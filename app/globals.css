@@ -1,0 +1,70 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #fcfaff;
+  --foreground: #0f0a1c;
+  --scitec-purple: #7c3aed;
+  --scitec-purple-dark: #5b21b6;
+  --scitec-purple-light: #a78bfa;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0b0614;
+    --foreground: #f8fafc;
+  }
+}
+
+html,
+body {
+  max-width: 100vw;
+  overflow-x: hidden;
+  width: 100%;
+}
+
+body {
+  color: var(--foreground);
+  background: var(--background);
+  font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+}
+
+/* SciTec Custom Glow & Glassmorphic Utilities */
+.scitec-glass {
+  background: rgba(19, 11, 36, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(124, 58, 237, 0.2);
+}
+
+.scitec-glass-light {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(124, 58, 237, 0.15);
+}
+
+.scitec-glow {
+  box-shadow: 0 0 25px -5px rgba(124, 58, 237, 0.3);
+}
+
+.scitec-glow-hover:hover {
+  box-shadow: 0 0 30px -5px rgba(167, 139, 250, 0.4);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(124, 58, 237, 0.3);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(124, 58, 237, 0.6);
+}

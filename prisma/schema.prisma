@@ -1,0 +1,206 @@
+// Prisma Schema for Junior Enterprise Process Management (SciTec jr.)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String         @id @default(uuid())
+  name            String
+  email           String         @unique
+  avatar          String?
+  role            String         @default("ASSESSOR") // PRESIDENTE, GERENTE, ASSESSOR, DIRETOR
+  primaryDept     String         @default("NEGOCIOS") // NEGOCIOS, ADMJURFIN, GENTE, MIDIAS, GLOBAL
+  cargo           String?        // Cargo formal (ex: Presidente, Gerente de Negócios, Assessor de Gente)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  assignedCards   Card[]
+  activities      CardActivity[]
+  assignedLeads   ProspectLead[]
+  assignedTasks   Task[]
+  requestsCreated CrossDeptRequest[] @relation("RequesterRelation")
+  requestsHandled CrossDeptRequest[] @relation("HandlerRelation")
+}
+
+model Pipe {
+  id          String      @id @default(uuid())
+  name        String
+  description String?
+  department  String      @default("NEGOCIOS") // NEGOCIOS, ADMJURFIN, GENTE, MIDIAS, GLOBAL
+  icon        String?     // Ícone representativo (Lucide icon name)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  phases Phase[]
+
+  @@index([department])
+}
+
+model Phase {
+  id        String   @id @default(uuid())
+  name      String
+  order     Int
+  pipeId    String
+  pipe      Pipe     @relation(fields: [pipeId], references: [id], onDelete: Cascade)
+  isFinal   Boolean  @default(false)
+  color     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  fields Field[]
+  cards  Card[]
+
+  @@index([pipeId])
+}
+
+model Field {
+  id          String   @id @default(uuid())
+  name        String
+  label       String
+  type        String   // TEXT, NUMBER, CURRENCY, DATE, SELECT, TEXTAREA
+  options     String?  // JSON formatted array of options for SELECT type
+  required    Boolean  @default(false)
+  order       Int      @default(0)
+  phaseId     String
+  phase       Phase    @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  cardValues CardFieldValue[]
+
+  @@index([phaseId])
+}
+
+model Card {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  order       Int      @default(0)
+  phaseId     String
+  phase       Phase    @relation(fields: [phaseId], references: [id], onDelete: Cascade)
+  assigneeId  String?
+  assignee    User?    @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  values     CardFieldValue[]
+  activities CardActivity[]
+
+  @@index([phaseId])
+  @@index([assigneeId])
+}
+
+model CardFieldValue {
+  id        String   @id @default(uuid())
+  cardId    String
+  card      Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  fieldId   String
+  field     Field    @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+  value     String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cardId, fieldId])
+  @@index([cardId])
+  @@index([fieldId])
+}
+
+model CardActivity {
+  id          String   @id @default(uuid())
+  cardId      String
+  card        Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  type        String   // PHASE_CHANGE, CARD_CREATED, FIELD_UPDATED, COMMENT
+  description String
+  metadata    String?  // JSON payload
+  createdAt   DateTime @default(now())
+
+  @@index([cardId])
+  @@index([userId])
+}
+
+// Module "Ferramentas": Lead Prospecting & Triage Model
+model ProspectLead {
+  id          String   @id @default(uuid())
+  companyName String
+  contactName String?
+  contactInfo String?  // Telefone, e-mail ou link
+  actionPlan  String   // O que deve ser feito com esse lead
+  notes       String?  // Anotações livres do membro
+  segment     String?
+  status      String   @default("PENDING") // PENDING, IN_PROGRESS, CONVERTED_TO_PIPE, DISCARDED
+  batchId     String?  // ID do lote do Excel importado
+  pipeCardId  String?  // ID do Card criado caso seja convertido
+  assignedTo  String?
+  assignedUser User?   @relation(fields: [assignedTo], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([status])
+  @@index([assignedTo])
+}
+
+// Future Module: Tasks Board (Quadro de Tarefas)
+model Task {
+  id          String    @id @default(uuid())
+  title       String
+  description String?
+  status      String    @default("TODO") // TODO, IN_PROGRESS, DONE, CANCELLED
+  priority    String    @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  dueDate     DateTime?
+  department  String?   @default("GLOBAL") // NEGOCIOS, ADMJURFIN, GENTE, MIDIAS, GLOBAL
+  assigneeId  String?
+  assignee    User?     @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
+  leadId      String?
+  cardId      String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([assigneeId])
+  @@index([status])
+  @@index([department])
+}
+
+// Novo model: Solicitações Intersetoriais (Cruza demandas entre setores)
+model CrossDeptRequest {
+  id            String    @id @default(uuid())
+  title         String
+  description   String
+  fromDept      String    @default("NEGOCIOS") // NEGOCIOS, ADMJURFIN, GENTE, MIDIAS, GLOBAL
+  toDept        String    @default("ADMJURFIN") // NEGOCIOS, ADMJURFIN, GENTE, MIDIAS, GLOBAL
+  status        String    @default("PENDING") // PENDING, APPROVED, REJECTED, IN_PROGRESS, COMPLETED
+  priority      String    @default("MEDIUM") // LOW, MEDIUM, HIGH, URGENT
+  requesterId   String
+  requester     User      @relation("RequesterRelation", fields: [requesterId], references: [id])
+  handlerId     String?
+  handler       User?     @relation("HandlerRelation", fields: [handlerId], references: [id])
+  linkedCardId  String?   // Opcional: Card no Kanban do setor destino
+  dueDate       DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([toDept, status])
+  @@index([fromDept])
+}
+
+// Setor AdmJurFin: Registro Financeiro básico integrado a projetos
+model FinancialTransaction {
+  id            String    @id @default(uuid())
+  description   String
+  amount        Float
+  type          String    // INFLOW (Receita) ou OUTFLOW (Despesa)
+  category      String    // Ex: Projeto, Ferramenta, Evento, Reembolso
+  status        String    @default("PENDING") // PENDING, PAID, CANCELLED
+  invoiceUrl    String?
+  relatedCardId String?   // Vínculo opcional com projeto fechado em Negócios
+  dueDate       DateTime?
+  paymentDate   DateTime?
+  createdAt     DateTime  @default(now())
+}
