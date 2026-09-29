@@ -45,7 +45,7 @@ import {
   Eye,
   Filter,
   MessageSquare,
-  Database,
+  Pickaxe,
 } from 'lucide-react';
 import { canAssignLeads, canBeLeadAssignee, canEditUnit, canUseNegociosTools, unitName } from '@/lib/permissions';
 
@@ -1412,7 +1412,7 @@ export default function SectorWorkspacePage() {
 
                   <div className="flex items-center gap-2 shrink-0">
                     <span className="text-xs font-semibold px-3 py-1.5 rounded-xl bg-purple-950/80 border border-purple-700/50 text-purple-300">
-                      3 Ferramentas Ativas
+                      {canUseNegociosTools(currentProfile) ? 4 : 3} Ferramentas Ativas
                     </span>
                   </div>
                 </div>
@@ -1586,36 +1586,50 @@ export default function SectorWorkspacePage() {
                     </div>
                   </div>
 
-                  {/* Ferramenta 6: Enriquecedor B2B */}
-                  <div className="p-6 rounded-2xl bg-slate-900/40 border border-slate-800/80 flex flex-col justify-between space-y-4 opacity-75">
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <div className="p-3 rounded-xl bg-amber-950/60 border border-amber-800/40 text-amber-300">
-                          <Database className="w-6 h-6" />
+                  {/* Ferramenta 6: Minerador de Leads */}
+                  {canUseNegociosTools(currentProfile) && (
+                    <Link
+                      href="/tools/lead-miner"
+                      aria-label="Abrir Minerador de Leads"
+                      onKeyDown={(e) => {
+                        // Enter já é nativo em <a>; Espaço precisa ser tratado.
+                        if (e.key === ' ' || e.key === 'Spacebar') {
+                          e.preventDefault();
+                          router.push('/tools/lead-miner');
+                        }
+                      }}
+                      className="p-6 rounded-2xl bg-slate-900/80 border border-purple-500/40 hover:border-purple-500 hover:shadow-xl hover:shadow-purple-950/30 flex flex-col justify-between space-y-4 transition-all group focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+                    >
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <div className="p-3 rounded-xl bg-purple-950/80 border border-purple-800/60 text-purple-300">
+                            <Pickaxe className="w-6 h-6" aria-hidden="true" />
+                          </div>
+                          <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full border bg-emerald-500/20 text-emerald-300 border-emerald-500/40">
+                            ● Ativo
+                          </span>
                         </div>
-                        <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full border bg-slate-800 text-slate-400 border-slate-700">
-                          Em breve
+                        <div>
+                          <span className="text-[10px] font-bold text-purple-400 uppercase tracking-wider">
+                            Inteligência de Mercado
+                          </span>
+                          <h4 className="text-base font-bold text-white mt-0.5 group-hover:text-purple-300 transition-colors">
+                            Minerador de Leads
+                          </h4>
+                          <p className="text-xs text-slate-400 mt-2 leading-relaxed">
+                            Mineração de empresas por bairro e nicho, análise de presença digital, classificação por oportunidade e ranking de prioridade para prospecção.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between">
+                        <span className="text-[11px] text-slate-500">Pronto para uso</span>
+                        <span className="px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 group-hover:from-purple-500 group-hover:to-indigo-500 rounded-xl shadow-md flex items-center gap-1.5 transition-all">
+                          Abrir Minerador <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
                         </span>
                       </div>
-                      <div>
-                        <span className="text-[10px] font-bold text-amber-400 uppercase tracking-wider">
-                          Inteligência de Mercado
-                        </span>
-                        <h4 className="text-base font-bold text-white mt-0.5">
-                          Enriquecedor de Dados B2B SciTec
-                        </h4>
-                        <p className="text-xs text-slate-400 mt-2 leading-relaxed">
-                          Busca automática de dados corporativos, CNAE e contatos de decisores para listas frias de prospecção.
-                        </p>
-                      </div>
-                    </div>
-                    <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between">
-                      <span className="text-[11px] text-slate-500">Em desenvolvimento</span>
-                      <button disabled className="px-3.5 py-1.5 rounded-xl bg-slate-800/60 text-slate-500 text-xs font-semibold cursor-not-allowed">
-                        Em breve
-                      </button>
-                    </div>
-                  </div>
+                    </Link>
+                  )}
                 </div>
               </div>
             )}

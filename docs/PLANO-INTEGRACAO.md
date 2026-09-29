@@ -186,7 +186,7 @@ Em Negócios → Ferramentas, o card **"Minerador de Leads"** substitui o placeh
 | Etapa | Conteúdo | Status |
 |---|---|---|
 | 0 — Fundação | Postgres; Auth.js Google + login dev; middleware; hierarquia (seção 4/5) com permissões no servidor em **todas** as APIs; gestão de pessoas; correção dos problemas da seção 2 | concluída na branch `etapa-0-fundacao` (PR pendente; login Google real depende das credenciais OAuth — ver 8.1) |
-| 1 — Minerador | Porte TS, persistência cumulativa, telas Minerar/Minerações/Ranking/Ficha/Mapa, integração com triagem existente | a fazer |
+| 1 — Minerador | Porte TS, persistência cumulativa, telas Minerar/Minerações/Ranking/Ficha/Mapa, integração com triagem existente | concluída em 2026-09-29 na branch `etapa-1-minerador` (PR pendente; ver 8.2) |
 | 2 — Painéis | Departamento, setor e membro | a fazer |
 | 3 — Melhorias | Google Places + fallback OSM; PageSpeed Insights; enriquecimento CNPJ (BrasilAPI); detecção Instagram/WhatsApp/tecnologias; mensagem de abordagem por IA | a fazer |
 | 4 — Deploy | Dockerfile standalone, Cloud Run, Neon, OAuth Internal, orçamento/quotas, guia passo a passo | a fazer |
@@ -213,6 +213,16 @@ Decisões tomadas na implementação (ajustáveis em `lib/permissions.ts`):
 - Não há mais cadastro manual de membros: o usuário nasce no primeiro login Google.
 
 Para testar o login Google real antes da Etapa 4 (sem depender do Presidente): criar um OAuth Client (Aplicativo da Web) em qualquer projeto GCP, consent screen **External** em modo de teste com as contas `@scitecjr.com` como test users, redirect `http://localhost:3000/api/auth/callback/google`, e preencher `AUTH_GOOGLE_ID`/`AUTH_GOOGLE_SECRET`. A restrição de domínio continua valendo porque é verificada no servidor.
+
+
+### 8.2 Registro da Etapa 1
+
+Spec completa em `.kiro/specs/lead-miner/` (requisitos, design e tarefas). Pontos operacionais:
+
+- **Limitação conhecida — limitador do Nominatim por processo.** A fila de 1 req/s (`lib/leads/sources/rate-limit.ts`) vive na memória do processo. Com mais de uma instância o limite global da política do Nominatim pode ser excedido. Na Etapa 4: Cloud Run com `max-instances=1` ou mover o limitador para o banco (tabela de lease).
+- **IA opcional.** A chave do Gemini é lida de `GEMINI_API_KEY` (`lib/leads/deps.ts`; opcionais `GEMINI_MODEL` e `GEMINI_MONTHLY_LIMIT`). Sem chave, as minerações rodam normalmente sem análise por IA e ficam com `iaDisabledReason = 'SEM_CHAVE'`.
+- **Testes.** `npm test` (Vitest) roda offline: o setup bloqueia qualquer acesso à rede. Os testes de integração com Postgres só rodam com `RUN_DB_TESTS=1` (banco em `DATABASE_URL_TEST` ou `DATABASE_URL`).
+- **Lint.** O ESLint não está configurado no projeto; `npm run lint` (`next lint`) abre o assistente interativo de configuração. A verificação usada foi `npm run build` + `npm test`.
 
 ---
 

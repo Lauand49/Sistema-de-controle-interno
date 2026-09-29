@@ -6,6 +6,8 @@
 // `DROP INDEX` desses índices:
 //   - "User_one_manager_per_department"
 //   - "SectorMember_one_manager_per_sector"
+//   - "MiningRun_one_active_per_author_params" (migração lead_miner: uma mineração
+//     PENDENTE/EM_ANDAMENTO por autor e conjunto de parâmetros)
 
 generator client {
   provider = "prisma-client-js"
@@ -68,6 +70,8 @@ model User {
   assignedTasks     Task[]
   requestsCreated   CrossDeptRequest[] @relation("RequesterRelation")
   requestsHandled   CrossDeptRequest[] @relation("HandlerRelation")
+  miningRuns        MiningRun[]
+  assignedCompanies Company[]
 
   @@index([departmentId])
   @@index([status])
@@ -234,11 +238,203 @@ model ProspectLead {
   pipeCardId   String?
   assignedTo   String?
   assignedUser User?    @relation(fields: [assignedTo], references: [id], onDelete: SetNull)
+  companyId    String?  @unique // Empresa minerada que originou o lead (Etapa 1)
+  company      Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
   @@index([status])
   @@index([assignedTo])
+}
+
+// ─────────────────────────────── Minerador de Leads ───────────────────────────────
+
+enum MiningSource {
+  OSM
+  GOOGLE
+  MISTA
+}
+
+enum MiningStatus {
+  PENDENTE
+  EM_ANDAMENTO
+  CONCLUIDA
+  ERRO
+}
+
+enum CompanyCategory {
+  CRIAR_SITE
+  OTIMIZACAO_SEGURANCA
+  ANALISE_DADOS_BI
+}
+
+enum LeadPriority {
+  ALTA
+  MEDIA
+  BAIXA
+}
+
+model Company {
+  id              String           @id @default(uuid())
+  googlePlaceId   String?          @unique // Etapa 3
+  osmId           String?          @unique // "node/123"
+  cnpj            String?          @unique // Etapa 3
+  nome            String
+  nomeNormalizado String
+  nicho           String           // id do nicho (lib/leads/config.ts)
+  endereco        String?
+  bairro          String?
+  cidade          String?
+  uf              String?
+  telefone        String?
+  website         String?
+  latitude        Float?
+  longitude       Float?
+  marcaRede       String?
+  fonte           MiningSource     @default(OSM)
+  // snapshot da análise mais recente
+  categoria       CompanyCategory?
+  scoreFinal      Int?
+  prioridade      LeadPriority?
+  hasSite         Boolean?
+  isHttps         Boolean?
+  lastAnalyzedAt  DateTime?
+  assignedTo      String?
+  assignedUser    User?            @relation(fields: [assignedTo], references: [id], onDelete: SetNull)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+
+  analyses     CompanyAnalysis[]
+  runs         MiningRunCompany[]
+  aliases      CompanyAlias[]
+  prospectLead ProspectLead?
+
+  @@index([scoreFinal(sort: Desc), nome])
+  @@index([nomeNormalizado])
+  @@index([uf, cidade, bairro])
+  @@index([nicho])
+  @@index([assignedTo])
+  @@index([lastAnalyzedAt])
+}
+
+// Identificadores externos fundidos numa Empresa (ex.: osmId de um elemento que casou por
+// nome + proximidade com uma Empresa que já tinha outro osmId). Consultados na deduplicação
+// com a mesma prioridade do identificador da própria Empresa (Req. 9).
+model CompanyAlias {
+  id         String       @id @default(uuid())
+  companyId  String
+  company    Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  source     MiningSource
+  externalId String
+  createdAt  DateTime     @default(now())
+
+  @@unique([source, externalId])
+  @@index([companyId])
+}
+
+model CompanyAnalysis {
+  id              String          @id @default(uuid())
+  companyId       String
+  company         Company         @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  runId           String?
+  run             MiningRun?      @relation(fields: [runId], references: [id], onDelete: SetNull)
+  hasSite         Boolean
+  online          Boolean
+  statusCode      Int?
+  isHttps         Boolean
+  sslValid        Boolean
+  sslProblem      String?
+  responseTime    Int?            // ms
+  lento           Boolean         @default(false)
+  motivoFalha     String?
+  finalUrl        String?
+  categoria       CompanyCategory
+  motivos         Json            // string[]
+  scoreDigital    Int
+  scoreIcp        Int
+  scoreObjetivo   Int
+  scoreIa         Int?
+  scoreFinal      Int
+  prioridade      LeadPriority
+  iaAplicada      Boolean         @default(false)
+  iaMotivo        String?         // "IA desabilitada" | "sem resposta" | "resposta inválida"
+  oportunidadeIa  String?
+  justificativaIa String?
+  detalhamento    Json            // ScoreBreakdown
+  pagespeed       Json?           // Etapa 3
+  tecnologias     Json?           // Etapa 3
+  createdAt       DateTime        @default(now())
+
+  runLink MiningRunCompany?
+
+  @@index([companyId, createdAt(sort: Desc)])
+}
+
+// Índice único parcial "MiningRun_one_active_per_author_params" criado via SQL na migração.
+model MiningRun {
+  id                String       @id @default(uuid())
+  bairro            String
+  cidade            String
+  uf                String
+  bairroNorm        String
+  cidadeNorm        String
+  nichos            Json         // string[]
+  excluirRedes      Boolean      @default(false)
+  iaEnabled         Boolean      @default(false)
+  iaDisabledReason  String?      // "SEM_CHAVE" quando iaEnabled foi forçado a false (Req. 7.9)
+  paramsKey         String       // buildRunParamsKey(bairro, cidade, uf, nichos) (Req. 18.7)
+  fonte             MiningSource @default(OSM)
+  status            MiningStatus @default(PENDENTE)
+  total             Int          @default(0)
+  processados       Int          @default(0)
+  area              Json?        // SearchArea obtida no Nominatim
+  nichosProcessados Json         @default("[]")
+  nichosFalhos      Json         @default("[]") // string[] de ids (Req. 2.14–2.17)
+  errorMessage      String?
+  lockedUntil       DateTime?    // lease da descoberta
+  createdById       String
+  createdBy         User         @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  finishedAt        DateTime?
+
+  companies MiningRunCompany[]
+  analyses  CompanyAnalysis[]
+
+  @@index([createdAt(sort: Desc)])
+  @@index([bairroNorm, cidadeNorm, uf, status])
+  @@index([createdById, status])
+  @@index([createdById, paramsKey])
+}
+
+model MiningRunCompany {
+  id           String           @id @default(uuid())
+  runId        String
+  run          MiningRun        @relation(fields: [runId], references: [id], onDelete: Cascade)
+  companyId    String
+  company      Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  isNew        Boolean
+  nicho        String           // nicho da 1ª ocorrência nesta mineração
+  claimToken   String?
+  claimedAt    DateTime?
+  processedAt  DateTime?
+  failed       Boolean          @default(false)
+  errorMessage String?
+  analysisId   String?          @unique
+  analysis     CompanyAnalysis? @relation(fields: [analysisId], references: [id], onDelete: SetNull)
+  createdAt    DateTime         @default(now())
+
+  @@unique([runId, companyId])
+  @@index([runId, processedAt])
+}
+
+model ApiUsage {
+  id       String @id @default(uuid())
+  provider String // "gemini" | "places"
+  month    String // "AAAA-MM"
+  count    Int    @default(0)
+
+  @@unique([provider, month])
 }
 
 // Tarefas pertencem a uma unidade (departamento ou setor). unitId nulo = tarefa geral.

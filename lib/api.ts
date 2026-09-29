@@ -8,23 +8,10 @@ import { ZodError } from 'zod';
 import { auth } from '@/auth';
 import { findUserDTO } from '@/lib/users';
 import type { User as Actor } from '@/types';
+import { ApiError, forbidden } from '@/lib/api-error';
 
 export type { Actor };
-
-export class ApiError extends Error {
-  constructor(
-    public status: number,
-    message: string,
-    public extra?: Record<string, unknown>
-  ) {
-    super(message);
-  }
-}
-
-export const forbidden = (message = 'Você não tem permissão para esta ação.') =>
-  new ApiError(403, message);
-export const notFound = (message = 'Registro não encontrado.') => new ApiError(404, message);
-export const badRequest = (message: string) => new ApiError(400, message);
+export { ApiError, forbidden, notFound, badRequest } from '@/lib/api-error';
 
 /** Lança 403 se a condição for falsa. */
 export function assert(condition: unknown, message?: string): asserts condition {

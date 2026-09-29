@@ -1,0 +1,31 @@
+/**
+ * POST /api/tools/lead-miner/runs/[id]/batch — Processa um Lote de empresas dentro de `BATCH_BUDGET_MS`.
+ * Só o autor da mineração pode acioná-la; 403 antes de qualquer efeito (Req. 8.3, 8.4, 8.11, 8.12, 18.1).
+ */
+import { NextResponse } from 'next/server';
+import { withAuth, forbidden, notFound } from '@/lib/api';
+import { prisma } from '@/lib/prisma';
+import { requireNegocios } from '@/lib/leads/route-helpers';
+import { BATCH_BUDGET_MS } from '@/lib/leads/config';
+import { runBatch, MSG_PIPELINE } from '@/lib/leads/pipeline';
+import { getPipelineDeps } from '@/lib/leads/deps';
+
+export const runtime = 'nodejs';
+export const dynamic = 'force-dynamic';
+export const maxDuration = 60;
+
+const NOT_AUTHOR_MESSAGE = 'Apenas o autor da mineração pode executá-la.';
+
+export const POST = withAuth<{ id: string }>(async (_req, { params, actor }) => {
+  requireNegocios(actor);
+  const t0 = Date.now();
+  const run = await prisma.miningRun.findUnique({
+    where: { id: params.id },
+    select: { createdById: true },
+  });
+  if (!run) throw notFound(MSG_PIPELINE.mineracaoNaoEncontrada);
+  if (run.createdById !== actor.id) throw forbidden(NOT_AUTHOR_MESSAGE);
+
+  const progress = await runBatch(params.id, getPipelineDeps(), t0 + BATCH_BUDGET_MS);
+  return NextResponse.json(progress);
+});
