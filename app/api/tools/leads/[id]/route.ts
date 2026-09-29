@@ -1,73 +1,42 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { withAuth, assert, notFound } from '@/lib/api';
+import { canDeleteLead, canEditLead } from '@/lib/permissions';
+import { assertLeadAssigneeChange, parseLeadStatus } from '@/lib/leads/guards';
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const body = await request.json();
+type Params = { id: string };
 
-    const existingLead = await prisma.prospectLead.findUnique({
-      where: { id: params.id },
-    });
+export const PATCH = withAuth<Params>(async (request, { params, actor }) => {
+  const body = await request.json();
 
-    if (!existingLead) {
-      return NextResponse.json({ error: 'Lead não encontrado.' }, { status: 404 });
-    }
+  const existing = await prisma.prospectLead.findUnique({ where: { id: params.id } });
+  if (!existing) throw notFound('Lead não encontrado.');
+  assert(canEditLead(actor, existing), 'Este lead pertence a outro responsável.');
 
-    if (body.assignedTo) {
-      const targetUser = await prisma.user.findUnique({
-        where: { id: body.assignedTo },
-      });
-      if (
-        !targetUser ||
-        (targetUser.primaryDept?.toUpperCase() !== 'NEGOCIOS' &&
-          targetUser.role?.toUpperCase() !== 'PRESIDENTE')
-      ) {
-        return NextResponse.json(
-          { error: 'Leads só podem ser atribuídos a membros da Diretoria de Negócios.' },
-          { status: 400 }
-        );
-      }
-    }
-
-    const updatedLead = await prisma.prospectLead.update({
-      where: { id: params.id },
-      data: {
-        ...(body.companyName ? { companyName: body.companyName } : {}),
-        ...(body.contactName !== undefined ? { contactName: body.contactName } : {}),
-        ...(body.contactInfo !== undefined ? { contactInfo: body.contactInfo } : {}),
-        ...(body.actionPlan !== undefined ? { actionPlan: body.actionPlan } : {}),
-        ...(body.notes !== undefined ? { notes: body.notes } : {}),
-        ...(body.segment !== undefined ? { segment: body.segment } : {}),
-        ...(body.status ? { status: body.status } : {}),
-        ...(body.assignedTo !== undefined ? { assignedTo: body.assignedTo } : {}),
-      },
-      include: {
-        assignedUser: true,
-      },
-    });
-
-    return NextResponse.json(updatedLead);
-  } catch (error: any) {
-    console.error('Error updating prospect lead:', error);
-    return NextResponse.json({ error: 'Erro ao atualizar o lead.' }, { status: 500 });
+  if (body.assignedTo !== undefined) {
+    await assertLeadAssigneeChange(actor, existing.assignedTo, body.assignedTo || null);
   }
-}
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    await prisma.prospectLead.delete({
-      where: { id: params.id },
-    });
+  const updated = await prisma.prospectLead.update({
+    where: { id: params.id },
+    data: {
+      ...(body.companyName ? { companyName: String(body.companyName) } : {}),
+      ...(body.contactName !== undefined ? { contactName: body.contactName } : {}),
+      ...(body.contactInfo !== undefined ? { contactInfo: body.contactInfo } : {}),
+      ...(body.actionPlan !== undefined ? { actionPlan: String(body.actionPlan) } : {}),
+      ...(body.notes !== undefined ? { notes: body.notes } : {}),
+      ...(body.segment !== undefined ? { segment: body.segment } : {}),
+      ...(body.status ? { status: parseLeadStatus(body.status) } : {}),
+      ...(body.assignedTo !== undefined ? { assignedTo: body.assignedTo || null } : {}),
+    },
+    include: { assignedUser: true },
+  });
 
-    return NextResponse.json({ success: true, message: 'Lead excluído.' });
-  } catch (error: any) {
-    console.error('Error deleting prospect lead:', error);
-    return NextResponse.json({ error: 'Erro ao excluir o lead.' }, { status: 500 });
-  }
-}
+  return NextResponse.json(updated);
+});
+
+export const DELETE = withAuth<Params>(async (_req, { params, actor }) => {
+  assert(canDeleteLead(actor), 'Apenas a gerência de Negócios ou a Presidência pode excluir leads.');
+  await prisma.prospectLead.delete({ where: { id: params.id } });
+  return NextResponse.json({ success: true, message: 'Lead excluído.' });
+});

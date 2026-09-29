@@ -26,6 +26,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { isDepartmentManager, isGlobal, isSectorManager } from '@/lib/permissions';
 
 type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE' | 'CANCELLED';
 type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
@@ -313,7 +314,7 @@ export default function MyTasksPage() {
               <span className="font-bold text-white underline decoration-purple-400">
                 {currentProfile?.name || 'você'}
               </span>{' '}
-              ({currentProfile?.role || 'Membro'}), além dos projetos e cards sob sua responsabilidade nos fluxos operacionais.
+              ({currentProfile?.title || 'Membro'}), além dos projetos e cards sob sua responsabilidade nos fluxos operacionais.
             </p>
           </div>
 
@@ -360,8 +361,8 @@ export default function MyTasksPage() {
 
         {/* Filter Controls Bar */}
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-4">
-          {/* Scope Selector: Diretores and Gerentes can view whole team; Assessores only their own */}
-          {(currentProfile?.role === 'DIRETOR' || currentProfile?.role === 'GERENTE') ? (
+          {/* Escopo: Presidência e gerentes acompanham a equipe; assessores só as próprias tarefas */}
+          {currentProfile && (isGlobal(currentProfile) || isDepartmentManager(currentProfile) || isSectorManager(currentProfile)) ? (
             <div className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-900/80 border border-slate-800">
               <button
                 onClick={() => setViewScope('MINE')}
@@ -402,7 +403,7 @@ export default function MyTasksPage() {
                 <option value="ALL">Todos os Membros</option>
                 {profiles.map((p) => (
                   <option key={p.id} value={p.id}>
-                    {p.name} ({p.role})
+                    {p.name} ({p.title})
                   </option>
                 ))}
               </select>
@@ -677,7 +678,7 @@ export default function MyTasksPage() {
                       <option value="">Não atribuído</option>
                       {profiles.map((u) => (
                         <option key={u.id} value={u.id}>
-                          {u.name} ({u.role})
+                          {u.name} ({u.title})
                         </option>
                       ))}
                     </select>

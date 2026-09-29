@@ -1,114 +1,80 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
+import type { Prisma } from '@prisma/client';
 import { z } from 'zod';
+import { prisma } from '@/lib/prisma';
+import { withAuth, assert, notFound } from '@/lib/api';
+import { canEditProfile, canViewPendingUsers, isGlobal, progressScope } from '@/lib/permissions';
+import { findUserDTO } from '@/lib/users';
 
-const userUpdateSchema = z.object({
-  name: z.string().min(2, 'O nome deve ter pelo menos 2 caracteres').optional(),
-  email: z.string().email('E-mail inválido').optional(),
-  role: z.enum(['PRESIDENTE', 'GERENTE', 'ASSESSOR', 'DIRETOR'], {
-    errorMap: () => ({ message: 'A hierarquia deve ser PRESIDENTE, GERENTE ou ASSESSOR' }),
-  }).optional(),
-  primaryDept: z.enum(['NEGOCIOS', 'ADMJURFIN', 'GENTE', 'MIDIAS', 'GLOBAL']).optional(),
-  cargo: z.string().optional().nullable(),
-  avatar: z.string().optional().nullable(),
+type Params = { id: string };
+
+const profileSchema = z.object({
+  name: z.string().trim().min(2, 'O nome deve ter pelo menos 2 caracteres').optional(),
+  avatar: z.string().url('URL de avatar inválida').optional().nullable().or(z.literal('')),
+  /** Título exibido. Apenas a Presidência altera. */
+  cargo: z.string().trim().max(80).optional().nullable(),
 });
 
-export async function GET(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const user = await prisma.user.findUnique({
-      where: { id: params.id },
-      include: {
-        assignedCards: {
-          include: {
-            phase: true,
-          },
-        },
-        assignedLeads: true,
-        assignedTasks: true,
-        _count: {
-          select: {
-            assignedCards: true,
-            assignedLeads: true,
-            assignedTasks: true,
-          },
-        },
-      },
-    });
-
-    if (!user) {
-      return NextResponse.json({ error: 'Membro não encontrado.' }, { status: 404 });
-    }
-
-    return NextResponse.json(user);
-  } catch (error: any) {
-    console.error('Error fetching user:', error);
-    return NextResponse.json({ error: 'Erro ao buscar membro.' }, { status: 500 });
+/**
+ * Perfil + progresso individual, conforme o escopo da matriz:
+ * Presidência/próprio/Gerente do depto → tudo; Gerente de Setor → só itens do(s) setor(es).
+ */
+export const GET = withAuth<Params>(async (_req, { params, actor }) => {
+  const target = await findUserDTO(params.id);
+  if (!target) throw notFound('Membro não encontrado.');
+  if (target.status === 'PENDENTE') {
+    assert(canViewPendingUsers(actor) || actor.id === target.id);
   }
-}
 
-export async function PATCH(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const body = await req.json();
-    const validatedData = userUpdateSchema.parse(body);
+  const scope = progressScope(actor, target);
+  if (!scope) return NextResponse.json({ ...target, progressScope: null });
 
-    if (validatedData.email) {
-      const existingUser = await prisma.user.findFirst({
-        where: {
-          email: validatedData.email,
-          NOT: { id: params.id },
-        },
-      });
+  const unitFilter = scope === 'ALL' ? undefined : { code: { in: scope } };
 
-      if (existingUser) {
-        return NextResponse.json(
-          { error: 'Já existe outro membro cadastrado com este e-mail.' },
-          { status: 400 }
-        );
-      }
-    }
+  const cardWhere: Prisma.CardWhereInput = { assigneeId: target.id };
+  if (unitFilter) cardWhere.phase = { pipe: { unit: unitFilter } };
+  const taskWhere: Prisma.TaskWhereInput = { assigneeId: target.id };
+  if (unitFilter) taskWhere.unit = unitFilter;
 
-    const updatedUser = await prisma.user.update({
-      where: { id: params.id },
-      data: validatedData,
-      include: {
-        _count: {
-          select: {
-            assignedCards: true,
-            assignedLeads: true,
-            assignedTasks: true,
-          },
-        },
-      },
-    });
+  const [assignedCards, assignedTasks, assignedLeads] = await Promise.all([
+    prisma.card.findMany({ where: cardWhere, include: { phase: true }, orderBy: { updatedAt: 'desc' } }),
+    prisma.task.findMany({ where: taskWhere, orderBy: { updatedAt: 'desc' } }),
+    scope === 'ALL'
+      ? prisma.prospectLead.findMany({ where: { assignedTo: target.id }, orderBy: { updatedAt: 'desc' } })
+      : Promise.resolve([]),
+  ]);
 
-    return NextResponse.json(updatedUser);
-  } catch (error: any) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors[0].message }, { status: 400 });
-    }
-    console.error('Error updating user:', error);
-    return NextResponse.json({ error: 'Erro ao atualizar membro.' }, { status: 500 });
+  return NextResponse.json({
+    ...target,
+    progressScope: scope,
+    assignedCards,
+    assignedTasks,
+    assignedLeads,
+    _count: {
+      assignedCards: assignedCards.length,
+      assignedTasks: assignedTasks.length,
+      assignedLeads: assignedLeads.length,
+    },
+  });
+});
+
+/** Dados básicos do perfil. Cargos e vínculos: /api/users/[id]/hierarchy e /api/units. */
+export const PATCH = withAuth<Params>(async (request, { params, actor }) => {
+  const data = profileSchema.parse(await request.json());
+  const target = await findUserDTO(params.id);
+  if (!target) throw notFound('Membro não encontrado.');
+  assert(canEditProfile(actor, target), 'Você só pode editar o seu próprio perfil.');
+  if (data.cargo !== undefined) {
+    assert(isGlobal(actor), 'Apenas a Presidência altera o título exibido.');
   }
-}
 
-export async function DELETE(
-  req: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    await prisma.user.delete({
-      where: { id: params.id },
-    });
-
-    return NextResponse.json({ success: true, message: 'Membro removido com sucesso.' });
-  } catch (error: any) {
-    console.error('Error deleting user:', error);
-    return NextResponse.json({ error: 'Erro ao remover membro.' }, { status: 500 });
-  }
-}
+  await prisma.user.update({
+    where: { id: params.id },
+    data: {
+      ...(data.name !== undefined ? { name: data.name } : {}),
+      ...(data.avatar !== undefined ? { avatar: data.avatar || null } : {}),
+      ...(data.cargo !== undefined ? { cargo: data.cargo || null } : {}),
+    },
+  });
+  return NextResponse.json(await findUserDTO(params.id));
+});

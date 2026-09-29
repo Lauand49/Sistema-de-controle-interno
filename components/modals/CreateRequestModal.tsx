@@ -40,7 +40,7 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
   const { currentProfile } = useProfile();
 
   const [toDept, setToDept] = useState<string>(defaultToDept);
-  const [fromDept, setFromDept] = useState<string>(currentProfile?.primaryDept || 'NEGOCIOS');
+  const [fromDept, setFromDept] = useState<string>(currentProfile?.departmentCode || 'GLOBAL');
   const [title, setTitle] = useState(defaultTitle);
   const [description, setDescription] = useState(defaultDescription);
   const [priority, setPriority] = useState<'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT'>('MEDIUM');
@@ -52,7 +52,7 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
     if (defaultToDept) setToDept(defaultToDept);
     if (defaultTitle) setTitle(defaultTitle);
     if (defaultDescription) setDescription(defaultDescription);
-    if (currentProfile?.primaryDept) setFromDept(currentProfile.primaryDept);
+    if (currentProfile) setFromDept(currentProfile.departmentCode || 'GLOBAL');
   }, [defaultToDept, defaultTitle, defaultDescription, currentProfile, isOpen]);
 
   if (!isOpen) return null;

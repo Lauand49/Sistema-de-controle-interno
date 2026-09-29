@@ -5,7 +5,9 @@ const prisma = new PrismaClient();
 async function main() {
   console.log('🌱 Starting SciTec jr. complete database seed (4 Departments)...');
 
-  // Clean existing data
+  // Limpa dados (as unidades fixas vêm da migração e são mantidas)
+  await prisma.auditLog.deleteMany();
+  await prisma.sectorMember.deleteMany();
   await prisma.cardActivity.deleteMany();
   await prisma.cardFieldValue.deleteMany();
   await prisma.card.deleteMany();
@@ -18,13 +20,29 @@ async function main() {
   await prisma.task.deleteMany();
   await prisma.user.deleteMany();
 
-  // 1. Create SciTec jr. Team Members
+  const units = await prisma.unit.findMany();
+  const unitId = (code: string) => {
+    const u = units.find((x) => x.code === code);
+    if (!u) throw new Error(`Unidade ${code} não encontrada. Rode "npx prisma migrate deploy" antes do seed.`);
+    return u.id;
+  };
+
+  // 1. Membros (domínio @scitecjr.com). joao.vaz é o Presidente de referência (ADMIN_EMAILS).
+  await prisma.user.create({
+    data: {
+      name: 'João Vaz',
+      email: 'joao.vaz@scitecjr.com',
+      status: 'ATIVO',
+      globalRole: 'PRESIDENTE',
+    },
+  });
+
   const userAna = await prisma.user.create({
     data: {
       name: 'Ana Clara',
-      email: 'ana.clara@scitecjr.com.br',
-      role: 'DIRETOR',
-      primaryDept: 'NEGOCIOS',
+      email: 'ana.clara@scitecjr.com',
+      status: 'ATIVO',
+      globalRole: 'VICE_PRESIDENTE',
       avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150',
     },
   });
@@ -32,54 +50,70 @@ async function main() {
   const userLucas = await prisma.user.create({
     data: {
       name: 'Lucas Mendes',
-      email: 'lucas.mendes@scitecjr.com.br',
-      role: 'ASSESSOR',
-      primaryDept: 'NEGOCIOS',
+      email: 'lucas.mendes@scitecjr.com',
+      status: 'ATIVO',
+      departmentId: unitId('NEGOCIOS'),
+      departmentRole: 'ASSESSOR',
       avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150',
+      sectorMemberships: { create: [{ unitId: unitId('TEC_SOFTWARE'), role: 'MEMBRO' }] },
     },
   });
 
   const userGabriel = await prisma.user.create({
     data: {
       name: 'Gabriel Santos',
-      email: 'gabriel.santos@scitecjr.com.br',
-      role: 'GERENTE',
-      primaryDept: 'NEGOCIOS',
+      email: 'gabriel.santos@scitecjr.com',
+      status: 'ATIVO',
+      departmentId: unitId('NEGOCIOS'),
+      departmentRole: 'GERENTE',
       avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150',
+      // Acumula Gerente de Departamento + Gerente de Setor
+      sectorMemberships: { create: [{ unitId: unitId('DADOS_INTELIGENCIA'), role: 'GERENTE' }] },
     },
   });
 
   const userBeatriz = await prisma.user.create({
     data: {
       name: 'Beatriz Rezende',
-      email: 'beatriz.rezende@scitecjr.com.br',
-      role: 'DIRETOR',
-      primaryDept: 'ADMJURFIN',
-      avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150',
+      email: 'beatriz.rezende@scitecjr.com',
+      status: 'ATIVO',
+      departmentId: unitId('ADMJURFIN'),
+      departmentRole: 'GERENTE',
+      avatar: 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150',
     },
   });
 
   const userRafael = await prisma.user.create({
     data: {
       name: 'Rafael Toledo',
-      email: 'rafael.toledo@scitecjr.com.br',
-      role: 'GERENTE',
-      primaryDept: 'GENTE',
-      avatar: 'https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=150',
+      email: 'rafael.toledo@scitecjr.com',
+      status: 'ATIVO',
+      departmentId: unitId('GENTE'),
+      departmentRole: 'GERENTE',
+      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150',
+      sectorMemberships: { create: [{ unitId: unitId('TEC_SOFTWARE'), role: 'MEMBRO' }] },
     },
   });
 
   const userMariana = await prisma.user.create({
     data: {
       name: 'Mariana Duarte',
-      email: 'mariana.duarte@scitecjr.com.br',
-      role: 'ASSESSOR',
-      primaryDept: 'MIDIAS',
+      email: 'mariana.duarte@scitecjr.com',
+      status: 'ATIVO',
+      departmentId: unitId('MIDIAS'),
+      departmentRole: 'ASSESSOR',
       avatar: 'https://images.unsplash.com/photo-1517841905240-472988babdf9?w=150',
+      // Assessora de Mídias que gerencia um setor → tipo exibido: Gerente de Setor
+      sectorMemberships: { create: [{ unitId: unitId('DESIGN_CONCEPCAO'), role: 'GERENTE' }] },
     },
   });
 
-  console.log('👤 Created 6 team members across 4 departments');
+  // Primeiro acesso aguardando aprovação
+  await prisma.user.create({
+    data: { name: 'Novo Membro', email: 'novo.membro@scitecjr.com', status: 'PENDENTE' },
+  });
+
+  console.log('👤 Membros criados: Presidente, Vice, 3 gerentes de departamento, 2 assessores e 1 pendente');
 
   // ==========================================
   // SETOR 1: NEGÓCIOS
@@ -88,7 +122,7 @@ async function main() {
     data: {
       name: 'Funil de Vendas & Negociação',
       description: 'Gestão integrada de prospecção, diagnósticos, propostas comerciais e fechamento.',
-      department: 'NEGOCIOS',
+      unitId: unitId('NEGOCIOS'),
       icon: 'Briefcase',
     },
   });
@@ -231,7 +265,7 @@ async function main() {
     data: {
       name: 'Emissão de Contratos & Validação Jurídica',
       description: 'Elaboração de minutas contratuais, validação jurídica, coleta de assinaturas e arquivamento.',
-      department: 'ADMJURFIN',
+      unitId: unitId('ADMJURFIN'),
       icon: 'Scale',
     },
   });
@@ -298,7 +332,7 @@ async function main() {
     data: {
       name: 'Contas a Receber & Faturamento',
       description: 'Controle de emissão de NFS-e, envio de boletos e baixa de pagamentos de projetos.',
-      department: 'ADMJURFIN',
+      unitId: unitId('ADMJURFIN'),
       icon: 'Receipt',
     },
   });
@@ -392,7 +426,7 @@ async function main() {
     data: {
       name: 'Processo Seletivo & Trainees',
       description: 'Acompanhamento do funil de candidatos, dinâmicas em grupo, entrevistas e programa de trainee.',
-      department: 'GENTE',
+      unitId: unitId('GENTE'),
       icon: 'UserCheck',
     },
   });
@@ -451,7 +485,7 @@ async function main() {
     data: {
       name: 'PDI & Acompanhamento de Ciclos',
       description: 'Planos de Desenvolvimento Individual, metas trimestrais e avaliações 360.',
-      department: 'GENTE',
+      unitId: unitId('GENTE'),
       icon: 'Award',
     },
   });
@@ -488,7 +522,7 @@ async function main() {
     data: {
       name: 'Produção de Conteúdo & Marketing',
       description: 'Linha editorial, redação de copy, design de criativos, validação e agendamento de posts.',
-      department: 'MIDIAS',
+      unitId: unitId('MIDIAS'),
       icon: 'Palette',
     },
   });

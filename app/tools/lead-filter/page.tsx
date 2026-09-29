@@ -28,6 +28,7 @@ import {
 import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { useProfile } from '@/contexts/ProfileContext';
+import { canUseNegociosTools } from '@/lib/permissions';
 
 interface HistoryItem {
   lead: TriageLead;
@@ -38,12 +39,7 @@ interface HistoryItem {
 
 export default function LeadFilterPage() {
   const { currentProfile } = useProfile();
-  const isPresident =
-    currentProfile?.role?.toUpperCase() === 'PRESIDENTE' ||
-    currentProfile?.primaryDept === 'GLOBAL';
-  const isNegociosMember =
-    currentProfile?.primaryDept?.toUpperCase() === 'NEGOCIOS';
-  const canManageLeads = Boolean(currentProfile && (isPresident || isNegociosMember));
+  const canManageLeads = canUseNegociosTools(currentProfile);
 
   const [queueLeads, setQueueLeads] = useState<TriageLead[]>([]);
   const [currentIndex, setCurrentIndex] = useState<number>(0);
@@ -103,7 +99,7 @@ export default function LeadFilterPage() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [canManageLeads]);
 
   useEffect(() => {
     fetchTriageData();

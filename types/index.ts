@@ -1,19 +1,23 @@
+import type { DepartmentCode, Person, PersonType } from '@/lib/permissions';
+
 export type FieldType = 'TEXT' | 'NUMBER' | 'CURRENCY' | 'DATE' | 'SELECT' | 'TEXTAREA';
 
-export type UserRole = 'PRESIDENTE' | 'GERENTE' | 'ASSESSOR' | 'DIRETOR';
-
-export type Department = 'NEGOCIOS' | 'ADMJURFIN' | 'GENTE' | 'MIDIAS' | 'GLOBAL';
+/** Departamento ou 'GLOBAL' (Presidência / itens gerais). */
+export type Department = DepartmentCode | 'GLOBAL';
 
 export type RequestStatus = 'PENDING' | 'APPROVED' | 'REJECTED' | 'IN_PROGRESS' | 'COMPLETED';
 
-export interface User {
-  id: string;
+/** Usuário como retornado pelas APIs (inclui a hierarquia). */
+export interface User extends Person {
   name: string;
   email: string;
   avatar?: string | null;
-  role: UserRole | string;
-  primaryDept?: Department | string;
   cargo?: string | null;
+  personType: PersonType;
+  /** Título legível: "Gerente de Negócios", "Presidente"... */
+  title: string;
+  lastLoginAt?: string | null;
+  createdAt?: string;
   _count?: {
     assignedCards?: number;
     assignedLeads?: number;
@@ -21,33 +25,10 @@ export interface User {
   };
 }
 
-export function getUserCargoTitle(user: { role?: string; primaryDept?: string; cargo?: string | null }): string {
+/** Título de exibição de um usuário (aceita objetos parciais vindos de relações). */
+export function getUserCargoTitle(user: { title?: string; cargo?: string | null }): string {
   if (user.cargo && user.cargo.trim()) return user.cargo;
-  const role = (user.role || '').toUpperCase();
-  const dept = (user.primaryDept || '').toUpperCase();
-
-  if (role === 'PRESIDENTE') return 'Presidente Institucional';
-
-  const deptMap: Record<string, string> = {
-    NEGOCIOS: 'Negócios',
-    MIDIAS: 'Mídias',
-    ADMJURFIN: 'AdmJurFin',
-    GENTE: 'Gente',
-    GLOBAL: 'Geral',
-  };
-
-  const deptName = deptMap[dept] || dept || '';
-
-  if (role === 'GERENTE') {
-    return deptName ? `Gerente de ${deptName}` : 'Gerente';
-  }
-  if (role === 'ASSESSOR') {
-    return deptName ? `Assessor(a) de ${deptName}` : 'Assessor(a)';
-  }
-  if (role === 'DIRETOR') {
-    return deptName ? `Diretor(a) de ${deptName}` : 'Diretor(a)';
-  }
-  return role || 'Membro';
+  return user.title || 'Membro';
 }
 
 export interface Task {
@@ -147,7 +128,7 @@ export interface PhaseGateError {
 }
 
 // Module "Ferramentas": Lead Prospecting & Triage Types
-export type LeadProspectStatus = 'PENDING' | 'IN_PROGRESS' | 'CONVERTED_TO_PIPE' | 'DISCARDED';
+export type LeadProspectStatus = 'RAW' | 'PENDING' | 'IN_PROGRESS' | 'CONVERTED_TO_PIPE' | 'DISCARDED';
 
 export interface ProspectLead {
   id: string;

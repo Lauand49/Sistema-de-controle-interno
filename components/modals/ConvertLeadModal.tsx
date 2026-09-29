@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { ProspectLead, User, getUserCargoTitle } from '@/types';
 import { Zap, X, Calendar, UserCheck, Building2, CheckCircle2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { useProfile } from '@/contexts/ProfileContext';
+import { canAssignLeads, canBeLeadAssignee } from '@/lib/permissions';
 
 interface ConvertLeadModalProps {
   lead: ProspectLead;
@@ -18,10 +20,12 @@ export const ConvertLeadModal: React.FC<ConvertLeadModalProps> = ({
   onClose,
   onSuccess,
 }) => {
-  const negociosUsers = users.filter((u) => u.primaryDept?.toUpperCase() === 'NEGOCIOS');
-  const presidenciaUsers = users.filter(
-    (u) => u.role?.toUpperCase() === 'PRESIDENTE' && u.primaryDept?.toUpperCase() !== 'NEGOCIOS'
-  );
+  const { currentProfile } = useProfile();
+  const canAssign = canAssignLeads(currentProfile);
+  // Quem não pode atribuir só escolhe a si mesmo (o servidor valida de novo).
+  const allowed = (u: User) => canBeLeadAssignee(u) && (canAssign || u.id === currentProfile?.id);
+  const negociosUsers = users.filter((u) => u.departmentCode === 'NEGOCIOS' && allowed(u));
+  const presidenciaUsers = users.filter((u) => u.globalRole !== null && allowed(u));
 
   const [assigneeId, setAssigneeId] = useState(lead.assignedTo || '');
   const [meetingDate, setMeetingDate] = useState(

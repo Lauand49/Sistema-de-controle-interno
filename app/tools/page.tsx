@@ -4,6 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { SciTecNavbar } from '@/components/navigation/SciTecNavbar';
 import { useProfile } from '@/contexts/ProfileContext';
+import { canViewUnit } from '@/lib/permissions';
 import {
   Briefcase,
   Scale,
@@ -25,8 +26,7 @@ import {
 
 export default function ToolsHubPage() {
   const { currentProfile } = useProfile();
-  const userDept = currentProfile?.primaryDept?.toUpperCase() || 'GLOBAL';
-  const isPresidente = currentProfile?.role?.toUpperCase() === 'PRESIDENTE';
+  const userDept = currentProfile?.departmentCode ?? null;
 
   const sectorTools = [
     {
@@ -44,7 +44,7 @@ export default function ToolsHubPage() {
         'Planilha Dinâmica de Importação e Anotação de Leads (Excel / CSV)',
         'Gerador de Propostas Comerciais com IA',
         'Disparador & Automação de WhatsApp SciTec',
-        'Enriquecedor de Dados B2B (CNPJ / CNAE)',
+        'Minerador de Leads B2B (em breve)',
       ],
       activeCount: 3,
       totalCount: 6,
@@ -53,10 +53,10 @@ export default function ToolsHubPage() {
       btnColor: 'from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500',
     },
     {
-      id: 'admjur',
+      id: 'admjurfin',
       name: 'AdmJurFin',
-      slug: 'admjur',
-      deptCode: 'ADMJUR',
+      slug: 'admjurfin',
+      deptCode: 'ADMJURFIN',
       color: 'blue',
       icon: Scale,
       summary: 'Administrativo, Jurídico e Financeiro',
@@ -154,10 +154,7 @@ export default function ToolsHubPage() {
             {sectorTools.map((sector) => {
               const IconComp = sector.icon;
               const isUserSector = userDept === sector.deptCode;
-              const isAssessorOutroSetor =
-                currentProfile?.role?.toUpperCase() === 'ASSESSOR' &&
-                userDept !== 'GLOBAL' &&
-                !isUserSector;
+              const hasAccess = canViewUnit(currentProfile, sector.deptCode);
 
               return (
                 <div
@@ -219,16 +216,18 @@ export default function ToolsHubPage() {
 
                   <div className="mt-6 pt-4 border-t border-slate-800/80 flex items-center justify-between">
                     <span className="text-xs text-slate-500 font-medium">
-                      Exclusivo no espaço do setor
+                      {hasAccess ? 'Exclusivo no espaço do setor' : 'Apenas membros do departamento e Presidência'}
                     </span>
 
-                    <Link
+                    {hasAccess && (
+<Link
                       href={`/setores/${sector.slug}?tab=TOOLS`}
                       className={`px-4 py-2.5 text-xs font-bold text-white bg-gradient-to-r ${sector.btnColor} rounded-xl shadow-md flex items-center gap-2 transition-all transform hover:-translate-y-0.5`}
                     >
                       Acessar Ferramentas de {sector.name}{' '}
                       <ArrowRight className="w-3.5 h-3.5" />
                     </Link>
+)}
                   </div>
                 </div>
               );

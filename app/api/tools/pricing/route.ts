@@ -1,5 +1,8 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { withAuth, ApiError, assert } from '@/lib/api';
+import { canUseNegociosTools } from '@/lib/permissions';
+import { assertActiveUser, findSalesPipe } from '@/lib/units';
 import {
   calculateProjectPricing,
   ROLES_RATES,
@@ -13,7 +16,7 @@ import {
   SimulationInput,
 } from '@/lib/pricing';
 
-export async function GET() {
+export const GET = withAuth(async () => {
   return NextResponse.json({
     roles: ROLES_RATES,
     clientSizes: CLIENT_SIZE_MODIFIERS,
@@ -24,9 +27,10 @@ export async function GET() {
     teamSizeFactor: TEAM_SIZE_FACTOR,
     loyaltyDiscountFactor: LOYALTY_DISCOUNT_FACTOR,
   });
-}
+});
 
-export async function POST(request: Request) {
+export const POST = withAuth(async (request, { actor }) => {
+  assert(canUseNegociosTools(actor), 'O motor de precificação é exclusivo de Negócios e da Presidência.');
   try {
     const body = await request.json();
     const { projeto, servicos, custos_extras, createCard, assigneeId } = body;
@@ -73,14 +77,8 @@ export async function POST(request: Request) {
 
     if (createCard) {
       // Find pipe and either "Proposta" phase or first phase
-      const pipe = await prisma.pipe.findFirst({
-        include: {
-          phases: {
-            orderBy: { order: 'asc' },
-            include: { fields: true },
-          },
-        },
-      });
+      if (assigneeId) await assertActiveUser(assigneeId);
+      const pipe = await findSalesPipe();
 
       if (pipe && pipe.phases.length > 0) {
         // Prefer "Proposta" phase, otherwise first phase
@@ -130,7 +128,7 @@ export async function POST(request: Request) {
               create: {
                 type: 'CARD_CREATED',
                 description: `Card gerado automaticamente pelo Motor de Precificação SciTec jr. (Valor: R$ ${result.preco_final.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})`,
-                userId: assigneeId || null,
+                userId: actor.id,
                 metadata: JSON.stringify({
                   source: 'PRICING_ENGINE',
                   preco_final: result.preco_final,
@@ -153,10 +151,11 @@ export async function POST(request: Request) {
       card: createdCard,
     });
   } catch (error: any) {
+    if (error instanceof ApiError) throw error;
     console.error('Error calculating project pricing:', error);
     return NextResponse.json(
       { error: 'Erro ao calcular a precificação do projeto.' },
       { status: 500 }
     );
   }
-}
+});

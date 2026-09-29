@@ -1,89 +1,42 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { createCardSchema } from '@/lib/validations';
+import { withAuth, assert } from '@/lib/api';
+import { canEditUnit } from '@/lib/permissions';
+import { assertActiveUser, phaseContext } from '@/lib/units';
+import { cardFullInclude, upsertCardFieldValues } from '@/lib/cards';
 
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const validated = createCardSchema.parse(body);
+export const POST = withAuth(async (request, { actor }) => {
+  const validated = createCardSchema.parse(await request.json());
 
-    // Get max order in the phase
-    const lastCard = await prisma.card.findFirst({
-      where: { phaseId: validated.phaseId },
-      orderBy: { order: 'desc' },
-    });
-    const newOrder = lastCard ? lastCard.order + 1 : 0;
+  const { phase, unitCode } = await phaseContext(validated.phaseId);
+  assert(canEditUnit(actor, unitCode), 'Você não participa da unidade deste funil.');
+  if (validated.assigneeId) await assertActiveUser(validated.assigneeId);
 
-    const phase = await prisma.phase.findUnique({
-      where: { id: validated.phaseId },
-    });
+  const lastCard = await prisma.card.findFirst({
+    where: { phaseId: phase.id },
+    orderBy: { order: 'desc' },
+  });
 
-    const card = await prisma.card.create({
-      data: {
-        title: validated.title,
-        description: validated.description,
-        phaseId: validated.phaseId,
-        assigneeId: validated.assigneeId || null,
-        order: newOrder,
-        activities: {
-          create: {
-            type: 'CARD_CREATED',
-            description: `Card "${validated.title}" criado na fase ${phase?.name || 'Prospecção'}.`,
-            userId: validated.assigneeId || null,
-          },
+  const card = await prisma.card.create({
+    data: {
+      title: validated.title,
+      description: validated.description,
+      phaseId: phase.id,
+      assigneeId: validated.assigneeId || null,
+      order: lastCard ? lastCard.order + 1 : 0,
+      activities: {
+        create: {
+          type: 'CARD_CREATED',
+          description: `Card "${validated.title}" criado na fase ${phase.name}.`,
+          userId: actor.id,
         },
       },
-      include: {
-        phase: true,
-        assignee: true,
-        values: { include: { field: true } },
-        activities: { orderBy: { createdAt: 'desc' }, include: { user: true } },
-      },
-    });
+    },
+  });
 
-    // Save field values if provided
-    if (validated.fieldValues && Object.keys(validated.fieldValues).length > 0) {
-      for (const [fieldId, val] of Object.entries(validated.fieldValues)) {
-        if (val !== undefined && val !== null) {
-          await prisma.cardFieldValue.upsert({
-            where: {
-              cardId_fieldId: {
-                cardId: card.id,
-                fieldId,
-              },
-            },
-            create: {
-              cardId: card.id,
-              fieldId,
-              value: String(val),
-            },
-            update: {
-              value: String(val),
-            },
-          });
-        }
-      }
-    }
+  await upsertCardFieldValues(card.id, phase.pipeId, validated.fieldValues);
 
-    const updatedCard = await prisma.card.findUnique({
-      where: { id: card.id },
-      include: {
-        phase: true,
-        assignee: true,
-        values: { include: { field: true } },
-        activities: { orderBy: { createdAt: 'desc' }, include: { user: true } },
-      },
-    });
-
-    return NextResponse.json(updatedCard, { status: 201 });
-  } catch (error: any) {
-    if (error.name === 'ZodError') {
-      return NextResponse.json(
-        { error: 'Dados inválidos.', details: error.errors },
-        { status: 400 }
-      );
-    }
-    console.error('Error creating card:', error);
-    return NextResponse.json({ error: 'Erro ao criar o card.' }, { status: 500 });
-  }
-}
+  const full = await prisma.card.findUnique({ where: { id: card.id }, include: cardFullInclude });
+  return NextResponse.json(full, { status: 201 });
+});

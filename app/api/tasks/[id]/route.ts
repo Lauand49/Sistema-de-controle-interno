@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
-import { prisma } from '@/lib/prisma';
 import { z } from 'zod';
+import { prisma } from '@/lib/prisma';
+import { withAuth, assert, notFound } from '@/lib/api';
+import { canEditTask } from '@/lib/permissions';
+import { assertActiveUser, serializeTask } from '@/lib/units';
 
 const updateTaskSchema = z.object({
   title: z.string().min(1).optional(),
@@ -13,56 +16,46 @@ const updateTaskSchema = z.object({
   cardId: z.string().optional().nullable(),
 });
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const body = await request.json();
-    const validated = updateTaskSchema.parse(body);
+type Params = { id: string };
 
-    const dataToUpdate: any = {};
-    if (validated.title !== undefined) dataToUpdate.title = validated.title;
-    if (validated.description !== undefined) dataToUpdate.description = validated.description;
-    if (validated.status !== undefined) dataToUpdate.status = validated.status;
-    if (validated.priority !== undefined) dataToUpdate.priority = validated.priority;
-    if (validated.dueDate !== undefined) {
-      dataToUpdate.dueDate = validated.dueDate ? new Date(validated.dueDate) : null;
-    }
-    if (validated.assigneeId !== undefined) dataToUpdate.assigneeId = validated.assigneeId;
-    if (validated.leadId !== undefined) dataToUpdate.leadId = validated.leadId;
-    if (validated.cardId !== undefined) dataToUpdate.cardId = validated.cardId;
-
-    const updatedTask = await prisma.task.update({
-      where: { id: params.id },
-      data: dataToUpdate,
-      include: {
-        assignee: true,
-      },
-    });
-
-    return NextResponse.json(updatedTask);
-  } catch (error: any) {
-    if (error instanceof z.ZodError) {
-      return NextResponse.json({ error: error.errors[0].message }, { status: 400 });
-    }
-    console.error('Error updating task:', error);
-    return NextResponse.json({ error: 'Erro ao atualizar tarefa.' }, { status: 500 });
-  }
+async function loadTask(id: string) {
+  const task = await prisma.task.findUnique({
+    where: { id },
+    select: { assigneeId: true, unit: { select: { code: true } } },
+  });
+  if (!task) throw notFound('Tarefa não encontrada.');
+  return { assigneeId: task.assigneeId, unitCode: task.unit?.code ?? null };
 }
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    await prisma.task.delete({
-      where: { id: params.id },
-    });
+export const PATCH = withAuth<Params>(async (request, { params, actor }) => {
+  const validated = updateTaskSchema.parse(await request.json());
+  const current = await loadTask(params.id);
+  assert(canEditTask(actor, current), 'Você não pode editar esta tarefa.');
+  if (validated.assigneeId) await assertActiveUser(validated.assigneeId);
 
-    return NextResponse.json({ success: true, message: 'Tarefa excluída com sucesso.' });
-  } catch (error: any) {
-    console.error('Error deleting task:', error);
-    return NextResponse.json({ error: 'Erro ao excluir tarefa.' }, { status: 500 });
+  const data: Record<string, unknown> = {};
+  if (validated.title !== undefined) data.title = validated.title;
+  if (validated.description !== undefined) data.description = validated.description;
+  if (validated.status !== undefined) data.status = validated.status;
+  if (validated.priority !== undefined) data.priority = validated.priority;
+  if (validated.dueDate !== undefined) {
+    data.dueDate = validated.dueDate ? new Date(validated.dueDate) : null;
   }
-}
+  if (validated.assigneeId !== undefined) data.assigneeId = validated.assigneeId;
+  if (validated.leadId !== undefined) data.leadId = validated.leadId;
+  if (validated.cardId !== undefined) data.cardId = validated.cardId;
+
+  const task = await prisma.task.update({
+    where: { id: params.id },
+    data,
+    include: { assignee: true, unit: { select: { code: true } } },
+  });
+  return NextResponse.json(serializeTask(task));
+});
+
+export const DELETE = withAuth<Params>(async (_req, { params, actor }) => {
+  const current = await loadTask(params.id);
+  assert(canEditTask(actor, current), 'Você não pode excluir esta tarefa.');
+  await prisma.task.delete({ where: { id: params.id } });
+  return NextResponse.json({ success: true, message: 'Tarefa excluída com sucesso.' });
+});

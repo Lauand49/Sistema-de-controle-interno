@@ -1,160 +1,123 @@
 import { NextResponse } from 'next/server';
+import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
+import { withAuth, assert, badRequest } from '@/lib/api';
+import { canUseNegociosTools } from '@/lib/permissions';
+import { parseLeadStatus } from '@/lib/leads/guards';
 
-export async function GET(request: Request) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const statusParam = searchParams.get('status');
-    const segmentParam = searchParams.get('segment');
-    const queryParam = searchParams.get('q');
+const NO_ACCESS = 'As ferramentas de leads são exclusivas de Negócios e da Presidência.';
 
-    const whereClause: any = {};
+export const GET = withAuth(async (request, { actor }) => {
+  assert(canUseNegociosTools(actor), NO_ACCESS);
 
-    if (statusParam && statusParam !== 'ALL') {
-      whereClause.status = statusParam;
-    }
+  const { searchParams } = new URL(request.url);
+  const statusParam = searchParams.get('status');
+  const segmentParam = searchParams.get('segment');
+  const queryParam = searchParams.get('q');
 
-    if (segmentParam && segmentParam !== 'ALL') {
-      whereClause.segment = segmentParam;
-    }
-
-    if (queryParam) {
-      whereClause.OR = [
-        { companyName: { contains: queryParam } },
-        { contactName: { contains: queryParam } },
-        { contactInfo: { contains: queryParam } },
-        { actionPlan: { contains: queryParam } },
-        { notes: { contains: queryParam } },
-      ];
-    }
-
-    const leads = await prisma.prospectLead.findMany({
-      where: whereClause,
-      include: {
-        assignedUser: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    });
-
-    // Lookup linked Cards to give real-time Funnel Phase information
-    const pipeCardIds = leads
-      .map((l) => l.pipeCardId)
-      .filter((id): id is string => Boolean(id));
-
-    let cardsMap = new Map<
-      string,
-      {
-        id: string;
-        title: string;
-        phaseId: string;
-        phaseName: string;
-        phaseColor: string | null;
-        meetingDate?: string | null;
-        assigneeName?: string | null;
-      }
-    >();
-
-    if (pipeCardIds.length > 0) {
-      const cards = await prisma.card.findMany({
-        where: { id: { in: pipeCardIds } },
-        include: {
-          phase: true,
-          assignee: true,
-          values: {
-            include: { field: true },
-          },
-        },
-      });
-
-      for (const c of cards) {
-        const meetingVal = c.values?.find((v) => v.field.name === 'meeting_date')?.value || null;
-        cardsMap.set(c.id, {
-          id: c.id,
-          title: c.title,
-          phaseId: c.phaseId,
-          phaseName: c.phase.name,
-          phaseColor: c.phase.color,
-          meetingDate: meetingVal,
-          assigneeName: c.assignee?.name || null,
-        });
-      }
-    }
-
-    // Attach pipeCard details to each lead
-    const enrichedLeads = leads.map((lead) => {
-      const cardInfo = lead.pipeCardId ? cardsMap.get(lead.pipeCardId) || null : null;
-      return {
-        ...lead,
-        pipeCard: cardInfo,
-      };
-    });
-
-    // Compute stats
-    const allLeads = await prisma.prospectLead.findMany({
-      select: { status: true },
-    });
-
-    const stats = {
-      total: allLeads.length,
-      raw: allLeads.filter((l) => l.status === 'RAW').length,
-      pending: allLeads.filter((l) => l.status === 'PENDING').length,
-      inProgress: allLeads.filter((l) => l.status === 'IN_PROGRESS').length,
-      converted: allLeads.filter((l) => l.status === 'CONVERTED_TO_PIPE').length,
-      discarded: allLeads.filter((l) => l.status === 'DISCARDED').length,
-    };
-
-    return NextResponse.json({ leads: enrichedLeads, stats });
-  } catch (error: any) {
-    console.error('Error fetching prospect leads:', error);
-    return NextResponse.json({ error: 'Erro ao buscar lista de leads.' }, { status: 500 });
+  const where: Prisma.ProspectLeadWhereInput = {};
+  if (statusParam && statusParam !== 'ALL') where.status = statusParam;
+  if (segmentParam && segmentParam !== 'ALL') where.segment = segmentParam;
+  if (queryParam) {
+    where.OR = [
+      { companyName: { contains: queryParam, mode: 'insensitive' } },
+      { contactName: { contains: queryParam, mode: 'insensitive' } },
+      { contactInfo: { contains: queryParam, mode: 'insensitive' } },
+      { actionPlan: { contains: queryParam, mode: 'insensitive' } },
+      { notes: { contains: queryParam, mode: 'insensitive' } },
+    ];
   }
-}
 
-export async function POST(request: Request) {
-  try {
-    const body = await request.json();
-    const { leads, batchId, defaultStatus } = body;
+  const leads = await prisma.prospectLead.findMany({
+    where,
+    include: { assignedUser: true },
+    orderBy: { createdAt: 'desc' },
+  });
 
-    if (!Array.isArray(leads) || leads.length === 0) {
-      return NextResponse.json(
-        { error: 'Nenhum lead válido fornecido para importação.' },
-        { status: 400 }
-      );
+  // Fase atual do card vinculado (tempo real)
+  const pipeCardIds = leads.map((l) => l.pipeCardId).filter((id): id is string => Boolean(id));
+  const cardsMap = new Map<
+    string,
+    {
+      id: string;
+      title: string;
+      phaseId: string;
+      phaseName: string;
+      phaseColor: string | null;
+      meetingDate?: string | null;
+      assigneeName?: string | null;
     }
+  >();
 
-    const createdBatchId = batchId || `lote_${Date.now()}`;
-    const initialStatus = defaultStatus || 'PENDING';
-    const createdLeads = [];
-
-    for (const item of leads) {
-      if (!item.companyName || !item.companyName.trim()) continue;
-
-      const lead = await prisma.prospectLead.create({
-        data: {
-          companyName: item.companyName.trim(),
-          contactName: item.contactName?.trim() || null,
-          contactInfo: item.contactInfo?.trim() || null,
-          actionPlan: item.actionPlan?.trim() || 'Aguardando definição de abordagem comercial',
-          notes: item.notes?.trim() || null,
-          segment: item.segment?.trim() || null,
-          status: item.status || initialStatus,
-          batchId: createdBatchId,
-        },
+  if (pipeCardIds.length > 0) {
+    const cards = await prisma.card.findMany({
+      where: { id: { in: pipeCardIds } },
+      include: { phase: true, assignee: true, values: { include: { field: true } } },
+    });
+    for (const c of cards) {
+      cardsMap.set(c.id, {
+        id: c.id,
+        title: c.title,
+        phaseId: c.phaseId,
+        phaseName: c.phase.name,
+        phaseColor: c.phase.color,
+        meetingDate: c.values?.find((v) => v.field.name === 'meeting_date')?.value || null,
+        assigneeName: c.assignee?.name || null,
       });
-      createdLeads.push(lead);
     }
-
-    return NextResponse.json(
-      {
-        success: true,
-        count: createdLeads.length,
-        batchId: createdBatchId,
-        leads: createdLeads,
-      },
-      { status: 201 }
-    );
-  } catch (error: any) {
-    console.error('Error batch importing leads:', error);
-    return NextResponse.json({ error: 'Erro ao salvar lote de leads.' }, { status: 500 });
   }
-}
+
+  const enrichedLeads = leads.map((lead) => ({
+    ...lead,
+    pipeCard: lead.pipeCardId ? cardsMap.get(lead.pipeCardId) || null : null,
+  }));
+
+  const grouped = await prisma.prospectLead.groupBy({ by: ['status'], _count: { _all: true } });
+  const count = (s: string) => grouped.find((g) => g.status === s)?._count._all ?? 0;
+  const stats = {
+    total: grouped.reduce((acc, g) => acc + g._count._all, 0),
+    raw: count('RAW'),
+    pending: count('PENDING'),
+    inProgress: count('IN_PROGRESS'),
+    converted: count('CONVERTED_TO_PIPE'),
+    discarded: count('DISCARDED'),
+  };
+
+  return NextResponse.json({ leads: enrichedLeads, stats });
+});
+
+export const POST = withAuth(async (request, { actor }) => {
+  assert(canUseNegociosTools(actor), NO_ACCESS);
+
+  const { leads, batchId, defaultStatus } = await request.json();
+  if (!Array.isArray(leads) || leads.length === 0) {
+    throw badRequest('Nenhum lead válido fornecido para importação.');
+  }
+
+  // Importação só cria leads nas etapas iniciais (sem responsável).
+  const initialStatus = parseLeadStatus(defaultStatus || 'PENDING');
+  if (initialStatus !== 'RAW' && initialStatus !== 'PENDING') {
+    throw badRequest('Leads importados devem entrar como RAW ou PENDING.');
+  }
+
+  const createdBatchId = batchId || `lote_${Date.now()}`;
+  const data = leads
+    .filter((item: any) => typeof item?.companyName === 'string' && item.companyName.trim())
+    .map((item: any) => ({
+      companyName: item.companyName.trim(),
+      contactName: item.contactName?.trim() || null,
+      contactInfo: item.contactInfo?.trim() || null,
+      actionPlan: item.actionPlan?.trim() || 'Aguardando definição de abordagem comercial',
+      notes: item.notes?.trim() || null,
+      segment: item.segment?.trim() || null,
+      status: initialStatus,
+      batchId: createdBatchId,
+    }));
+
+  const createdLeads = await prisma.$transaction(data.map((d) => prisma.prospectLead.create({ data: d })));
+
+  return NextResponse.json(
+    { success: true, count: createdLeads.length, batchId: createdBatchId, leads: createdLeads },
+    { status: 201 }
+  );
+});
