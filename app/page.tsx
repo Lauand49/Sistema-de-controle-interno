@@ -341,13 +341,13 @@ export default function HomeDashboard() {
           </Link>
 
           {(() => {
-            const userDept = currentProfile?.primaryDept?.toUpperCase();
-            const isSectorUser = userDept && userDept !== 'GLOBAL';
-            const toolsHref = isSectorUser ? `/setores/${userDept.toLowerCase()}?tab=TOOLS` : '/tools';
+            const userDept = currentProfile?.departmentCode ?? null;
+            const isSectorUser = Boolean(userDept);
+            const toolsHref = userDept ? `/setores/${userDept.toLowerCase()}?tab=TOOLS` : '/tools';
             const sectorName =
               userDept === 'NEGOCIOS'
                 ? 'Negócios'
-                : userDept === 'ADMJUR'
+                : userDept === 'ADMJURFIN'
                 ? 'AdmJurFin'
                 : userDept === 'MIDIAS'
                 ? 'Mídias'

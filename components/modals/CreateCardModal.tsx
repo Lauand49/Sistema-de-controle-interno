@@ -133,7 +133,7 @@ export const CreateCardModal: React.FC<CreateCardModalProps> = ({
                 <option value="">Selecione um consultor</option>
                 {users.map((u) => (
                   <option key={u.id} value={u.id}>
-                    {u.name} ({u.role})
+                    {u.name} ({u.title})
                   </option>
                 ))}
               </select>

@@ -1,9 +1,12 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
+import { withAuth, assert } from '@/lib/api';
+import { canAccessFinance } from '@/lib/permissions';
 
 export const dynamic = 'force-dynamic';
 
-export async function GET() {
+export const GET = withAuth(async (_req, { actor }) => {
+  assert(canAccessFinance(actor), 'Acesso restrito a AdmJurFin e Presidência.');
   try {
     const transactions = await prisma.financialTransaction.findMany({
       orderBy: { createdAt: 'desc' },
@@ -49,9 +52,10 @@ export async function GET() {
       { status: 500 }
     );
   }
-}
+});
 
-export async function POST(request: Request) {
+export const POST = withAuth(async (request, { actor }) => {
+  assert(canAccessFinance(actor), 'Acesso restrito a AdmJurFin e Presidência.');
   try {
     const body = await request.json();
     const {
@@ -99,4 +103,4 @@ export async function POST(request: Request) {
       { status: 500 }
     );
   }
-}
+});

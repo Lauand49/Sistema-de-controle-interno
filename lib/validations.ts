@@ -28,6 +28,7 @@ export const moveCardSchema = z.object({
   targetPhaseId: z.string().min(1, 'A fase destino é obrigatória.'),
   newOrder: z.number().int().optional(),
   fieldValues: z.record(z.string(), z.any()).optional(),
+  /** Ignorado: o autor da movimentação vem sempre da sessão. */
   userId: z.string().optional(),
 });
 

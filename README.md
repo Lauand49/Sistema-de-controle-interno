@@ -28,11 +28,14 @@ O sistema atende as 4 diretorias da Empresa Júnior em um ambiente unificado, co
 
 ---
 
-## 🔐 Hierarquia de Cargos & Permissões
+## 🔐 Acesso, Hierarquia & Permissões
 
-- **Presidente:** Visão global e controle total sobre todos os setores, chamados, membros e ferramentas.
-- **Gerentes:** Gestão de processos, atribuição de cards/leads e aprovações do seu respectivo setor.
-- **Assessores:** Execução focada com permissões de alteração restritas ao seu setor de atuação, mantendo visualização institucional segura.
+- **Login somente com Google Workspace `@scitecjr.com`** (Auth.js). O domínio é verificado no servidor (`email_verified` + claim `hd` + sufixo do e-mail); o parâmetro `hd` do Google é só uma dica visual.
+- **Primeiro acesso = PENDENTE**: a pessoa só vê "Aguardando aprovação" até um Gerente de Departamento (ou a Presidência) aprová-la no seu departamento. E-mails em `ADMIN_EMAILS` entram direto como Presidente.
+- **Estrutura**: cada pessoa pertence a **um departamento** (Negócios, AdmJurFin, Gente, Mídias) e pode participar de **vários setores** (Tecnologia e Software, Engenharia e Inovação, Design e Concepção, Ciência e Consultoria, Dados e Inteligência).
+- **Tipos**: Presidente, Vice-presidente, Gerente de Departamento, Gerente de Setor e Assessor. Um gerente por departamento e um por setor (garantido no banco).
+- **Permissões verificadas no servidor em todas as APIs**. A matriz vive em um único arquivo, `lib/permissions.ts`, usado pelo servidor e pela interface.
+- Mudanças de cargo/vínculo/status ficam no **AuditLog** (Equipe → Auditoria). Contas saem por desativação, não exclusão.
 
 ---
 
@@ -41,7 +44,8 @@ O sistema atende as 4 diretorias da Empresa Júnior em um ambiente unificado, co
 - **Framework:** [Next.js 14](https://nextjs.org/) (App Router, Server Components & Route Handlers)
 - **Linguagem:** [TypeScript](https://www.typescriptlang.org/)
 - **Estilização:** [Tailwind CSS](https://tailwindcss.com/)
-- **Banco de Dados & ORM:** [Prisma ORM](https://www.prisma.io/) com SQLite
+- **Banco de Dados & ORM:** [Prisma ORM](https://www.prisma.io/) com PostgreSQL (Neon em produção)
+- **Autenticação:** [Auth.js](https://authjs.dev/) (NextAuth v5) com Google
 - **Drag & Drop:** [@dnd-kit](https://dndkit.com/)
 - **Ícones & UI:** [Lucide React](https://lucide.dev/), [Sonner](https://sonner.emilkowal.ski/)
 - **Planilhas:** [XLSX (SheetJS)](https://sheetjs.com/)
@@ -61,26 +65,29 @@ cd scitec-jr-os
 npm install
 ```
 
-### 3. Configurar variáveis de ambiente
-Crie um arquivo `.env` na raiz do projeto (ou copie do exemplo):
+### 3. Subir um Postgres local
+Qualquer Postgres 14+ serve. Exemplo com Homebrew (macOS):
+```bash
+brew install postgresql@16
+brew services start postgresql@16
+/opt/homebrew/opt/postgresql@16/bin/createdb scitec_dev
+```
+
+### 4. Configurar variáveis de ambiente
 ```bash
 cp .env.example .env
 ```
-O conteúdo padrão será:
-```env
-DATABASE_URL="file:./dev.db"
-```
+Preencha `DATABASE_URL` e `AUTH_SECRET` (`npx auth secret`). Para testar sem Google, use `DEV_LOGIN="true"`: no modo desenvolvimento aparece um login que aceita qualquer e-mail `@scitecjr.com` sem senha. Ele não existe no build de produção.
 
-### 4. Inicializar o banco de dados e popular dados iniciais
+### 5. Criar as tabelas e popular dados de exemplo
 ```bash
-# Aplica o schema Prisma no SQLite
-npx prisma db push
-
-# Popula o banco com os dados e membros da hierarquia SciTec jr.
-npm run db:seed
+npm run db:setup   # prisma migrate deploy + seed
 ```
+O seed cria o Presidente de referência (`joao.vaz@scitecjr.com`), uma Vice, gerentes, assessores e um usuário pendente.
 
-### 5. Iniciar o servidor de desenvolvimento
+> Mudou o `schema.prisma`? Gere a migração com `npm run db:migrate:dev -- --name descricao` e confira se o SQL não remove os índices parciais `User_one_manager_per_department` e `SectorMember_one_manager_per_sector` (ver comentário no topo do schema).
+
+### 6. Iniciar o servidor de desenvolvimento
 ```bash
 npm run dev
 ```
@@ -95,8 +102,10 @@ Acesse no navegador: **[http://localhost:3000](http://localhost:3000)**
 - `npm run build`: Gera o build otimizado de produção.
 - `npm run start`: Executa o servidor compilado em produção.
 - `npm run prisma:generate`: Regenera os tipos do Prisma Client.
-- `npm run prisma:push`: Sincroniza o schema com o banco de dados.
-- `npm run db:seed`: Popula pipes, usuários e cargos iniciais.
+- `npm run db:migrate`: Aplica as migrações pendentes (`prisma migrate deploy`).
+- `npm run db:migrate:dev`: Cria uma nova migração a partir do schema.
+- `npm run db:seed`: Recria os dados de exemplo (apaga os dados atuais).
+- `npm run db:setup`: Migrações + seed.
 
 ---
 

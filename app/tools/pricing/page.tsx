@@ -997,7 +997,7 @@ SciTec jr. - Consultoria & Engenharia em Computação
                         <option value="">Responsável Comercial (Opcional)</option>
                         {profiles.map((user) => (
                           <option key={user.id} value={user.id}>
-                            {user.name} ({user.role})
+                            {user.name} ({user.title})
                           </option>
                         ))}
                       </select>

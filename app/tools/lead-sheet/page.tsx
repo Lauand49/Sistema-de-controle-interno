@@ -40,6 +40,7 @@ import {
   Lock,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { canAssignLeads, canBeLeadAssignee, canUseNegociosTools } from '@/lib/permissions';
 
 type TabType = 'TRIAGE' | 'MEETING';
 
@@ -65,22 +66,20 @@ export default function LeadSheetPage() {
   const { currentProfile } = useProfile();
 
   // Permission: Only Negócios members and President can manage leads
-  const isPresident =
-    currentProfile?.role?.toUpperCase() === 'PRESIDENTE' ||
-    currentProfile?.primaryDept === 'GLOBAL';
-  const isNegociosMember =
-    currentProfile?.primaryDept?.toUpperCase() === 'NEGOCIOS';
-  const canManageLeads = Boolean(currentProfile && (isPresident || isNegociosMember));
+  const canManageLeads = canUseNegociosTools(currentProfile);
+  const canAssign = canAssignLeads(currentProfile);
 
   const [leads, setLeads] = useState<ProspectLead[]>([]);
   const [users, setUsers] = useState<User[]>([]);
 
-  // Users who can be assigned leads (Negócios + Presidência)
-  const negociosUsers = users.filter((u) => u.primaryDept?.toUpperCase() === 'NEGOCIOS');
-  const presidenciaUsers = users.filter(
-    (u) => u.role?.toUpperCase() === 'PRESIDENTE' && u.primaryDept?.toUpperCase() !== 'NEGOCIOS'
-  );
-  const eligibleAssignees = [...negociosUsers, ...presidenciaUsers];
+  // Responsáveis possíveis: Negócios + Presidência (lib/permissions: canBeLeadAssignee)
+  const negociosUsers = users.filter((u) => canBeLeadAssignee(u) && u.departmentCode === 'NEGOCIOS');
+  const presidenciaUsers = users.filter((u) => canBeLeadAssignee(u) && u.globalRole !== null);
+  // Quem não pode atribuir só assume leads sem dono ou libera os seus (o servidor valida de novo).
+  const canChangeAssignee = (lead: ProspectLead) =>
+    canManageLeads && (canAssign || !lead.assignedTo || lead.assignedTo === currentProfile?.id);
+  const assignOptionsFor = (lead: ProspectLead, list: User[]) =>
+    canAssign ? list : list.filter((u) => u.id === currentProfile?.id || u.id === lead.assignedTo);
   const [activeTab, setActiveTab] = useState<TabType>('TRIAGE');
   const [showDiscardedDrawer, setShowDiscardedDrawer] = useState<boolean>(false);
   const [stats, setStats] = useState({
@@ -151,7 +150,9 @@ export default function LeadSheetPage() {
 
   useEffect(() => {
     fetchData();
-  }, [statusFilter, searchQuery]);
+  // canManageLeads: recarrega quando o perfil chega depois do primeiro render (F5)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter, searchQuery, canManageLeads]);
 
   // Handle Excel File Drop / Upload
   const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -868,20 +869,21 @@ export default function LeadSheetPage() {
                                 const val = e.target.value || null;
                                 handleUpdateLead(lead.id, { assignedTo: val });
                               }}
-                              disabled={!canManageLeads}
+                              disabled={!canChangeAssignee(lead)}
+                              aria-label={`Responsável por ${lead.companyName}`}
                               className="w-full text-xs font-semibold px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-200 focus:ring-1 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               <option value="">Não atribuído</option>
                               <optgroup label="Equipe de Negócios">
-                                {negociosUsers.map((u) => (
+                                {assignOptionsFor(lead, negociosUsers).map((u) => (
                                   <option key={u.id} value={u.id}>
                                     {u.name} ({getUserCargoTitle(u)})
                                   </option>
                                 ))}
                               </optgroup>
-                              {presidenciaUsers.length > 0 && (
+                              {assignOptionsFor(lead, presidenciaUsers).length > 0 && (
                                 <optgroup label="Presidência">
-                                  {presidenciaUsers.map((u) => (
+                                  {assignOptionsFor(lead, presidenciaUsers).map((u) => (
                                     <option key={u.id} value={u.id}>
                                       {u.name} ({getUserCargoTitle(u)})
                                     </option>

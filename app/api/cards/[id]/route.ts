@@ -1,143 +1,63 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { updateCardSchema } from '@/lib/validations';
+import { withAuth, assert, notFound } from '@/lib/api';
+import { canEditUnit, canViewUnit } from '@/lib/permissions';
+import { assertActiveUser } from '@/lib/units';
+import { cardFullInclude, upsertCardFieldValues } from '@/lib/cards';
 
-export async function GET(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const card = await prisma.card.findUnique({
-      where: { id: params.id },
-      include: {
-        phase: {
-          include: {
-            fields: { orderBy: { order: 'asc' } },
-          },
-        },
-        assignee: true,
-        values: { include: { field: true } },
-        activities: {
-          orderBy: { createdAt: 'desc' },
-          include: { user: true },
-        },
-      },
-    });
+type Params = { id: string };
 
-    if (!card) {
-      return NextResponse.json({ error: 'Card não encontrado.' }, { status: 404 });
-    }
-
-    return NextResponse.json(card);
-  } catch (error: any) {
-    console.error('Error fetching card:', error);
-    return NextResponse.json({ error: 'Erro ao buscar o card.' }, { status: 500 });
-  }
+async function loadCard(id: string) {
+  const card = await prisma.card.findUnique({
+    where: { id },
+    include: { phase: { select: { pipeId: true, pipe: { select: { unit: { select: { code: true } } } } } } },
+  });
+  if (!card) throw notFound('Card não encontrado.');
+  return { card, unitCode: card.phase.pipe.unit.code, pipeId: card.phase.pipeId };
 }
 
-export async function PATCH(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    const body = await request.json();
-    const validated = updateCardSchema.parse(body);
+export const GET = withAuth<Params>(async (_req, { params, actor }) => {
+  const { unitCode } = await loadCard(params.id);
+  assert(canViewUnit(actor, unitCode));
+  const card = await prisma.card.findUnique({ where: { id: params.id }, include: cardFullInclude });
+  return NextResponse.json(card);
+});
 
-    const existingCard = await prisma.card.findUnique({
-      where: { id: params.id },
-      include: { values: true },
-    });
+export const PATCH = withAuth<Params>(async (request, { params, actor }) => {
+  const validated = updateCardSchema.parse(await request.json());
+  const { unitCode, pipeId } = await loadCard(params.id);
+  assert(canEditUnit(actor, unitCode), 'Você não participa da unidade deste funil.');
+  if (validated.assigneeId) await assertActiveUser(validated.assigneeId);
 
-    if (!existingCard) {
-      return NextResponse.json({ error: 'Card não encontrado.' }, { status: 404 });
-    }
+  await prisma.card.update({
+    where: { id: params.id },
+    data: {
+      ...(validated.title ? { title: validated.title } : {}),
+      ...(validated.description !== undefined ? { description: validated.description } : {}),
+      ...(validated.assigneeId !== undefined ? { assigneeId: validated.assigneeId } : {}),
+    },
+  });
 
-    // Update basic card properties
-    await prisma.card.update({
-      where: { id: params.id },
+  const updatedLabels = await upsertCardFieldValues(params.id, pipeId, validated.fieldValues);
+  if (updatedLabels.length > 0) {
+    await prisma.cardActivity.create({
       data: {
-        ...(validated.title ? { title: validated.title } : {}),
-        ...(validated.description !== undefined ? { description: validated.description } : {}),
-        ...(validated.assigneeId !== undefined ? { assigneeId: validated.assigneeId } : {}),
+        cardId: params.id,
+        userId: actor.id,
+        type: 'FIELD_UPDATED',
+        description: `Campos atualizados: ${updatedLabels.join(', ')}.`,
       },
     });
-
-    // Update field values
-    if (validated.fieldValues && Object.keys(validated.fieldValues).length > 0) {
-      let updatedFieldNames: string[] = [];
-
-      for (const [fieldId, val] of Object.entries(validated.fieldValues)) {
-        if (val !== undefined && val !== null) {
-          await prisma.cardFieldValue.upsert({
-            where: {
-              cardId_fieldId: {
-                cardId: params.id,
-                fieldId,
-              },
-            },
-            create: {
-              cardId: params.id,
-              fieldId,
-              value: String(val),
-            },
-            update: {
-              value: String(val),
-            },
-          });
-
-          const f = await prisma.field.findUnique({ where: { id: fieldId } });
-          if (f) updatedFieldNames.push(f.label);
-        }
-      }
-
-      if (updatedFieldNames.length > 0) {
-        await prisma.cardActivity.create({
-          data: {
-            cardId: params.id,
-            type: 'FIELD_UPDATED',
-            description: `Campos atualizados: ${updatedFieldNames.join(', ')}.`,
-          },
-        });
-      }
-    }
-
-    const updatedCard = await prisma.card.findUnique({
-      where: { id: params.id },
-      include: {
-        phase: {
-          include: { fields: { orderBy: { order: 'asc' } } },
-        },
-        assignee: true,
-        values: { include: { field: true } },
-        activities: { orderBy: { createdAt: 'desc' }, include: { user: true } },
-      },
-    });
-
-    return NextResponse.json(updatedCard);
-  } catch (error: any) {
-    if (error.name === 'ZodError') {
-      return NextResponse.json(
-        { error: 'Dados inválidos.', details: error.errors },
-        { status: 400 }
-      );
-    }
-    console.error('Error updating card:', error);
-    return NextResponse.json({ error: 'Erro ao atualizar o card.' }, { status: 500 });
   }
-}
 
-export async function DELETE(
-  request: Request,
-  { params }: { params: { id: string } }
-) {
-  try {
-    await prisma.card.delete({
-      where: { id: params.id },
-    });
+  const card = await prisma.card.findUnique({ where: { id: params.id }, include: cardFullInclude });
+  return NextResponse.json(card);
+});
 
-    return NextResponse.json({ success: true, message: 'Card excluído com sucesso.' });
-  } catch (error: any) {
-    console.error('Error deleting card:', error);
-    return NextResponse.json({ error: 'Erro ao excluir o card.' }, { status: 500 });
-  }
-}
+export const DELETE = withAuth<Params>(async (_req, { params, actor }) => {
+  const { unitCode } = await loadCard(params.id);
+  assert(canEditUnit(actor, unitCode), 'Você não participa da unidade deste funil.');
+  await prisma.card.delete({ where: { id: params.id } });
+  return NextResponse.json({ success: true, message: 'Card excluído com sucesso.' });
+});

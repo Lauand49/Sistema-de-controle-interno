@@ -230,7 +230,7 @@ export const CardDetailModal: React.FC<CardDetailModalProps> = ({
                   <option value="">Nenhum</option>
                   {users.map((u) => (
                     <option key={u.id} value={u.id}>
-                      {u.name} ({u.role})
+                      {u.name} ({u.title})
                     </option>
                   ))}
                 </select>

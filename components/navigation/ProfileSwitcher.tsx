@@ -3,7 +3,8 @@
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useProfile } from '@/contexts/ProfileContext';
-import { ChevronDown, Users, LogOut, CheckSquare, LogIn, Crown, Briefcase, Layers } from 'lucide-react';
+import { ChevronDown, Users, LogOut, CheckSquare, LogIn } from 'lucide-react';
+import { PersonTypeBadge } from '@/components/ui/PersonTypeBadge';
 import { getUserCargoTitle } from '@/types';
 import { toast } from 'sonner';
 
@@ -44,30 +45,6 @@ export const ProfileSwitcher: React.FC = () => {
     );
   }
 
-  const getRoleBadge = (role: string) => {
-    switch (role?.toUpperCase()) {
-      case 'PRESIDENTE':
-        return (
-          <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/50">
-            <Crown className="w-3 h-3 text-amber-400" /> Presidente
-          </span>
-        );
-      case 'GERENTE':
-        return (
-          <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/40">
-            <Briefcase className="w-3 h-3 text-blue-400" /> Gerente
-          </span>
-        );
-      case 'ASSESSOR':
-      default:
-        return (
-          <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-            <Layers className="w-3 h-3 text-emerald-400" /> Assessor
-          </span>
-        );
-    }
-  };
-
   return (
     <div className="relative" ref={dropdownRef}>
       {/* Trigger Button */}
@@ -95,10 +72,10 @@ export const ProfileSwitcher: React.FC = () => {
             <span className="font-bold text-white max-w-[110px] truncate">
               {currentProfile.name}
             </span>
-            {getRoleBadge(currentProfile.role)}
+            <PersonTypeBadge type={currentProfile.personType} />
           </div>
           <span className="text-[10px] text-purple-300/80 truncate max-w-[140px] font-medium">
-            {currentProfile.cargo || getUserCargoTitle(currentProfile)}
+            {getUserCargoTitle(currentProfile)}
           </span>
         </div>
 
@@ -129,9 +106,9 @@ export const ProfileSwitcher: React.FC = () => {
                 <div className="font-bold text-xs text-white truncate">{currentProfile.name}</div>
                 <div className="text-[10px] text-slate-400 truncate">{currentProfile.email}</div>
                 <div className="mt-1 flex items-center gap-1.5 flex-wrap">
-                  {getRoleBadge(currentProfile.role)}
+                  <PersonTypeBadge type={currentProfile.personType} />
                   <span className="text-[10px] font-semibold text-slate-300">
-                    {currentProfile.cargo || getUserCargoTitle(currentProfile)}
+                    {getUserCargoTitle(currentProfile)}
                   </span>
                 </div>
               </div>
@@ -160,12 +137,12 @@ export const ProfileSwitcher: React.FC = () => {
             <button
               onClick={() => {
                 setIsOpen(false);
+                toast.info('Encerrando sessão...');
                 logout();
-                toast.info('Sessão encerrada.');
               }}
               className="flex items-center gap-2 w-full py-2 px-3 text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-950/40 rounded-xl transition-colors text-left"
             >
-              <LogOut className="w-3.5 h-3.5" /> Sair da Conta / Trocar
+              <LogOut className="w-3.5 h-3.5" /> Sair da conta
             </button>
           </div>
         </div>

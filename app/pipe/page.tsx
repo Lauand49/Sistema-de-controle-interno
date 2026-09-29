@@ -16,6 +16,7 @@ import {
   ShieldAlert,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { canEditUnit, unitName } from '@/lib/permissions';
 
 function DashboardContent() {
   const searchParams = useSearchParams();
@@ -29,12 +30,7 @@ function DashboardContent() {
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
 
   const pipeDepartment = pipe?.department || 'NEGOCIOS';
-  const isPresident =
-    currentProfile?.role?.toUpperCase() === 'PRESIDENTE' ||
-    currentProfile?.primaryDept === 'GLOBAL';
-  const isSectorMember =
-    currentProfile?.primaryDept?.toUpperCase() === pipeDepartment.toUpperCase();
-  const canEditSector = Boolean(currentProfile && (isPresident || isSectorMember));
+  const canEditSector = canEditUnit(currentProfile, pipeDepartment);
 
   const fetchData = async () => {
     setLoading(true);
@@ -177,7 +173,7 @@ function DashboardContent() {
           <div className="flex items-center gap-2.5">
             <ShieldAlert className="w-4 h-4 text-amber-400 shrink-0" />
             <span>
-              <strong>Modo Somente Leitura:</strong> Você está visualizando o funil de {pipeDepartment} como membro de {currentProfile?.primaryDept || 'outro setor'}. Edições e movimentações de cards estão desabilitadas.
+              <strong>Modo Somente Leitura:</strong> Você está visualizando o funil de {pipeDepartment} como membro de {unitName(currentProfile?.departmentCode)}. Edições e movimentações de cards estão desabilitadas.
             </span>
           </div>
           <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 uppercase shrink-0">

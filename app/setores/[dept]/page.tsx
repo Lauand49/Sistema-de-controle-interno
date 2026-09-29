@@ -47,6 +47,7 @@ import {
   MessageSquare,
   Database,
 } from 'lucide-react';
+import { canAssignLeads, canBeLeadAssignee, canEditUnit, canUseNegociosTools, unitName } from '@/lib/permissions';
 
 export default function SectorWorkspacePage() {
   const params = useParams();
@@ -115,12 +116,9 @@ export default function SectorWorkspacePage() {
   const SectorIcon = currentSector.icon;
 
   // RBAC Permission check: President or sector member can edit; others are read-only
-  const isPresident =
-    currentProfile?.role?.toUpperCase() === 'PRESIDENTE' ||
-    currentProfile?.primaryDept === 'GLOBAL';
-  const isSectorMember =
-    currentProfile?.primaryDept?.toUpperCase() === currentSector.code;
-  const canEditSector = Boolean(currentProfile && (isPresident || isSectorMember));
+  // Permissões (lib/permissions): membros do departamento e Presidência trabalham aqui.
+  const canEditSector = canEditUnit(currentProfile, currentSector.code);
+  const canAssign = canAssignLeads(currentProfile);
 
   // Tabs State
   const [activeTab, setActiveTab] = useState<'KANBAN' | 'LEADS' | 'TOOLS' | 'REQUESTS'>('KANBAN');
@@ -147,10 +145,14 @@ export default function SectorWorkspacePage() {
   const [searchQuery, setSearchQuery] = useState('');
 
   // Eligible users for lead assignment (exclusive to Negócios and Presidência)
-  const negociosUsers = users.filter((u) => u.primaryDept?.toUpperCase() === 'NEGOCIOS');
-  const presidenciaUsers = users.filter(
-    (u) => u.role?.toUpperCase() === 'PRESIDENTE' && u.primaryDept?.toUpperCase() !== 'NEGOCIOS'
-  );
+  const negociosUsers = users.filter((u) => canBeLeadAssignee(u) && u.departmentCode === 'NEGOCIOS');
+  const presidenciaUsers = users.filter((u) => canBeLeadAssignee(u) && u.globalRole !== null);
+  // Quem não pode atribuir só assume leads sem dono ou libera os seus (o servidor valida de novo).
+  const canChangeAssignee = (lead: ProspectLead) =>
+    canUseNegociosTools(currentProfile) &&
+    (canAssign || !lead.assignedTo || lead.assignedTo === currentProfile?.id);
+  const assignOptionsFor = (lead: ProspectLead, list: User[]) =>
+    canAssign ? list : list.filter((u) => u.id === currentProfile?.id || u.id === lead.assignedTo);
 
   // Modals State
   const [isCreateCardModalOpen, setIsCreateCardModalOpen] = useState(false);
@@ -424,19 +426,15 @@ export default function SectorWorkspacePage() {
               <div className="space-y-0.5">
                 <div className="flex items-center gap-2">
                   <h4 className="text-xs font-bold text-amber-300 uppercase tracking-wider">
-                    Modo Somente Leitura Ativado
+                    Acesso restrito
                   </h4>
                   <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300">
-                    Acesso de Consulta
+                    Sem permissão
                   </span>
                 </div>
                 <p className="text-xs text-amber-200/80">
-                  Você está visualizando este setor como{' '}
-                  <strong className="text-white">
-                    {currentProfile?.name} ({currentProfile?.cargo || currentProfile?.role})
-                  </strong>{' '}
-                  do setor{' '}
-                  <strong className="text-white">{currentProfile?.primaryDept || 'Geral'}</strong>. Você tem acesso para ler e consultar todas as informações, mas alterações só podem ser feitas por membros deste setor ou pela Presidência.
+                  Você não participa de <strong className="text-white">{unitName(currentSector.code)}</strong>. Funis, tarefas e
+                  ferramentas deste departamento ficam disponíveis apenas para seus membros e para a Presidência.
                 </p>
               </div>
             </div>
@@ -801,20 +799,21 @@ export default function SectorWorkspacePage() {
                                     <select
                                       value={lead.assignedTo || ''}
                                       onChange={(e) => handleUpdateLeadAssignee(lead.id, e.target.value || null)}
-                                      disabled={!canEditSector}
+                                      disabled={!canChangeAssignee(lead)}
+                                      aria-label={`Consultor de ${lead.companyName}`}
                                       className="w-full text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-200 focus:ring-1 focus:ring-purple-500 disabled:opacity-50"
                                     >
                                       <option value="">Aguardando Designação</option>
                                       <optgroup label="Equipe de Negócios">
-                                        {negociosUsers.map((u) => (
+                                        {assignOptionsFor(lead, negociosUsers).map((u) => (
                                           <option key={u.id} value={u.id}>
                                             {u.name} ({getUserCargoTitle(u)})
                                           </option>
                                         ))}
                                       </optgroup>
-                                      {presidenciaUsers.length > 0 && (
+                                      {assignOptionsFor(lead, presidenciaUsers).length > 0 && (
                                         <optgroup label="Presidência">
-                                          {presidenciaUsers.map((u) => (
+                                          {assignOptionsFor(lead, presidenciaUsers).map((u) => (
                                             <option key={u.id} value={u.id}>
                                               {u.name} ({getUserCargoTitle(u)})
                                             </option>
@@ -1328,7 +1327,7 @@ export default function SectorWorkspacePage() {
                         <div className="flex-1 min-w-0">
                           <h4 className="text-xs font-bold text-white truncate">{u.name}</h4>
                           <span className="text-[10px] font-medium text-purple-300 block">
-                            {getUserCargoTitle(u)} • {u.primaryDept || 'Membro'}
+                            {getUserCargoTitle(u)} • {unitName(u.departmentCode)}
                           </span>
                           <span className="text-[10px] text-slate-500 truncate block">
                             {u.email}
