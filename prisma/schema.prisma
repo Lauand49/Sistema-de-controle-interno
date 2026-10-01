@@ -245,6 +245,7 @@ model ProspectLead {
 
   @@index([status])
   @@index([assignedTo])
+  @@index([createdAt])
 }
 
 // ─────────────────────────────── Minerador de Leads ───────────────────────────────
@@ -451,12 +452,15 @@ model Task {
   assignee    User?     @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
   leadId      String?
   cardId      String?
+  completedAt DateTime? // Data_Conclusao: instante em que a tarefa passou para DONE; mantido pela API_Tarefas
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
   @@index([assigneeId])
   @@index([status])
   @@index([unitId])
+  @@index([unitId, status])
+  @@index([completedAt])
 }
 
 // Solicitações entre departamentos (códigos de departamento)
@@ -479,6 +483,7 @@ model CrossDeptRequest {
 
   @@index([toDept, status])
   @@index([fromDept])
+  @@index([handlerId])
 }
 
 model FinancialTransaction {

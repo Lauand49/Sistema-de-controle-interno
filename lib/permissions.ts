@@ -272,6 +272,29 @@ export function progressScope(
   return shared.length > 0 ? shared : null;
 }
 
+// ─────────────────────────────── Painéis (dashboards) ───────────────────────────────
+
+/** Painel de unidade: mesmo critério de canViewUnit, restrito a códigos válidos (Req. 1.1). */
+export function canViewUnitDashboard(p: Person | null | undefined, unitCode: string): boolean {
+  return isUnitCode(unitCode) && canViewUnit(p, unitCode);
+}
+
+/** Painel de membro: existe algum Escopo_Progresso (Req. 1.2). */
+export function canViewMemberDashboard(actor: Person | null | undefined, target: Person): boolean {
+  return progressScope(actor, target) !== null;
+}
+
+/** Resumo_Membro de `target` no painel da unidade `unitCode` (Req. 7.3). */
+export function canSeeMemberSummary(
+  actor: Person | null | undefined,
+  target: Person,
+  unitCode: string
+): boolean {
+  const scope = progressScope(actor, target);
+  if (scope === null) return false;
+  return scope === 'ALL' || (scope as string[]).includes(unitCode);
+}
+
 // ─────────────────────────────── Negócios / Leads ───────────────────────────────
 
 /** Ferramentas de Negócios (leads, triagem, precificação, minerador). */

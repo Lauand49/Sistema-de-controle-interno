@@ -43,6 +43,7 @@ export interface Task {
   assignee?: User | null;
   leadId?: string | null;
   cardId?: string | null;
+  completedAt?: string | null;
   createdAt: string;
   updatedAt: string;
 }

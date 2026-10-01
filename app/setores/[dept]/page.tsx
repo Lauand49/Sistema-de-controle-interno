@@ -46,8 +46,17 @@ import {
   Filter,
   MessageSquare,
   Pickaxe,
+  LayoutDashboard,
 } from 'lucide-react';
-import { canAssignLeads, canBeLeadAssignee, canEditUnit, canUseNegociosTools, unitName } from '@/lib/permissions';
+import {
+  canAssignLeads,
+  canBeLeadAssignee,
+  canEditUnit,
+  canUseNegociosTools,
+  canViewUnitDashboard,
+  unitName,
+} from '@/lib/permissions';
+import { dashboardPages } from '@/lib/dashboards/client-api';
 
 export default function SectorWorkspacePage() {
   const params = useParams();
@@ -265,19 +274,19 @@ export default function SectorWorkspacePage() {
   // Filter cards by search query
   const filteredActivePipe = activePipe
     ? {
-        ...activePipe,
-        phases: activePipe.phases.map((phase) => ({
-          ...phase,
-          cards: phase.cards.filter((card) => {
-            if (!searchQuery.trim()) return true;
-            const q = searchQuery.toLowerCase();
-            return (
-              card.title.toLowerCase().includes(q) ||
-              (card.description && card.description.toLowerCase().includes(q))
-            );
-          }),
-        })),
-      }
+      ...activePipe,
+      phases: activePipe.phases.map((phase) => ({
+        ...phase,
+        cards: phase.cards.filter((card) => {
+          if (!searchQuery.trim()) return true;
+          const q = searchQuery.toLowerCase();
+          return (
+            card.title.toLowerCase().includes(q) ||
+            (card.description && card.description.toLowerCase().includes(q))
+          );
+        }),
+      })),
+    }
     : null;
 
   // Handle New Financial Transaction Creation
@@ -394,6 +403,14 @@ export default function SectorWorkspacePage() {
               <p className="text-xs md:text-sm text-slate-300 leading-relaxed">
                 {currentSector.subtitle}
               </p>
+              {canViewUnitDashboard(currentProfile, currentSector.code) && (
+                <Link
+                  href={dashboardPages.unit(currentSector.code)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 mt-1 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-lg shadow-purple-900/40 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
+                >
+                  <LayoutDashboard className="w-3.5 h-3.5" aria-hidden="true" /> Ver painel
+                </Link>
+              )}
             </div>
 
             {/* Quick Stats Chips */}
@@ -446,11 +463,10 @@ export default function SectorWorkspacePage() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => setActiveTab('KANBAN')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
-                activeTab === 'KANBAN'
-                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
-              }`}
+              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'KANBAN'
+                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
+                : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                }`}
             >
               <Kanban className="w-3.5 h-3.5" /> Funis & Processos (Kanban)
             </button>
@@ -458,11 +474,10 @@ export default function SectorWorkspacePage() {
             {currentSector.code === 'NEGOCIOS' && (
               <button
                 onClick={() => setActiveTab('LEADS')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
-                  activeTab === 'LEADS'
-                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
-                    : 'text-slate-400 hover:text-white hover:bg-slate-900'
-                }`}
+                className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'LEADS'
+                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
+                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                  }`}
               >
                 <Target className="w-3.5 h-3.5 text-purple-400" /> Leads Designados ({negociosLeads.length})
               </button>
@@ -470,22 +485,20 @@ export default function SectorWorkspacePage() {
 
             <button
               onClick={() => setActiveTab('TOOLS')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
-                activeTab === 'TOOLS'
-                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
-              }`}
+              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'TOOLS'
+                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
+                : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                }`}
             >
               <Wrench className="w-3.5 h-3.5 text-amber-400" /> Ferramentas de {currentSector.code === 'ADMJURFIN' ? 'AdmJurFin' : currentSector.code === 'MIDIAS' ? 'Mídias' : currentSector.code === 'GENTE' ? 'Gente' : 'Negócios'}
             </button>
 
             <button
               onClick={() => setActiveTab('REQUESTS')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${
-                activeTab === 'REQUESTS'
-                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
-              }`}
+              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'REQUESTS'
+                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
+                : 'text-slate-400 hover:text-white hover:bg-slate-900'
+                }`}
             >
               <Send className="w-3.5 h-3.5" /> Demandas do Setor ({requests.length})
             </button>
@@ -521,21 +534,19 @@ export default function SectorWorkspacePage() {
                 <div className="flex items-center gap-1.5 bg-slate-950/80 p-1 rounded-xl border border-slate-800 w-fit">
                   <button
                     onClick={() => setGenteViewMode('KANBAN')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
-                      genteViewMode === 'KANBAN'
-                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
-                        : 'text-slate-400 hover:text-white'
-                    }`}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${genteViewMode === 'KANBAN'
+                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
+                      : 'text-slate-400 hover:text-white'
+                      }`}
                   >
                     <Kanban className="w-3.5 h-3.5" /> Funis de Processo ({pipes.length})
                   </button>
                   <button
                     onClick={() => setGenteViewMode('TASKS')}
-                    className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
-                      genteViewMode === 'TASKS'
-                        ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
-                        : 'text-slate-400 hover:text-white'
-                    }`}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${genteViewMode === 'TASKS'
+                      ? 'bg-amber-500/20 text-amber-300 border border-amber-500/40 shadow-sm'
+                      : 'text-slate-400 hover:text-white'
+                      }`}
                   >
                     <CheckSquare className="w-3.5 h-3.5" /> Quadro Livre de Tarefas
                   </button>
@@ -701,22 +712,20 @@ export default function SectorWorkspacePage() {
                   <span className="text-xs font-bold text-slate-400 whitespace-nowrap">Filtrar por:</span>
                   <button
                     onClick={() => setLeadAssigneeFilter('ALL')}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${
-                      leadAssigneeFilter === 'ALL'
-                        ? 'bg-purple-600 text-white'
-                        : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
-                    }`}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${leadAssigneeFilter === 'ALL'
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+                      }`}
                   >
                     Todos ({negociosLeads.filter((l) => l.status !== 'DISCARDED').length})
                   </button>
 
                   <button
                     onClick={() => setLeadAssigneeFilter('UNASSIGNED')}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${
-                      leadAssigneeFilter === 'UNASSIGNED'
-                        ? 'bg-amber-600 text-white'
-                        : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
-                    }`}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${leadAssigneeFilter === 'UNASSIGNED'
+                      ? 'bg-amber-600 text-white'
+                      : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+                      }`}
                   >
                     Sem Consultor ({negociosLeads.filter((l) => !l.assignedTo && l.status !== 'DISCARDED').length})
                   </button>
@@ -729,11 +738,10 @@ export default function SectorWorkspacePage() {
                       <button
                         key={u.id}
                         onClick={() => setLeadAssigneeFilter(u.id)}
-                        className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${
-                          leadAssigneeFilter === u.id
-                            ? 'bg-indigo-600 text-white'
-                            : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
-                        }`}
+                        className={`px-3 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-colors ${leadAssigneeFilter === u.id
+                          ? 'bg-indigo-600 text-white'
+                          : 'bg-slate-900 border border-slate-800 text-slate-400 hover:text-white'
+                          }`}
                       >
                         {u.name} ({count})
                       </button>
@@ -825,19 +833,18 @@ export default function SectorWorkspacePage() {
 
                                   <td className="p-3.5">
                                     <span
-                                      className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border ${
-                                        lead.status === 'CONVERTED_TO_PIPE'
-                                          ? 'bg-emerald-950/60 text-emerald-300 border-emerald-800'
-                                          : lead.status === 'IN_PROGRESS'
+                                      className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border ${lead.status === 'CONVERTED_TO_PIPE'
+                                        ? 'bg-emerald-950/60 text-emerald-300 border-emerald-800'
+                                        : lead.status === 'IN_PROGRESS'
                                           ? 'bg-purple-950/60 text-purple-300 border-purple-800'
                                           : 'bg-amber-950/60 text-amber-300 border-amber-800'
-                                      }`}
+                                        }`}
                                     >
                                       {lead.status === 'CONVERTED_TO_PIPE'
                                         ? 'Reunião Marcada'
                                         : lead.status === 'IN_PROGRESS'
-                                        ? 'Em Triagem'
-                                        : 'Pendente'}
+                                          ? 'Em Triagem'
+                                          : 'Pendente'}
                                     </span>
                                   </td>
 
@@ -1005,11 +1012,10 @@ export default function SectorWorkspacePage() {
                             <td className="py-3 font-medium text-white">{t.description}</td>
                             <td className="py-3">
                               <span
-                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                  t.type === 'INFLOW'
-                                    ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
-                                    : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
-                                }`}
+                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${t.type === 'INFLOW'
+                                  ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
+                                  : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
+                                  }`}
                               >
                                 {t.type === 'INFLOW' ? 'Receita' : 'Despesa'}
                               </span>
@@ -1017,11 +1023,10 @@ export default function SectorWorkspacePage() {
                             <td className="py-3 text-slate-300">{t.category}</td>
                             <td className="py-3">
                               <span
-                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                                  t.status === 'PAID'
-                                    ? 'bg-blue-500/20 text-blue-300'
-                                    : 'bg-amber-500/20 text-amber-300'
-                                }`}
+                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${t.status === 'PAID'
+                                  ? 'bg-blue-500/20 text-blue-300'
+                                  : 'bg-amber-500/20 text-amber-300'
+                                  }`}
                               >
                                 {t.status === 'PAID' ? 'Liquidado' : 'Pendente'}
                               </span>
@@ -1030,13 +1035,12 @@ export default function SectorWorkspacePage() {
                               {t.paymentDate
                                 ? new Date(t.paymentDate).toLocaleDateString('pt-BR')
                                 : t.dueDate
-                                ? `Venc: ${new Date(t.dueDate).toLocaleDateString('pt-BR')}`
-                                : '-'}
+                                  ? `Venc: ${new Date(t.dueDate).toLocaleDateString('pt-BR')}`
+                                  : '-'}
                             </td>
                             <td
-                              className={`py-3 text-right font-bold ${
-                                t.type === 'INFLOW' ? 'text-emerald-400' : 'text-rose-400'
-                              }`}
+                              className={`py-3 text-right font-bold ${t.type === 'INFLOW' ? 'text-emerald-400' : 'text-rose-400'
+                                }`}
                             >
                               {t.type === 'INFLOW' ? '+' : '-'}{' '}
                               {t.amount.toLocaleString('pt-BR', {
@@ -1675,13 +1679,12 @@ export default function SectorWorkspacePage() {
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-2">
                         <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
-                            req.priority === 'URGENT'
-                              ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
-                              : req.priority === 'HIGH'
+                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${req.priority === 'URGENT'
+                            ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
+                            : req.priority === 'HIGH'
                               ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
                               : 'bg-slate-800 text-slate-300 border-slate-700'
-                          }`}
+                            }`}
                         >
                           {req.priority}
                         </span>
@@ -1691,13 +1694,12 @@ export default function SectorWorkspacePage() {
                         </span>
 
                         <span
-                          className={`text-[10px] font-semibold px-2 py-0.2 rounded-full ${
-                            req.status === 'COMPLETED'
-                              ? 'bg-emerald-500/20 text-emerald-300'
-                              : req.status === 'IN_PROGRESS'
+                          className={`text-[10px] font-semibold px-2 py-0.2 rounded-full ${req.status === 'COMPLETED'
+                            ? 'bg-emerald-500/20 text-emerald-300'
+                            : req.status === 'IN_PROGRESS'
                               ? 'bg-blue-500/20 text-blue-300'
                               : 'bg-amber-500/20 text-amber-300'
-                          }`}
+                            }`}
                         >
                           ● {req.status}
                         </span>

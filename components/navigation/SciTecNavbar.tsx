@@ -17,6 +17,7 @@ import {
   Send,
   ChevronDown,
   Layers,
+  LayoutDashboard,
   Menu,
   X,
 } from 'lucide-react';
@@ -56,6 +57,7 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
   const isTasksActive = pathname.startsWith('/tasks');
   const isTeamActive = pathname.startsWith('/team');
   const isRequestsActive = pathname.startsWith('/requests');
+  const isPaineisActive = pathname.startsWith('/paineis');
 
   const isNegociosActive = pathname === '/setores/negocios' || pathname === '/pipe';
   const isAdmJurFinActive = pathname === '/setores/admjurfin';
@@ -148,11 +150,10 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
             <nav className="hidden xl:flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-purple-900/40">
               <Link
                 href="/"
-                className={`px-3 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all ${
-                  isHomeActive
-                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
-                    : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
-                }`}
+                className={`px-3 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all ${isHomeActive
+                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
+                  : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
+                  }`}
               >
                 Início
               </Link>
@@ -162,18 +163,16 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
                 <button
                   type="button"
                   onClick={() => setIsSectorDropdownOpen(!isSectorDropdownOpen)}
-                  className={`px-3 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all ${
-                    isAnySectorActive
-                      ? 'bg-purple-900/80 text-white border border-purple-600/40'
-                      : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
-                  }`}
+                  className={`px-3 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all ${isAnySectorActive
+                    ? 'bg-purple-900/80 text-white border border-purple-600/40'
+                    : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
+                    }`}
                 >
                   <Layers className="w-3.5 h-3.5 text-purple-400" />
                   <span>Setores</span>
                   <ChevronDown
-                    className={`w-3 h-3 transition-transform ${
-                      isSectorDropdownOpen ? 'rotate-180' : ''
-                    }`}
+                    className={`w-3 h-3 transition-transform ${isSectorDropdownOpen ? 'rotate-180' : ''
+                      }`}
                   />
                 </button>
 
@@ -199,11 +198,10 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
                           key={sec.id}
                           href={sec.href}
                           onClick={() => setIsSectorDropdownOpen(false)}
-                          className={`flex items-start gap-2.5 p-2.5 rounded-xl transition-all ${
-                            isActive
-                              ? 'bg-purple-950/80 text-white border border-purple-700/50'
-                              : 'hover:bg-slate-800/80 text-slate-300 hover:text-white'
-                          }`}
+                          className={`flex items-start gap-2.5 p-2.5 rounded-xl transition-all ${isActive
+                            ? 'bg-purple-950/80 text-white border border-purple-700/50'
+                            : 'hover:bg-slate-800/80 text-slate-300 hover:text-white'
+                            }`}
                         >
                           <div className={`p-1.5 rounded-lg bg-slate-950 border border-slate-800 ${sec.color}`}>
                             <Icon className="w-4 h-4" />
@@ -224,11 +222,10 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
               {/* Central de Solicitações */}
               <Link
                 href="/requests"
-                className={`px-3 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all ${
-                  isRequestsActive
-                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
-                    : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
-                }`}
+                className={`px-3 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all ${isRequestsActive
+                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
+                  : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
+                  }`}
               >
                 <Send className="w-3.5 h-3.5" /> Solicitações
                 {pendingRequestsCount > 0 && (
@@ -240,24 +237,32 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
 
               <Link
                 href="/tasks"
-                className={`px-3 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all ${
-                  isTasksActive
-                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
-                    : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
-                }`}
+                className={`px-3 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all ${isTasksActive
+                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
+                  : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
+                  }`}
               >
                 <CheckSquare className="w-3.5 h-3.5" /> Minhas Tarefas
               </Link>
 
               <Link
                 href="/team"
-                className={`px-3 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all ${
-                  isTeamActive
-                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
-                    : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
-                }`}
+                className={`px-3 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all ${isTeamActive
+                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
+                  : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
+                  }`}
               >
                 <Users className="w-3.5 h-3.5" /> Equipe
+              </Link>
+
+              <Link
+                href="/paineis"
+                className={`px-3 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all ${isPaineisActive
+                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
+                  : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
+                  }`}
+              >
+                <LayoutDashboard className="w-3.5 h-3.5" /> Painéis
               </Link>
             </nav>
           </div>
@@ -352,11 +357,10 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
               <Link
                 href="/"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`px-3 py-2 text-xs font-bold rounded-xl flex items-center gap-2 transition-all ${
-                  isHomeActive
-                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
-                    : 'bg-slate-900/80 text-purple-200/80 hover:text-white hover:bg-purple-950/50 border border-slate-800'
-                }`}
+                className={`px-3 py-2 text-xs font-bold rounded-xl flex items-center gap-2 transition-all ${isHomeActive
+                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
+                  : 'bg-slate-900/80 text-purple-200/80 hover:text-white hover:bg-purple-950/50 border border-slate-800'
+                  }`}
               >
                 <Sparkles className="w-3.5 h-3.5 text-purple-400" /> Início
               </Link>
@@ -364,11 +368,10 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
               <Link
                 href="/requests"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`px-3 py-2 text-xs font-bold rounded-xl flex items-center justify-between gap-1 transition-all ${
-                  isRequestsActive
-                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
-                    : 'bg-slate-900/80 text-purple-200/80 hover:text-white hover:bg-purple-950/50 border border-slate-800'
-                }`}
+                className={`px-3 py-2 text-xs font-bold rounded-xl flex items-center justify-between gap-1 transition-all ${isRequestsActive
+                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
+                  : 'bg-slate-900/80 text-purple-200/80 hover:text-white hover:bg-purple-950/50 border border-slate-800'
+                  }`}
               >
                 <div className="flex items-center gap-1.5">
                   <Send className="w-3.5 h-3.5 text-purple-400" /> Solicitações
@@ -383,11 +386,10 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
               <Link
                 href="/tasks"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`px-3 py-2 text-xs font-bold rounded-xl flex items-center gap-2 transition-all ${
-                  isTasksActive
-                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
-                    : 'bg-slate-900/80 text-purple-200/80 hover:text-white hover:bg-purple-950/50 border border-slate-800'
-                }`}
+                className={`px-3 py-2 text-xs font-bold rounded-xl flex items-center gap-2 transition-all ${isTasksActive
+                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
+                  : 'bg-slate-900/80 text-purple-200/80 hover:text-white hover:bg-purple-950/50 border border-slate-800'
+                  }`}
               >
                 <CheckSquare className="w-3.5 h-3.5 text-emerald-400" /> Tarefas
               </Link>
@@ -395,13 +397,23 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
               <Link
                 href="/team"
                 onClick={() => setIsMobileMenuOpen(false)}
-                className={`px-3 py-2 text-xs font-bold rounded-xl flex items-center gap-2 transition-all ${
-                  isTeamActive
-                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
-                    : 'bg-slate-900/80 text-purple-200/80 hover:text-white hover:bg-purple-950/50 border border-slate-800'
-                }`}
+                className={`px-3 py-2 text-xs font-bold rounded-xl flex items-center gap-2 transition-all ${isTeamActive
+                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
+                  : 'bg-slate-900/80 text-purple-200/80 hover:text-white hover:bg-purple-950/50 border border-slate-800'
+                  }`}
               >
                 <Users className="w-3.5 h-3.5 text-blue-400" /> Equipe
+              </Link>
+
+              <Link
+                href="/paineis"
+                onClick={() => setIsMobileMenuOpen(false)}
+                className={`px-3 py-2 text-xs font-bold rounded-xl flex items-center gap-2 transition-all ${isPaineisActive
+                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md'
+                    : 'bg-slate-900/80 text-purple-200/80 hover:text-white hover:bg-purple-950/50 border border-slate-800'
+                  }`}
+              >
+                <LayoutDashboard className="w-3.5 h-3.5 text-indigo-400" /> Painéis
               </Link>
 
               <button

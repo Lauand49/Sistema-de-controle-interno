@@ -4,6 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { withAuth, assert, notFound } from '@/lib/api';
 import { canEditTask } from '@/lib/permissions';
 import { assertActiveUser, serializeTask } from '@/lib/units';
+import { completedAtUpdate } from '@/lib/task-completion';
 
 const updateTaskSchema = z.object({
   title: z.string().min(1).optional(),
@@ -21,10 +22,10 @@ type Params = { id: string };
 async function loadTask(id: string) {
   const task = await prisma.task.findUnique({
     where: { id },
-    select: { assigneeId: true, unit: { select: { code: true } } },
+    select: { assigneeId: true, status: true, unit: { select: { code: true } } },
   });
   if (!task) throw notFound('Tarefa não encontrada.');
-  return { assigneeId: task.assigneeId, unitCode: task.unit?.code ?? null };
+  return { assigneeId: task.assigneeId, status: task.status, unitCode: task.unit?.code ?? null };
 }
 
 export const PATCH = withAuth<Params>(async (request, { params, actor }) => {
@@ -37,6 +38,8 @@ export const PATCH = withAuth<Params>(async (request, { params, actor }) => {
   if (validated.title !== undefined) data.title = validated.title;
   if (validated.description !== undefined) data.description = validated.description;
   if (validated.status !== undefined) data.status = validated.status;
+  const completedAt = completedAtUpdate(current.status, validated.status, new Date());
+  if (completedAt !== undefined) data.completedAt = completedAt;
   if (validated.priority !== undefined) data.priority = validated.priority;
   if (validated.dueDate !== undefined) {
     data.dueDate = validated.dueDate ? new Date(validated.dueDate) : null;
