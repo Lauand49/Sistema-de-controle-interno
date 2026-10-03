@@ -287,10 +287,10 @@ Convenções:
   - [x] 11.8 Escrever testes de exemplo do pipeline com as duas fontes
     - `pipeline-sources.test.ts` (fakes + Prisma falso): fallback por Nicho sem chave, com cota esgotada, com 429/5xx esgotados e com 401/403; Fonte_Efetiva `GOOGLE`, `OSM` e `MISTA`; paginação parada e retomada entre passos; descarte de `CLOSED_PERMANENTLY`; Rede por 3 nomes iguais; reserva de cota por requisição inclusive nas retentativas; Nicho falho nas duas fontes
     - _Requirements: 4.3, 4.5, 4.6, 4.7, 4.8, 4.10, 3.5, 3.9, 2.4, 21.2_
-  - [ ]* 11.9 Escrever teste de propriedade da decisão de fontes
+  - [x]* 11.9 Escrever teste de propriedade da decisão de fontes
     - **Property 10: Decisão de fontes por Mineracao e por Nicho**
     - **Validates: Requirements 4.3, 4.4, 4.5, 4.8**
-  - [ ]* 11.10 Escrever teste de propriedade da descoberta retomável
+  - [x]* 11.10 Escrever teste de propriedade da descoberta retomável
     - **Property 11: Descoberta retomável com fallback**
     - **Validates: Requirements 4.6, 4.10**
   - [x]* 11.11 Escrever teste de propriedade da validação dos parâmetros novos
