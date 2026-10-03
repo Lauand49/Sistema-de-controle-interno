@@ -39,6 +39,7 @@
     "node_modules",
     "prisma/**/*.ts",
     "tests/**/*.ts",
+    "tests/**/*.tsx",
     "scripts/**"
   ]
 }

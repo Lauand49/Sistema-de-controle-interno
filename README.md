@@ -106,6 +106,18 @@ Acesse no navegador: **[http://localhost:3000](http://localhost:3000)**
 - `npm run db:migrate:dev`: Cria uma nova migração a partir do schema.
 - `npm run db:seed`: Recria os dados de exemplo (apaga os dados atuais).
 - `npm run db:setup`: Migrações + seed.
+- `npm test`: Roda os testes (Vitest), sem acesso à rede.
+- `npm run test:watch`: Testes em modo observação.
+
+---
+
+## ⛏️ Minerador de Leads
+
+Em **Ferramentas → Minerador de Leads** (Negócios e Presidência): busca empresas por bairro/cidade/UF e nicho no OpenStreetMap, analisa o site de cada uma, calcula um score e acumula tudo numa base única com ranking, mapa, ficha, atribuição de responsável, envio para a triagem e exportação CSV.
+
+- `GEMINI_API_KEY` (opcional): ativa a análise por IA. Sem ela, as minerações rodam sem IA. `GEMINI_MODEL` e `GEMINI_MONTHLY_LIMIT` também são opcionais (ver `.env.example`).
+- Testes de integração com Postgres: `RUN_DB_TESTS=1 npm test` (usa `DATABASE_URL_TEST` ou `DATABASE_URL`).
+- Detalhes e limitações: `docs/PLANO-INTEGRACAO.md` (seção 8.2) e `.kiro/specs/lead-miner/`.
 
 ---
 

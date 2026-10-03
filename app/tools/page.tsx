@@ -2,9 +2,10 @@
 
 import React from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { SciTecNavbar } from '@/components/navigation/SciTecNavbar';
 import { useProfile } from '@/contexts/ProfileContext';
-import { canViewUnit } from '@/lib/permissions';
+import { canUseNegociosTools, canViewUnit } from '@/lib/permissions';
 import {
   Briefcase,
   Scale,
@@ -22,10 +23,13 @@ import {
   DollarSign,
   Calendar,
   Award,
+  Pickaxe,
 } from 'lucide-react';
 
 export default function ToolsHubPage() {
   const { currentProfile } = useProfile();
+  const router = useRouter();
+  const showLeadMiner = canUseNegociosTools(currentProfile);
   const userDept = currentProfile?.departmentCode ?? null;
 
   const sectorTools = [
@@ -44,9 +48,9 @@ export default function ToolsHubPage() {
         'Planilha Dinâmica de Importação e Anotação de Leads (Excel / CSV)',
         'Gerador de Propostas Comerciais com IA',
         'Disparador & Automação de WhatsApp SciTec',
-        'Minerador de Leads B2B (em breve)',
+        'Minerador de Leads B2B',
       ],
-      activeCount: 3,
+      activeCount: 4,
       totalCount: 6,
       borderColor: 'border-purple-500/40 hover:border-purple-500',
       badgeColor: 'bg-purple-950/80 text-purple-300 border-purple-700/60',
@@ -139,6 +143,45 @@ export default function ToolsHubPage() {
           </div>
         </div>
 
+        {/* Card ativo: Minerador de Leads (Negócios) */}
+        {showLeadMiner && (
+          <Link
+            href="/tools/lead-miner"
+            aria-label="Abrir Minerador de Leads"
+            onKeyDown={(e) => {
+              // Enter já é nativo em <a>; Espaço precisa ser tratado.
+              if (e.key === ' ' || e.key === 'Spacebar') {
+                e.preventDefault();
+                router.push('/tools/lead-miner');
+              }
+            }}
+            className="group block rounded-2xl p-6 border border-slate-800 bg-slate-900/80 hover:border-purple-500 hover:shadow-xl hover:shadow-purple-950/30 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+          >
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className="p-3 rounded-xl border bg-purple-950/80 text-purple-300 border-purple-700/60">
+                  <Pickaxe className="w-6 h-6" aria-hidden="true" />
+                </div>
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <h4 className="text-lg font-black text-white group-hover:text-purple-300 transition-colors">
+                      Minerador de Leads
+                    </h4>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                      ● Ativo
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-400 leading-relaxed max-w-2xl">
+                    Negócios · Mineração de empresas por bairro e nicho, análise de presença digital e ranking de prioridade para prospecção.
+                  </p>
+                </div>
+              </div>
+              <span className="shrink-0 px-4 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 group-hover:from-purple-500 group-hover:to-indigo-500 rounded-xl shadow-md flex items-center gap-2 transition-all">
+                Abrir Minerador <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+              </span>
+            </div>
+          </Link>
+        )}
         {/* Grade de Ferramentas por Setor */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">

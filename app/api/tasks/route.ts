@@ -11,6 +11,7 @@ import {
   visibleUnitCodes,
 } from '@/lib/permissions';
 import { assertActiveUser, getUnitByCode, serializeTask } from '@/lib/units';
+import { completedAtUpdate } from '@/lib/task-completion';
 
 const createTaskSchema = z.object({
   title: z.string().min(1, 'Título é obrigatório'),
@@ -100,6 +101,7 @@ export const POST = withAuth(async (request, { actor }) => {
       title: validated.title,
       description: validated.description,
       status: validated.status,
+      completedAt: completedAtUpdate(null, validated.status, new Date()),
       priority: validated.priority,
       dueDate: validated.dueDate ? new Date(validated.dueDate) : null,
       unitId,

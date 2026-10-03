@@ -186,8 +186,8 @@ Em Negócios → Ferramentas, o card **"Minerador de Leads"** substitui o placeh
 | Etapa | Conteúdo | Status |
 |---|---|---|
 | 0 — Fundação | Postgres; Auth.js Google + login dev; middleware; hierarquia (seção 4/5) com permissões no servidor em **todas** as APIs; gestão de pessoas; correção dos problemas da seção 2 | concluída na branch `etapa-0-fundacao` (PR pendente; login Google real depende das credenciais OAuth — ver 8.1) |
-| 1 — Minerador | Porte TS, persistência cumulativa, telas Minerar/Minerações/Ranking/Ficha/Mapa, integração com triagem existente | a fazer |
-| 2 — Painéis | Departamento, setor e membro | a fazer |
+| 1 — Minerador | Porte TS, persistência cumulativa, telas Minerar/Minerações/Ranking/Ficha/Mapa, integração com triagem existente | concluída em 2026-09-29 na branch `etapa-1-minerador` (PR pendente; ver 8.2) |
+| 2 — Painéis | Departamento, setor e membro | concluída em 2026-10-01 na branch `etapa-2-paineis` (PR pendente; ver 8.3) |
 | 3 — Melhorias | Google Places + fallback OSM; PageSpeed Insights; enriquecimento CNPJ (BrasilAPI); detecção Instagram/WhatsApp/tecnologias; mensagem de abordagem por IA | a fazer |
 | 4 — Deploy | Dockerfile standalone, Cloud Run, Neon, OAuth Internal, orçamento/quotas, guia passo a passo | a fazer |
 
@@ -213,6 +213,39 @@ Decisões tomadas na implementação (ajustáveis em `lib/permissions.ts`):
 - Não há mais cadastro manual de membros: o usuário nasce no primeiro login Google.
 
 Para testar o login Google real antes da Etapa 4 (sem depender do Presidente): criar um OAuth Client (Aplicativo da Web) em qualquer projeto GCP, consent screen **External** em modo de teste com as contas `@scitecjr.com` como test users, redirect `http://localhost:3000/api/auth/callback/google`, e preencher `AUTH_GOOGLE_ID`/`AUTH_GOOGLE_SECRET`. A restrição de domínio continua valendo porque é verificada no servidor.
+
+
+### 8.2 Registro da Etapa 1
+
+Spec completa em `.kiro/specs/lead-miner/` (requisitos, design e tarefas). Pontos operacionais:
+
+- **Limitação conhecida — limitador do Nominatim por processo.** A fila de 1 req/s (`lib/leads/sources/rate-limit.ts`) vive na memória do processo. Com mais de uma instância o limite global da política do Nominatim pode ser excedido. Na Etapa 4: Cloud Run com `max-instances=1` ou mover o limitador para o banco (tabela de lease).
+- **IA opcional.** A chave do Gemini é lida de `GEMINI_API_KEY` (`lib/leads/deps.ts`; opcionais `GEMINI_MODEL` e `GEMINI_MONTHLY_LIMIT`). Sem chave, as minerações rodam normalmente sem análise por IA e ficam com `iaDisabledReason = 'SEM_CHAVE'`.
+- **Testes.** `npm test` (Vitest) roda offline: o setup bloqueia qualquer acesso à rede. Os testes de integração com Postgres só rodam com `RUN_DB_TESTS=1` (banco em `DATABASE_URL_TEST` ou `DATABASE_URL`).
+- **Lint.** O ESLint não está configurado no projeto; `npm run lint` (`next lint`) abre o assistente interativo de configuração. A verificação usada foi `npm run build` + `npm test`.
+
+### 8.3 Registro da Etapa 2
+
+Spec completa em `.kiro/specs/dashboards/` (requisitos, design e tarefas). Decisões confirmadas:
+
+- **Rotas novas, não abas:** `/paineis` (hub), `/paineis/unidades/[code]` e `/paineis/membros/[userId]`. A página do departamento ganha só o link "Ver painel".
+- **Atrasada** = aberta (TODO/IN_PROGRESS) com prazo em dia anterior a hoje (fuso de São Paulo). Vencendo hoje não é atrasada; canceladas não contam em nada.
+- **`Task.completedAt`:** nova coluna, com backfill a partir de `updatedAt` para as tarefas já concluídas (migração `20261010000000_paineis`). "Concluídas no período" não muda quando alguém edita uma tarefa antiga.
+- **Períodos:** 7/30/90 dias ou "todo o período" (padrão 30). Afeta só concluídas, solicitações concluídas e conversão; abertas, atrasadas, cards por fase e leads por status são sempre a foto atual.
+- **Taxa de conversão** por coorte de criação: leads criados no período que viraram card ÷ leads criados no período que já saíram de `RAW` (o `ProspectLead` não tem data de conversão).
+- **Solicitações só em departamento** (`CrossDeptRequest` não tem setor). No painel de membro: solicitações em que a pessoa é responsável.
+- **Resumos por membro** seguem o `progressScope`: só aparecem as linhas que o usuário pode ver naquela unidade (Assessor vê só a própria; Gerente de Setor não vê linhas no painel do departamento).
+- **Gerente de Departamento com escopo total** sobre os membros do seu departamento, inclusive cards/tarefas em setores dos quais ele não participa (sem limitar pelo `canViewUnit`).
+- **Inativos** não aparecem no hub nem nos resumos, mas o painel da conta desativada continua acessível pela URL para quem tem escopo.
+- **Página inicial** (`app/page.tsx`) inalterada; só a navegação ganha "Painéis".
+- **Desempenho:** agregação no banco (contagens/agrupamentos), sem carregar registros inteiros.
+- **PR** com base `etapa-1-minerador` (as PRs das Etapas 0 e 1 ainda não foram mergeadas); retargetar para `main` depois.
+
+Pontos operacionais:
+
+- **Prazo pela data UTC.** O dia do prazo é a parte de data em UTC de `dueDate` (`dueDayKey`), tratada como data sem horário (a hora gravada não altera o dia). Ler no fuso de São Paulo jogaria prazos gravados à meia-noite UTC para o dia anterior. Já "hoje" e as janelas de período usam o fuso de São Paulo.
+- **Horário de verão histórico.** Em dias antigos de início do horário de verão a meia-noite local não existe; `startOfSaoPauloDay` devolve o primeiro instante do dia (01:00 local) em vez de cair no dia anterior.
+- **Testes.** `npm test` roda offline. Os testes de integração (`tests/dashboards/integration/`) só rodam com `RUN_DB_TESTS=1`; eles aplicam `prisma migrate deploy` e criam/apagam linhas, então use um banco descartável em `DATABASE_URL_TEST` (sem ela, caem no `DATABASE_URL` do `.env`). Exemplo: `RUN_DB_TESTS=1 DATABASE_URL_TEST=postgres://... npm test`.
 
 ---
 
