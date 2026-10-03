@@ -82,8 +82,22 @@ describe('Property 19: Validação dos parâmetros de mineração', () => {
             if (!result.ok) return;
             const v = result.value;
             expect(Object.keys(v).sort()).toEqual(
-              ['bairro', 'cidade', 'excluirRedes', 'iaEnabled', 'nichos', 'uf'],
+              [
+                'bairro',
+                'cidade',
+                'cnpjEnabled',
+                'excluirRedes',
+                'fonte',
+                'iaEnabled',
+                'nichos',
+                'pagespeedEnabled',
+                'uf',
+              ],
             );
+            // Campos da Etapa 2 ausentes no corpo → padrões (Req. 4.3, 10.1, 12.7).
+            expect(v.fonte).toBe('MISTA');
+            expect(v.pagespeedEnabled).toBe(true);
+            expect(v.cnpjEnabled).toBe(true);
             expect(v.bairro).toBe((bairro.value as string).trim());
             expect(v.cidade).toBe((cidade.value as string).trim());
             expect(v.uf).toBe(uf.value);

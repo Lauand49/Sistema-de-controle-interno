@@ -19,6 +19,7 @@ import {
   SITE_TIMEOUT_MS,
   SLOW_THRESHOLD_MS,
 } from './config';
+import { decodeHtml, isHtmlContentType } from './html';
 import { mapNodeError, TransportError } from './net/http-transport';
 import type { Transport, TransportResponse } from './net/http-transport';
 import { resolveAndValidate, validateUrlShape } from './net/ssrf';
@@ -86,7 +87,7 @@ function linkSignals(signals: AbortSignal[]): { signal: AbortSignal; dispose: ()
   const onAbort = () => ctl.abort();
   if (signals.some((s) => s.aborted)) {
     ctl.abort();
-    return { signal: ctl.signal, dispose: () => {} };
+    return { signal: ctl.signal, dispose: () => { } };
   }
   for (const s of signals) s.addEventListener('abort', onAbort, { once: true });
   return {
@@ -127,7 +128,7 @@ async function runAttempt(
   let raw = original;
   let redirects = 0;
 
-  for (;;) {
+  for (; ;) {
     // Req. 4.1, 4.2: forma da URL antes de qualquer DNS ou conexão.
     const shape = validateUrlShape(current, raw);
     if (shape === 'URL_INVALIDA') return fail('URL_INVALIDA', false);
@@ -157,6 +158,8 @@ async function runAttempt(
         method: 'GET',
         signal,
         maxBodyBytes: MAX_BODY_BYTES,
+        // Req. 7.1, 7.2: o corpo vem da mesma conexão validada, com o mesmo limite.
+        captureBody: true,
       });
     } catch (err) {
       if (signal.aborted) return fail('TIMEOUT', true);
@@ -245,10 +248,27 @@ function responseResult(
 /** Esquema explícito: `algo://`. Sem `//`, o texto é tratado como host (ex.: `exemplo.com.br:443`). */
 const HAS_SCHEME = /^[a-zA-Z][a-zA-Z0-9+.-]*:\/\//;
 
+/** Resultado da análise com o Corpo_HTML decodificado (Req. 7.1, 7.3). Nunca persistido. */
+export interface SiteFetch {
+  analysis: SiteAnalysis;
+  /** Corpo_HTML: só quando a resposta final está online, com `Content-Type` HTML e corpo. */
+  html: string | null;
+}
+
+function withoutHtml(analysis: SiteAnalysis): SiteFetch {
+  return { analysis, html: null };
+}
+
+/** Etapa 1, inalterado para quem já usa. */
 export async function analyzeSite(website: string | null, deps: SiteAnalyzerDeps): Promise<SiteAnalysis> {
+  return (await analyzeSiteWithBody(website, deps)).analysis;
+}
+
+/** Mesma lógica da Etapa 1; pede `captureBody` e devolve o Corpo_HTML decodificado. */
+export async function analyzeSiteWithBody(website: string | null, deps: SiteAnalyzerDeps): Promise<SiteFetch> {
   const trimmed = (website ?? '').trim();
   // Req. 3.5: sem site → sem rede.
-  if (trimmed === '') return noSiteResult();
+  if (trimmed === '') return withoutHtml(noSiteResult());
 
   const hasScheme = HAS_SCHEME.test(trimmed);
   const rawCandidates = hasScheme ? [trimmed] : [`https://${trimmed}`, `http://${trimmed}`];
@@ -259,7 +279,7 @@ export async function analyzeSite(website: string | null, deps: SiteAnalyzerDeps
     try {
       candidates.push({ url: new URL(raw), raw });
     } catch {
-      return offlineResult({ reason: 'URL_INVALIDA', retryable: false }, null);
+      return withoutHtml(offlineResult({ reason: 'URL_INVALIDA', retryable: false }, null));
     }
   }
 
@@ -277,7 +297,7 @@ export async function analyzeSite(website: string | null, deps: SiteAnalyzerDeps
       // Sub-limite só para a tentativa https:// de um website sem esquema.
       const withSubLimit = !hasScheme && i === 0;
       const sub = new AbortController();
-      const cancelSub = withSubLimit ? setTimer(() => sub.abort(), HTTPS_ATTEMPT_TIMEOUT_MS) : () => {};
+      const cancelSub = withSubLimit ? setTimer(() => sub.abort(), HTTPS_ATTEMPT_TIMEOUT_MS) : () => { };
       const link = linkSignals(withSubLimit ? [total.signal, sub.signal] : [total.signal]);
 
       let outcome: AttemptOutcome;
@@ -288,7 +308,17 @@ export async function analyzeSite(website: string | null, deps: SiteAnalyzerDeps
         link.dispose();
       }
 
-      if (outcome.ok) return responseResult(outcome.response, outcome.url, startedAt, sslProblem);
+      if (outcome.ok) {
+        const { response } = outcome;
+        const analysis = responseResult(response, outcome.url, startedAt, sslProblem);
+        // Req. 7.3: sem HTML se offline, sem Content-Type HTML ou sem corpo.
+        const body = response.body ?? null;
+        const html =
+          analysis.online && body !== null && isHtmlContentType(response.contentType ?? null)
+            ? decodeHtml(body, response.contentType ?? null)
+            : null;
+        return { analysis, html };
+      }
 
       // Req. 3.4: problema de SSL (da tentativa https) é preservado no resultado final.
       if (outcome.ssl && sslProblem === null) sslProblem = outcome.ssl;
@@ -302,5 +332,5 @@ export async function analyzeSite(website: string | null, deps: SiteAnalyzerDeps
   }
 
   // Req. 3.3: ambas falharam → motivo da última tentativa.
-  return offlineResult(last, sslProblem);
+  return withoutHtml(offlineResult(last, sslProblem));
 }

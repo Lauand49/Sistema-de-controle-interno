@@ -347,12 +347,12 @@ Convenções:
   - Rodar `npm test` (zero falhas, sem rede) e `npm run build` (sem erros); ensure all tests pass, ask the user if questions arise.
   - _Requirements: 20.7, 20.8_
 
-- [ ] 16. Registro da entrega e PR
+- [x] 16. Registro da entrega e PR
   - [x] 16.1 Atualizar `docs/PLANO-INTEGRACAO.md`
     - Seção 8: marcar a Etapa 1 como concluída na coluna "Status", com a data e a branch
     - Registrar a limitação do limitador do Nominatim por processo (Cloud Run `max-instances=1` ou lease no banco na Etapa 4)
     - _Requirements: 20.9, 20.10_
-  - [-] 16.2 Commitar e abrir o PR para `main`
+  - [x] 16.2 Commitar e abrir o PR para `main`
     - Stage de arquivos específicos (sem `.env`); `git push -u origin etapa-1-minerador`; `gh pr create --base main` com resumo, resultado de `npm test`/`npm run build`, checklist do Req. 20 (incluindo a seção 8 atualizada) e roteiro de verificação manual das telas e de acessibilidade
     - _Requirements: 20.8, 20.9, 20.10_
 

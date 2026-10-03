@@ -41,6 +41,8 @@ describe('Property 4: Mapeamento de elementos OSM', () => {
           latitude: lat,
           longitude: lon,
           marcaRede: tagOf(t, 'brand'),
+          instagramOsm: null,
+          whatsappOsm: null,
         });
       }),
       { numRuns: 100 },

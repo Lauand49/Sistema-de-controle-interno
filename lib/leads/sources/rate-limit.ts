@@ -6,6 +6,8 @@
  * quando a execução anterior falhou.
  */
 
+import { BRASILAPI_MIN_INTERVAL_MS } from '../config';
+
 export interface Clock {
   /** Instante atual em milissegundos. */
   now: () => number;
@@ -56,3 +58,11 @@ export const nominatimLimiter: RateLimiter =
   globalForLimiter.__nominatimLimiter ?? intervalLimiter(NOMINATIM_MIN_INTERVAL_MS);
 
 globalForLimiter.__nominatimLimiter = nominatimLimiter;
+
+// BrasilAPI: 1 req/s por processo (Req. 2.3); intervalo definido em `config.ts`.
+const globalForBrasilApi = globalThis as unknown as { __brasilApiLimiter?: RateLimiter };
+
+/** Limitador global do processo para a BrasilAPI (sobrevive ao hot reload). */
+export const brasilApiLimiter: RateLimiter =
+  globalForBrasilApi.__brasilApiLimiter ?? intervalLimiter(BRASILAPI_MIN_INTERVAL_MS);
+globalForBrasilApi.__brasilApiLimiter = brasilApiLimiter;

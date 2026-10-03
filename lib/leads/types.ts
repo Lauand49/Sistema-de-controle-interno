@@ -41,6 +41,143 @@ export interface FoundCompany {
   latitude: number | null;
   longitude: number | null;
   marcaRede: string | null;
+  /**
+   * Tag OSM `contact:instagram` (bruta). Opcional para manter compatíveis os construtores da
+   * Etapa 1; ausente equivale a `null`.
+   */
+  instagramOsm?: string | null;
+  /** Tag OSM `contact:whatsapp` (bruta). Opcional; ausente equivale a `null`. */
+  whatsappOsm?: string | null;
+}
+
+// ---------------------------------------------------------------------------
+// Serviços externos e fontes (Etapa 2 — enriquecimento)
+// ---------------------------------------------------------------------------
+
+/** Serviço externo com cota mensal controlada. */
+export type ExternalProvider = 'places' | 'pagespeed' | 'gemini';
+
+/** Motivo pelo qual um serviço externo não está disponível. */
+export type UnavailableReason = 'SEM_CHAVE' | 'COTA_ESGOTADA' | 'ERRO' | 'DESABILITADO_NA_MINERACAO';
+
+/** Fonte de descoberta de uma Mineração. */
+export type SourceMode = 'OSM' | 'GOOGLE' | 'MISTA';
+
+/** Lugar devolvido pela Fonte_Google (Conteudo_Google, exceto `placeId`). */
+export interface GooglePlace {
+  placeId: string;
+  nome: string;
+  nicho: string;
+  endereco: string | null;
+  bairro: string | null;
+  cidade: string | null;
+  uf: string | null;
+  telefone: string | null;
+  website: string | null;
+  latitude: number | null;
+  longitude: number | null;
+  mapsUri: string | null;
+  businessStatus: string | null;
+  tipos: string[];
+}
+
+// ---------------------------------------------------------------------------
+// Sinais digitais (Detector_Sinais)
+// ---------------------------------------------------------------------------
+
+/** Grupo do Catalogo_Tecnologias (definido aqui para evitar ciclo; reexportado por `config.ts`). */
+export type TechGroup = 'CMS' | 'LOJA_VIRTUAL' | 'ANALYTICS' | 'MARKETING' | 'FRAMEWORK';
+
+/** Origem de um sinal digital. */
+export type SignalOrigin = 'SITE' | 'OSM';
+
+/** Tecnologia detectada no site. */
+export interface TechHit {
+  id: string;
+  label: string;
+  group: TechGroup;
+}
+
+export interface SinaisDigitais {
+  instagram: string | null;
+  instagramOrigem: SignalOrigin | null;
+  /** Somente dígitos, 12–13, iniciando com 55. */
+  whatsapp: string | null;
+  whatsappOrigem: SignalOrigin | null;
+  /** Ordenadas por grupo (TECH_GROUP_ORDER) e rótulo; origem sempre SITE. */
+  tecnologias: TechHit[];
+}
+
+// ---------------------------------------------------------------------------
+// PageSpeed
+// ---------------------------------------------------------------------------
+
+export interface PageSpeedResult {
+  /** 0..100 */
+  desempenho: number;
+  acessibilidade: number | null;
+  boasPraticas: number | null;
+  seo: number | null;
+  lcpMs: number | null;
+  cls: number | null;
+  tbtMs: number | null;
+  fcpMs: number | null;
+  urlAnalisada: string;
+}
+
+/** Motivo pelo qual não há resultado do PageSpeed. */
+export type PageSpeedAbsence =
+  | 'ERRO'
+  | 'TIMEOUT'
+  | 'RESPOSTA_INVALIDA'
+  | 'COTA_ESGOTADA'
+  | 'DESABILITADO_NA_MINERACAO'
+  | 'SITE_OFFLINE'
+  | 'SEM_SITE';
+
+export type PageSpeedOutcome = { ok: true; result: PageSpeedResult } | { ok: false; reason: PageSpeedAbsence };
+
+// ---------------------------------------------------------------------------
+// CNPJ
+// ---------------------------------------------------------------------------
+
+/** Origem do CNPJ associado à Empresa. */
+export type CnpjOrigin = 'SITE' | 'MANUAL';
+
+/** Dados_CNPJ consultados na BrasilAPI. */
+export interface CnpjData {
+  /** 14 dígitos. */
+  cnpj: string;
+  razaoSocial: string | null;
+  nomeFantasia: string | null;
+  situacao: string | null;
+  situacaoData: string | null;
+  cnaeCodigo: string | null;
+  cnaeDescricao: string | null;
+  porte: string | null;
+  naturezaJuridica: string | null;
+  mei: boolean | null;
+  inicioAtividade: string | null;
+  municipio: string | null;
+  uf: string | null;
+  /** ISO 8601. */
+  consultadoEm: string;
+}
+
+/** Motivo pelo qual um CNPJ ficou como candidato (não associado automaticamente). */
+export type CandidateReason =
+  | 'MULTIPLOS'
+  | 'CONFLITO'
+  | 'UF_DIVERGENTE'
+  | 'NAO_ENCONTRADO'
+  | 'MANUAL_PRESERVADO'
+  | 'CONSULTA_DESABILITADA';
+
+export interface CnpjCandidate {
+  cnpj: string;
+  motivo: CandidateReason;
+  /** Empresa que já possui o CNPJ (motivo CONFLITO). */
+  conflitoCompanyId?: string;
 }
 
 /** Motivo de falha da análise do site (Req. 3). */
@@ -77,7 +214,9 @@ export interface SiteAnalysis {
   finalUrl: string | null;
 }
 
-/** Saída do Classificador (Req. 5.6): `motivos` tem de 1 a 5 itens. */
+/**
+ * Saída do Classificador (Etapa 1 Req. 5.6; Etapa 2 Req. 13.2): `motivos` tem de 1 a 6 itens.
+ */
 export interface ClassificationResult {
   category: CategoryCode;
   motivos: string[];
@@ -129,4 +268,6 @@ export interface ScoreBreakdown {
   final: number;
   prioridade: PriorityCode;
   formula: 'OBJETIVO_MAIS_IA' | 'OBJETIVO_REESCALADO';
+  /** Versão da pontuação: ausente = 1 (Análises antigas); 2 inclui Desempenho_Ruim. */
+  versao?: 1 | 2;
 }

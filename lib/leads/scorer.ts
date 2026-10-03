@@ -3,21 +3,27 @@
  *
  * Módulo puro e isomórfico: sem I/O, sem relógio, sem aleatoriedade. A mesma entrada
  * produz sempre o mesmo detalhamento (Req. 6.10).
+ *
+ * Versao_Score 2 (Etapa 2, Req. 13.3, 13.6): entrada opcional `pagespeed` e critério
+ * `desempenhoRuim` depois de `lento`. ICP, IA, fórmulas, reescala e prioridade não mudam;
+ * sem Desempenho_Ruim o detalhamento é o da Etapa 1 acrescido de `versao: 2`.
  */
 
 import {
   AI_MAX,
   DIGITAL_MAX,
-  DIGITAL_POINTS,
+  DIGITAL_POINTS_V2,
   HTTP_ERROR_MIN_STATUS,
   ICP_MAX,
   ICP_POINTS,
   OBJECTIVE_MAX,
   SLOW_THRESHOLD_MS,
 } from './config';
+import { desempenhoRuimLabel, isPoorPerformance } from './classifier';
 import type {
   AiOutcome,
   NicheTier,
+  PageSpeedResult,
   PriorityCode,
   ScoreBreakdown,
   ScoreComponent,
@@ -31,7 +37,14 @@ export interface ScoreInput {
   iaEnabled: boolean;
   /** null quando a IA não foi chamada. */
   ai: AiOutcome | null;
+  /** Resultado_PageSpeed (Versao_Score 2); ausente/null = sem dados de desempenho. */
+  pagespeed?: PageSpeedResult | null;
 }
+
+/** Versão da pontuação gravada no detalhamento. */
+export const SCORE_VERSION = 2;
+
+export { isPoorPerformance };
 
 /** Arredonda para o inteiro mais próximo, com frações .5 para cima. */
 export function roundHalfUp(x: number): number {
@@ -51,26 +64,29 @@ const sumPoints = (criteria: readonly ScoreCriterion[]): number =>
   criteria.reduce((acc, c) => acc + c.points, 0);
 
 /** Componente de presença digital (Req. 6.1). Critérios em ordem fixa. */
-function digitalComponent(a: SiteAnalysis): ScoreComponent {
+function digitalComponent(a: SiteAnalysis, pagespeed: PageSpeedResult | null | undefined): ScoreComponent {
   const criteria: ScoreCriterion[] = [];
 
   if (!a.hasSite) {
-    criteria.push({ id: 'semSite', label: 'Empresa não possui site', points: DIGITAL_POINTS.semSite });
+    criteria.push({ id: 'semSite', label: 'Empresa não possui site', points: DIGITAL_POINTS_V2.semSite });
   } else {
     if (!a.online) {
-      criteria.push({ id: 'offline', label: 'Site offline', points: DIGITAL_POINTS.offline });
+      criteria.push({ id: 'offline', label: 'Site offline', points: DIGITAL_POINTS_V2.offline });
     }
     if (a.statusCode != null && a.statusCode >= HTTP_ERROR_MIN_STATUS) {
-      criteria.push({ id: 'httpErro', label: `Site responde com erro HTTP ${a.statusCode}`, points: DIGITAL_POINTS.httpErro });
+      criteria.push({ id: 'httpErro', label: `Site responde com erro HTTP ${a.statusCode}`, points: DIGITAL_POINTS_V2.httpErro });
     }
     if (!a.isHttps) {
-      criteria.push({ id: 'semHttps', label: 'Site sem HTTPS', points: DIGITAL_POINTS.semHttps });
+      criteria.push({ id: 'semHttps', label: 'Site sem HTTPS', points: DIGITAL_POINTS_V2.semHttps });
     }
     if (!a.sslValid) {
-      criteria.push({ id: 'sslInvalido', label: 'Certificado SSL inválido ou ausente', points: DIGITAL_POINTS.sslInvalido });
+      criteria.push({ id: 'sslInvalido', label: 'Certificado SSL inválido ou ausente', points: DIGITAL_POINTS_V2.sslInvalido });
     }
     if (a.responseTimeMs != null && a.responseTimeMs > SLOW_THRESHOLD_MS) {
-      criteria.push({ id: 'lento', label: 'Site lento (acima de 2,5 s)', points: DIGITAL_POINTS.lento });
+      criteria.push({ id: 'lento', label: 'Site lento (acima de 2,5 s)', points: DIGITAL_POINTS_V2.lento });
+    }
+    if (isPoorPerformance(pagespeed)) {
+      criteria.push({ id: 'desempenhoRuim', label: desempenhoRuimLabel(pagespeed), points: DIGITAL_POINTS_V2.desempenhoRuim });
     }
   }
 
@@ -114,7 +130,7 @@ function aiNotUsedReason(input: ScoreInput): NonNullable<ScoreBreakdown['iaNaoUs
 
 /** Calcula componentes, Score_Final, Prioridade e detalhamento (Req. 6). */
 export function score(input: ScoreInput): ScoreBreakdown {
-  const digital = digitalComponent(input.analysis);
+  const digital = digitalComponent(input.analysis, input.pagespeed);
   const icp = icpComponent(input.tier);
   const objetivo = clamp(digital.value + icp.value, 0, OBJECTIVE_MAX);
 
@@ -135,6 +151,7 @@ export function score(input: ScoreInput): ScoreBreakdown {
       final,
       prioridade: priorityOf(final),
       formula: 'OBJETIVO_MAIS_IA',
+      versao: SCORE_VERSION,
     };
   }
 
@@ -148,5 +165,6 @@ export function score(input: ScoreInput): ScoreBreakdown {
     final,
     prioridade: priorityOf(final),
     formula: 'OBJETIVO_REESCALADO',
+    versao: SCORE_VERSION,
   };
 }

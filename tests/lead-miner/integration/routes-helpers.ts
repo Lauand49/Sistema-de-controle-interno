@@ -37,6 +37,9 @@ export function fakePipelineDeps(db: PrismaClient): PipelineDeps {
     osm: { http: { getJson: noNetwork }, limiter: { acquire: noNetwork }, sleep: async () => undefined } as never,
     site: { resolver: { resolveAll: async () => noNetwork() }, transport: { request: noNetwork }, now: () => Date.now() } as never,
     ai: { client: null, usage: {} as never, limit: 0, now: () => new Date() },
+    google: { http: null, usage: {} as never, limit: 0, now: () => new Date(), sleep: async () => undefined },
+    pagespeed: { http: { run: noNetwork }, usage: {} as never, limit: 0, now: () => new Date(), hasKey: false },
+    cnpj: { http: { getCnpj: noNetwork }, limiter: { schedule: noNetwork }, sleep: async () => undefined, now: () => new Date() } as never,
     now: () => Date.now(),
     newToken: () => crypto.randomUUID(),
   };

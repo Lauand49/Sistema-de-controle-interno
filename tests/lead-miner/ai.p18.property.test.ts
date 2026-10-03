@@ -54,7 +54,7 @@ describe('Property 18: Uso de cota do Gemini', () => {
           });
 
           if (c < limit) {
-            expect(usage.count('gemini', month)).toBe(c + 1);
+            expect(usage.peek('gemini', month)).toBe(c + 1);
             expect(log).toEqual(['reserve:ok', 'generate']);
             expect(client.prompts).toHaveLength(1);
             const prompt = client.prompts[0];
@@ -76,7 +76,7 @@ describe('Property 18: Uso de cota do Gemini', () => {
           } else {
             expect(out).toEqual({ ok: false, reason: 'cota esgotada' });
             expect(client.prompts).toHaveLength(0);
-            expect(usage.count('gemini', month)).toBe(c);
+            expect(usage.peek('gemini', month)).toBe(c);
           }
         },
       ),

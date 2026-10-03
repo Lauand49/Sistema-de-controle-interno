@@ -220,12 +220,12 @@ Convenções:
   - Rodar `npm test` (zero falhas, sem rede) e `npm run build` (sem erros); ensure all tests pass, ask the user if questions arise.
   - _Requirements: 12.5, 12.6_
 
-- [ ] 15. Registro da entrega e PR
+- [x] 15. Registro da entrega e PR
   - [x] 15.1 Atualizar `docs/PLANO-INTEGRACAO.md`
     - Seção 8: linha "2 — Painéis" com "concluída em {data} na branch `etapa-2-paineis` (PR pendente; ver 8.3)"
     - Nova subseção "8.3 Registro da Etapa 2": spec em `.kiro/specs/dashboards/`; as 12 decisões confirmadas (rotas `/paineis/**`, definição de atrasada, `Task.completedAt` com backfill, períodos, taxa de conversão por coorte de criação, solicitações só em departamento, Resumos_Membro pelo `progressScope`, GD com escopo total, inativos, home inalterada, agregação no banco, PR com base `etapa-1-minerador`); leitura de `dueDate` pela data UTC; como rodar os testes de integração (`RUN_DB_TESTS=1`)
     - _Requirements: 12.7_
-  - [-] 15.2 Commitar, enviar e abrir o PR
+  - [x] 15.2 Commitar, enviar e abrir o PR
     - Stage de arquivos específicos (spec, `prisma/`, `lib/`, `app/`, `components/`, `tests/dashboards/`, `types/index.ts`, `docs/PLANO-INTEGRACAO.md`; nunca `.env`); commit em português
     - `git push -u origin etapa-2-paineis`; como o `gh` não está instalado, abrir o PR pela URL impressa pelo `git push`, com base `etapa-1-minerador` (retargetar para `main` depois do merge das Etapas 0 e 1); descrição com resumo, resultado de `npm test`/`npm run build`, checklist do Req. 12 e roteiro manual de estilo e acessibilidade
     - _Requirements: 12.6, 12.7, 12.8_

@@ -83,6 +83,9 @@ function makeDeps(db: ReturnType<typeof fakeDb>, nowMs = 0): PipelineDeps {
       now: () => nowMs,
     } as never,
     ai: { client: null, usage: {} as never, limit: 0, now: () => new Date(0) },
+    google: { http: null, usage: {} as never, limit: 0, now: () => new Date(0), sleep: async () => undefined },
+    pagespeed: { http: { run: unused }, usage: {} as never, limit: 0, now: () => new Date(0), hasKey: false },
+    cnpj: { http: { getCnpj: unused }, limiter: { schedule: unused }, sleep: async () => undefined, now: () => new Date(0) } as never,
     now: () => nowMs,
     newToken: () => 'tok-1',
   };
@@ -107,7 +110,8 @@ beforeEach(() => {
 
 describe('runBatch', () => {
   it('não inicia empresa com menos de 32 s até o deadline e libera os claims (Req. 8.4)', async () => {
-    const db = fakeDb();
+    // Etapa 3: a margem depende dos serviços habilitados; 32 s é o caso da Etapa 1 (só IA).
+    const db = fakeDb({ run: { iaEnabled: true } });
     const items = [item('a'), item('b'), item('c')];
     claimBatch.mockResolvedValueOnce(items);
     const now = 1_000_000;

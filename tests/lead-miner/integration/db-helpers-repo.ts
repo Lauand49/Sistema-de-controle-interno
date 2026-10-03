@@ -106,7 +106,11 @@ export function makeDeps(db: PrismaClient, script: NicheScript): PipelineDeps {
       transport: { request: failing('transport') as never },
       now: () => 0,
     },
-    ai: { client: null, usage: { reserve: failing('usage') as never }, limit: 0, now: () => new Date(0) },
+    ai: { client: null, usage: { reserve: failing('usage') as never, count: failing('usage') as never }, limit: 0, now: () => new Date(0) },
+    // Serviços da Etapa 3 (ainda sem uso no pipeline da Etapa 1).
+    google: { http: null, usage: { reserve: failing('usage') as never, count: failing('usage') as never }, limit: 0, now: () => new Date(0), sleep: async () => undefined },
+    pagespeed: { http: { run: failing('pagespeed') as never }, usage: { reserve: failing('usage') as never, count: failing('usage') as never }, limit: 0, now: () => new Date(0), hasKey: false },
+    cnpj: { http: { getCnpj: failing('brasilapi') as never }, limiter: { schedule: (fn) => fn() }, sleep: async () => undefined, now: () => new Date(0) },
     now: () => 0,
     newToken: () => randomUUID(),
   };

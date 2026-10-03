@@ -79,21 +79,21 @@ describe('analyzeWithAi', () => {
     const client = fakeGemini({ kind: 'ok', text: valid });
     expect(await analyzeWithAi(input, deps({ client, usage }))).toEqual({ ok: false, reason: 'cota esgotada' });
     expect(client.prompts).toHaveLength(0);
-    expect(usage.count('gemini', MONTH)).toBe(10);
+    expect(usage.peek('gemini', MONTH)).toBe(10);
   });
 
   it('sucesso incrementa o contador do mês corrente', async () => {
     const usage = memoryUsageGate();
     const out = await analyzeWithAi(input, deps({ usage }));
     expect(out).toMatchObject({ ok: true, result: { score: 21 } });
-    expect(usage.count('gemini', MONTH)).toBe(1);
+    expect(usage.peek('gemini', MONTH)).toBe(1);
   });
 
   it('erro do cliente → "sem resposta" e contador incrementado', async () => {
     const usage = memoryUsageGate();
     const out = await analyzeWithAi(input, deps({ usage, client: fakeGemini({ kind: 'error' }) }));
     expect(out).toEqual({ ok: false, reason: 'sem resposta' });
-    expect(usage.count('gemini', MONTH)).toBe(1);
+    expect(usage.peek('gemini', MONTH)).toBe(1);
   });
 
   it('timeout de 20 s → "sem resposta" e aborta a requisição', async () => {
@@ -109,7 +109,7 @@ describe('analyzeWithAi', () => {
     await vi.advanceTimersByTimeAsync(1);
     expect(await pending).toEqual({ ok: false, reason: 'sem resposta' });
     expect(client.signals[0].aborted).toBe(true);
-    expect(usage.count('gemini', MONTH)).toBe(1);
+    expect(usage.peek('gemini', MONTH)).toBe(1);
   });
 
   it('resposta inválida → "resposta inválida"', async () => {
@@ -118,7 +118,10 @@ describe('analyzeWithAi', () => {
   });
 
   it('falha do gate de cota não lança', async () => {
-    const usage = { reserve: () => Promise.reject(new Error('db fora')) };
+    const usage = {
+      reserve: () => Promise.reject(new Error('db fora')),
+      count: () => Promise.reject(new Error('db fora')),
+    };
     expect(await analyzeWithAi(input, deps({ usage }))).toEqual({ ok: false, reason: 'sem resposta' });
   });
 });

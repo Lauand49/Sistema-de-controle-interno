@@ -20,5 +20,14 @@ globalThis.fetch = forbidden as unknown as typeof globalThis.fetch;
 // Propaga as substituições para os imports nomeados ESM (`import { lookup } from 'node:dns'`).
 syncBuiltinESMExports();
 
-// Nenhum teste pode depender de uma chave real do Gemini.
-delete process.env.GEMINI_API_KEY;
+// Nenhum teste pode depender de chaves reais nem de limites configurados no ambiente
+// (Gemini, Places API e PageSpeed — Req. 21.1, 21.10).
+for (const name of [
+  'GEMINI_API_KEY',
+  'GOOGLE_PLACES_API_KEY',
+  'PAGESPEED_API_KEY',
+  'PLACES_MONTHLY_LIMIT',
+  'PAGESPEED_MONTHLY_LIMIT',
+]) {
+  delete process.env[name];
+}

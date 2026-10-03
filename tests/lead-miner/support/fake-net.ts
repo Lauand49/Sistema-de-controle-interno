@@ -53,17 +53,28 @@ export interface TransportRequest {
   method: 'GET' | 'HEAD';
   signal: AbortSignal;
   maxBodyBytes: number;
+  captureBody?: boolean;
 }
 
+/** Resposta configurada; `contentType`/`body` (Etapa 3) são opcionais e viram `null`. */
 export interface TransportResponse {
   status: number;
   location: string | null;
   headersAt: number;
   bodyBytes: number;
+  contentType?: string | null;
+  body?: Uint8Array | null;
 }
 
+/** Resposta devolvida pelo transporte falso (contrato completo de `net/http-transport.ts`). */
+export type FullTransportResponse = TransportResponse & { contentType: string | null; body: Uint8Array | null };
+
 export interface Transport {
-  request(r: TransportRequest): Promise<TransportResponse>;
+  request(r: TransportRequest): Promise<FullTransportResponse>;
+}
+
+function complete(r: TransportResponse): FullTransportResponse {
+  return { ...r, contentType: r.contentType ?? null, body: r.body ?? null };
 }
 
 /** Resposta configurada: objeto, erro lançado ou função da requisição. */
@@ -98,8 +109,8 @@ export function fakeTransport(
       else answer = answers[r.url.href];
       if (answer === undefined) throw new Error(`fakeTransport: sem resposta para ${r.url.href}`);
       if (answer instanceof Error) throw answer;
-      if (typeof answer === 'function') return answer(r);
-      return { ...answer };
+      if (typeof answer === 'function') return complete(await answer(r));
+      return complete(answer);
     },
   };
 }

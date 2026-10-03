@@ -1,6 +1,6 @@
 /**
  * Sanidade do bloqueio de rede do setup global (tests/setup/no-network.ts).
- * **Validates: Requirements 20.6, 20.7**
+ * **Validates: Requirements 20.6, 20.7, 21.1, 21.10**
  */
 import dns from 'node:dns';
 import net from 'node:net';
@@ -33,4 +33,11 @@ describe('bloqueio de rede nos testes', () => {
   it('GEMINI_API_KEY não está definida', () => {
     expect(process.env.GEMINI_API_KEY).toBeUndefined();
   });
+
+  it.each(['GOOGLE_PLACES_API_KEY', 'PAGESPEED_API_KEY', 'PLACES_MONTHLY_LIMIT', 'PAGESPEED_MONTHLY_LIMIT'])(
+    '%s não está definida',
+    (name) => {
+      expect(process.env[name]).toBeUndefined();
+    },
+  );
 });

@@ -5,6 +5,8 @@
  * - Mantém o hostname original no cabeçalho `Host` e no SNI/verificação do certificado.
  * - Envia apenas `Host`, `User-Agent` e `Accept`; sem corpo, cookies ou autenticação.
  * - Lê no máximo `maxBodyBytes` do corpo e encerra a conexão ao atingir o limite, sem falha.
+ * - Com `captureBody`, devolve os bytes lidos da resposta final (não redirecionamento) e o
+ *   `Content-Type` bruto (Req. 7.1, 7.2); a leitura e o limite são os mesmos.
  *
  * Sem `server-only`: o módulo é importado em testes (apenas `mapNodeError` é exercitado lá).
  * Usa só `node:http`, `node:https` e `node:net`.
@@ -24,6 +26,8 @@ export interface TransportRequest {
   method: 'GET' | 'HEAD';
   signal: AbortSignal;
   maxBodyBytes: number;
+  /** Guarda os bytes do corpo (≤ `maxBodyBytes`) quando a resposta não é redirecionamento (Req. 7.1). */
+  captureBody?: boolean;
 }
 
 export interface TransportResponse {
@@ -33,6 +37,49 @@ export interface TransportResponse {
   headersAt: number;
   /** Bytes do corpo lidos (nunca maior que `maxBodyBytes`). */
   bodyBytes: number;
+  /** Valor bruto do cabeçalho `Content-Type` (ou null). */
+  contentType: string | null;
+  /** Corpo lido (≤ `maxBodyBytes`) quando `captureBody` e a resposta não é redirecionamento; senão null. */
+  body: Uint8Array | null;
+}
+
+/** Status tratados como redirecionamento quando acompanhados de `Location` (iguais aos do Analisador_de_Site). */
+const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
+
+export interface BodyCollector {
+  /** Acrescenta um chunk; o último é cortado no limite. `'FULL'` quando o limite foi atingido. */
+  push(chunk: Uint8Array): 'MORE' | 'FULL';
+  /** Bytes acumulados até agora (cópia contígua, ≤ `maxBytes`). */
+  bytes(): Uint8Array;
+}
+
+/** Acumulador puro de chunks do corpo até `maxBytes` (Req. 7.2). */
+export function collectBody(maxBytes: number): BodyCollector {
+  const limit = Math.max(0, Math.floor(maxBytes));
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  return {
+    push(chunk) {
+      if (total >= limit) return 'FULL';
+      const room = limit - total;
+      const part = chunk.length > room ? chunk.subarray(0, room) : chunk;
+      if (part.length > 0) {
+        // Copia: o Node pode reutilizar o buffer do chunk.
+        chunks.push(new Uint8Array(part));
+        total += part.length;
+      }
+      return total >= limit ? 'FULL' : 'MORE';
+    },
+    bytes() {
+      const out = new Uint8Array(total);
+      let offset = 0;
+      for (const c of chunks) {
+        out.set(c, offset);
+        offset += c.length;
+      }
+      return out;
+    },
+  };
 }
 
 export type TransportErrorKind =
@@ -158,6 +205,8 @@ function doRequest(r: TransportRequest, now: () => number): Promise<TransportRes
     let location: string | null = null;
     let headersAt = 0;
     let bodyBytes = 0;
+    let contentType: string | null = null;
+    let collector: BodyCollector | null = null;
     let gotResponse = false;
 
     const cleanup = () => r.signal.removeEventListener('abort', onAbort);
@@ -165,7 +214,7 @@ function doRequest(r: TransportRequest, now: () => number): Promise<TransportRes
       if (settled) return;
       settled = true;
       cleanup();
-      resolve({ status, location, headersAt, bodyBytes });
+      resolve({ status, location, headersAt, bodyBytes, contentType, body: collector ? collector.bytes() : null });
     };
     const fail = (e: TransportError) => {
       if (settled) return;
@@ -188,9 +237,15 @@ function doRequest(r: TransportRequest, now: () => number): Promise<TransportRes
       status = res.statusCode ?? 0;
       const loc = res.headers.location;
       location = typeof loc === 'string' ? loc : null;
+      const ct = res.headers['content-type'];
+      contentType = typeof ct === 'string' ? ct : null;
+      // Corpo só da resposta final (não redirecionamento) e só quando pedido (Req. 7.1).
+      const isRedirect = REDIRECT_STATUSES.has(status) && location !== null;
+      if (r.captureBody === true && !isRedirect) collector = collectBody(r.maxBodyBytes);
 
       res.on('data', (chunk: Buffer) => {
         if (settled) return;
+        if (collector) collector.push(chunk);
         bodyBytes += chunk.length;
         if (bodyBytes >= r.maxBodyBytes) {
           // Limite atingido: encerra a conexão e registra os dados obtidos (Req. 4.6).

@@ -12,6 +12,7 @@ import {
   RETRY_DELAYS_MS,
   type Niche,
 } from '../config';
+import { normalizeInstagram, normalizeWhatsapp } from '../signals';
 import type { FoundCompany } from '../types';
 import type { RateLimiter } from './rate-limit';
 
@@ -29,8 +30,19 @@ export interface OsmDeps {
   sleep: (ms: number) => Promise<void>;
 }
 
+/** Retângulo geográfico (graus decimais). */
+export interface BBox {
+  south: number;
+  west: number;
+  north: number;
+  east: number;
+}
+/**
+ * Área de busca. `kind: 'area'` carrega o `bbox` do Nominatim quando disponível (usado
+ * como retângulo da Text Search do Google, Req. 3.1); mineracões antigas podem não tê-lo.
+ */
 export type SearchArea =
-  | { kind: 'area'; areaId: number }
+  | { kind: 'area'; areaId: number; bbox?: BBox }
   | { kind: 'bbox'; south: number; west: number; north: number; east: number };
 
 export type GeocodeResult =
@@ -58,7 +70,7 @@ export const WAY_AREA_OFFSET = 2_400_000_000;
 const MAX_ATTEMPTS = RETRY_DELAYS_MS.length + 1;
 
 /** Erro de resposta com formato inesperado (tratado como falha e retentado). */
-class InvalidResponseError extends Error {}
+class InvalidResponseError extends Error { }
 
 /**
  * Executa `attempt` até `MAX_ATTEMPTS` vezes, aguardando `RETRY_DELAYS_MS[i]` antes da
@@ -105,17 +117,24 @@ function toFiniteNumber(v: unknown): number | null {
 function areaFromNominatim(first: unknown): SearchArea | null {
   if (typeof first !== 'object' || first === null) return null;
   const r = first as Record<string, unknown>;
+  const bbox = bboxFromNominatim(r.boundingbox);
   const osmId = toFiniteNumber(r.osm_id);
   if (osmId !== null && Number.isSafeInteger(osmId) && osmId > 0) {
-    if (r.osm_type === 'relation') return { kind: 'area', areaId: RELATION_AREA_OFFSET + osmId };
-    if (r.osm_type === 'way') return { kind: 'area', areaId: WAY_AREA_OFFSET + osmId };
+    const offset = r.osm_type === 'relation' ? RELATION_AREA_OFFSET : r.osm_type === 'way' ? WAY_AREA_OFFSET : null;
+    if (offset !== null) {
+      const areaId = offset + osmId;
+      return bbox ? { kind: 'area', areaId, bbox } : { kind: 'area', areaId };
+    }
   }
-  // node ou sem limite: boundingbox do Nominatim = [south, north, west, east]
-  const bb = r.boundingbox;
+  // node ou sem limite: usa o próprio retângulo
+  return bbox ? { kind: 'bbox', ...bbox } : null;
+}
+/** boundingbox do Nominatim = [south, north, west, east] (strings); null se inválido. */
+function bboxFromNominatim(bb: unknown): BBox | null {
   if (!Array.isArray(bb) || bb.length !== 4) return null;
   const [south, north, west, east] = bb.map(toFiniteNumber);
   if (south === null || north === null || west === null || east === null) return null;
-  return { kind: 'bbox', south, west, north, east };
+  return { south, west, north, east };
 }
 
 export async function geocode(bairro: string, cidade: string, uf: string, deps: OsmDeps): Promise<GeocodeResult> {
@@ -201,6 +220,8 @@ export function mapElement(el: OverpassElement, nicheId: string): FoundCompany |
     latitude: hasOwnCoords ? (el.lat as number) : finiteOrNull(el.center?.lat),
     longitude: hasOwnCoords ? (el.lon as number) : finiteOrNull(el.center?.lon),
     marcaRede: tagValue(el.tags, 'brand'),
+    instagramOsm: normalizeInstagram(tagValue(el.tags, 'contact:instagram', 'instagram')),
+    whatsappOsm: normalizeWhatsapp(tagValue(el.tags, 'contact:whatsapp', 'whatsapp')),
   };
 }
 

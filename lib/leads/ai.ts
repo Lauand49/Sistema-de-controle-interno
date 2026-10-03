@@ -11,7 +11,7 @@
  */
 import { AI_MAX, GEMINI_TIMEOUT_MS } from './config';
 import { roundHalfUp } from './scorer';
-import type { AiOutcome, SiteAnalysis } from './types';
+import type { AiOutcome, CnpjData, SinaisDigitais, SiteAnalysis } from './types';
 import { monthKey, type UsageGate } from './usage';
 
 export type { UsageGate } from './usage';
@@ -43,6 +43,27 @@ export interface AiInput {
   bairro: string | null;
   cidade: string | null;
   site: SiteAnalysis;
+  /** Sinais_Digitais da análise (Req. 14.1). Opcional para manter os chamadores da Etapa 1. */
+  sinais?: SinaisDigitais | null;
+  /** Campos de Dados_CNPJ permitidos à IA (Req. 12.8), já gravados na Empresa. */
+  cnpj?: CnpjAiFields | null;
+}
+/** Dados_CNPJ que a IA pode receber (Req. 12.8): sem razão social, QSA, e-mail ou telefone. */
+export type CnpjAiFields = Pick<
+  CnpjData,
+  'nomeFantasia' | 'cnaeCodigo' | 'cnaeDescricao' | 'porte' | 'situacao' | 'inicioAtividade'
+>;
+/** Projeta Dados_CNPJ nos campos permitidos à IA; nunca inclui `razaoSocial` (Req. 12.8). */
+export function cnpjAiFields(d: CnpjData | CnpjAiFields | null | undefined): CnpjAiFields | null {
+  if (!d) return null;
+  return {
+    nomeFantasia: d.nomeFantasia ?? null,
+    cnaeCodigo: d.cnaeCodigo ?? null,
+    cnaeDescricao: d.cnaeDescricao ?? null,
+    porte: d.porte ?? null,
+    situacao: d.situacao ?? null,
+    inicioAtividade: d.inicioAtividade ?? null,
+  };
 }
 
 export const OPORTUNIDADE_MAX = 500;
@@ -53,8 +74,11 @@ const defaultSetTimer: SetTimer = (cb, ms) => {
   return () => clearTimeout(handle);
 };
 
-/** Dados da empresa enviados ao Gemini (Req. 7.1). */
+/** Dados da empresa enviados ao Gemini (Req. 7.1, 14.1). */
 export function promptData(input: AiInput) {
+  // Reprojeta mesmo quando o chamador já passou CnpjAiFields: campos extras nunca vazam.
+  const cnpj = input.cnpj ? cnpjAiFields(input.cnpj) : null;
+  const sinais = input.sinais ?? null;
   return {
     nome: input.nome,
     nicho: input.nicho,
@@ -68,6 +92,17 @@ export function promptData(input: AiInput) {
       latenciaMs: input.site.responseTimeMs,
       disponivel: input.site.online,
     },
+    // Só presença e rótulos: o perfil e o número de WhatsApp não são enviados.
+    ...(sinais
+      ? {
+          presencaDigital: {
+            instagram: sinais.instagram !== null,
+            whatsapp: sinais.whatsapp !== null,
+            tecnologias: sinais.tecnologias.map((t) => t.label),
+          },
+        }
+      : {}),
+    ...(cnpj ? { cnpj } : {}),
   };
 }
 

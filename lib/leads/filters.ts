@@ -6,6 +6,7 @@
  */
 import { z } from 'zod';
 import type {
+  ApproachChannel,
   CompanyCategory,
   LeadPriority,
   MiningSource,
@@ -13,6 +14,7 @@ import type {
   Prisma,
 } from '@prisma/client';
 import { BULK_MAX, MAP_MAX, NICHES, PRESETS, UFS, type PresetId } from './config';
+import { isValidCnpj, normalizeCnpj } from './cnpj';
 import { isValidCoord } from './geo';
 import { normalizeText } from './text';
 
@@ -28,6 +30,7 @@ const CATEGORIES = [
 ] as const satisfies readonly CompanyCategory[];
 const PRIORITIES = ['ALTA', 'MEDIA', 'BAIXA'] as const satisfies readonly LeadPriority[];
 const SOURCES = ['OSM', 'GOOGLE', 'MISTA'] as const satisfies readonly MiningSource[];
+const CHANNELS = ['WHATSAPP', 'EMAIL'] as const satisfies readonly ApproachChannel[];
 const RUN_STATUSES = [
   'PENDENTE',
   'EM_ANDAMENTO',
@@ -73,6 +76,9 @@ export const MSG = {
   bulkRepetido: 'Há empresas repetidas na seleção.',
   bulkId: 'Identificador de empresa inválido.',
   nenhumNicho: 'Nenhum nicho pôde ser consultado no OpenStreetMap',
+  canal: 'Canal inválido (use WhatsApp ou E-mail).',
+  cnpj: 'CNPJ inválido',
+  campoDesconhecido: 'Campo não permitido.',
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -188,6 +194,12 @@ export interface RunInput {
   nichos: string[];
   excluirRedes: boolean;
   iaEnabled: boolean;
+  /** Modo_Fonte solicitado (padrão `MISTA`, Req. 4.3). */
+  fonte: MiningSource;
+  /** Analisar desempenho pelo PageSpeed (padrão `true`, Req. 10.1). */
+  pagespeedEnabled: boolean;
+  /** Consultar CNPJ na BrasilAPI (padrão `true`, Req. 12.7). */
+  cnpjEnabled: boolean;
 }
 
 const nichosSchema = z
@@ -218,6 +230,9 @@ const runInputObject = z.object({
   preset: z.enum(PRESET_IDS, { errorMap: () => ({ message: MSG.preset }) }).optional(),
   excluirRedes: z.boolean({ invalid_type_error: MSG.booleano }).default(false),
   iaEnabled: z.boolean({ invalid_type_error: MSG.booleano }).default(false),
+  fonte: z.enum(SOURCES, { errorMap: () => ({ message: MSG.fonte }) }).default('MISTA'),
+  pagespeedEnabled: z.boolean({ invalid_type_error: MSG.booleano }).default(true),
+  cnpjEnabled: z.boolean({ invalid_type_error: MSG.booleano }).default(true),
 });
 
 const isPresetId = (v: unknown): v is PresetId =>
@@ -243,6 +258,9 @@ export const runInputSchema: z.ZodType<RunInput, z.ZodTypeDef, unknown> = z.prep
       nichos: v.nichos,
       excluirRedes: v.excluirRedes,
       iaEnabled: v.iaEnabled,
+      fonte: v.fonte,
+      pagespeedEnabled: v.pagespeedEnabled,
+      cnpjEnabled: v.cnpjEnabled,
     }),
   ),
 );
@@ -262,6 +280,46 @@ export function buildRunParamsKey(i: Pick<RunInput, 'bairro' | 'cidade' | 'uf' |
   const esc = (s: string) => normalizeText(s).replace(/[\\|]/g, '\\$&');
   return `${esc(i.bairro)}|${esc(i.cidade)}|${i.uf}|${nichos}`;
 }
+
+// ---------------------------------------------------------------------------
+// Corpos das rotas da Ficha (Req. 11.7, 20.3, 20.5)
+// ---------------------------------------------------------------------------
+
+/** Identificadores de autor que o cliente pode enviar; são descartados — o autor vem da sessão (Req. 20.3). */
+const AUTHOR_ID_KEYS = ['createdById', 'authorId', 'userId', 'actorId'] as const;
+
+const dropAuthorIds = (raw: unknown): unknown => {
+  if (raw === null || typeof raw !== 'object' || Array.isArray(raw)) return raw;
+  const obj: Record<string, unknown> = { ...(raw as Record<string, unknown>) };
+  for (const key of AUTHOR_ID_KEYS) delete obj[key];
+  return obj;
+};
+
+/** `POST /companies/[id]/approach`: `{ canal: 'WHATSAPP' | 'EMAIL' }`; outros campos → 400. */
+export const approachBodySchema: z.ZodType<{ canal: ApproachChannel }, z.ZodTypeDef, unknown> = z.preprocess(
+  dropAuthorIds,
+  z
+    .object({
+      canal: z.enum(CHANNELS, { errorMap: () => ({ message: MSG.canal }) }),
+    })
+    .strict(MSG.campoDesconhecido),
+);
+
+/**
+ * `PUT /companies/[id]/cnpj`: `{ cnpj }` aceito com ou sem máscara, validado pelo Validador_CNPJ
+ * e devolvido normalizado (14 caracteres, maiúsculas). Inválido → "CNPJ inválido" (Req. 11.7).
+ */
+export const cnpjBodySchema: z.ZodType<{ cnpj: string }, z.ZodTypeDef, unknown> = z.preprocess(
+  dropAuthorIds,
+  z
+    .object({
+      cnpj: z
+        .string({ required_error: MSG.cnpj, invalid_type_error: MSG.cnpj })
+        .refine(isValidCnpj, MSG.cnpj)
+        .transform(normalizeCnpj),
+    })
+    .strict(MSG.campoDesconhecido),
+);
 
 /** Desfecho do fim da descoberta (Req. 2.11, 2.13, 8.13). */
 export function finalizeDiscovery(

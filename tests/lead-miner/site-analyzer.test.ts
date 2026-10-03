@@ -9,7 +9,7 @@ import { fakeTimers, hangUntilAbort } from './support/fake-timers';
 const PUBLIC = '93.184.216.34';
 
 function ok(status: number, headersAt: number, location: string | null = null): TransportResponse {
-  return { status, location, headersAt, bodyBytes: 0 };
+  return { status, location, headersAt, bodyBytes: 0, contentType: null, body: null };
 }
 
 function setup(

@@ -25,7 +25,7 @@ describe('geocode', () => {
     const http = fakeHttpJson([[{ osm_type: 'relation', osm_id: 298285, boundingbox: ['0', '1', '0', '1'] }]]);
     const { d, limiter } = deps(http);
     const r = await geocode('Vila Mariana', 'São Paulo', 'SP', d);
-    expect(r).toEqual({ ok: true, area: { kind: 'area', areaId: 3_600_298_285 } });
+    expect(r).toEqual({ ok: true, area: { kind: 'area', areaId: 3_600_298_285, bbox: { south: 0, north: 1, west: 0, east: 1 } } });
     expect(limiter.count).toBe(1);
     const url = new URL(http.calls[0].url);
     expect(url.searchParams.get('q')).toBe('Vila Mariana, São Paulo, SP');
@@ -132,6 +132,8 @@ describe('mapElement', () => {
       latitude: -23.5,
       longitude: -46.6,
       marcaRede: 'Rede X',
+      instagramOsm: null,
+      whatsappOsm: null,
     });
   });
 

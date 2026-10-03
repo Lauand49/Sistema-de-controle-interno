@@ -7,7 +7,8 @@ import type { UsageGate, UsageProvider } from '@/lib/leads/usage';
 
 export interface MemoryUsageGate extends UsageGate {
   counts: Map<string, number>;
-  count(provider: UsageProvider, month: string): number;
+  /** Leitura síncrona para asserções. */
+  peek(provider: UsageProvider, month: string): number;
   reserveCalls: number;
 }
 
@@ -19,7 +20,8 @@ export function memoryUsageGate(
   const gate: MemoryUsageGate = {
     counts,
     reserveCalls: 0,
-    count: (provider, month) => counts.get(`${provider}:${month}`) ?? 0,
+    peek: (provider, month) => counts.get(`${provider}:${month}`) ?? 0,
+    count: async (provider, month) => counts.get(`${provider}:${month}`) ?? 0,
     async reserve(provider, month, limit) {
       gate.reserveCalls += 1;
       const key = `${provider}:${month}`;

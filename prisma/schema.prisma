@@ -51,8 +51,8 @@ model User {
   name           String
   email          String          @unique
   avatar         String?
-  cargo          String?         // Título livre exibido (opcional)
-  globalRole     GlobalRole?     // Presidente / Vice (sem departamento)
+  cargo          String? // Título livre exibido (opcional)
+  globalRole     GlobalRole? // Presidente / Vice (sem departamento)
   status         UserStatus      @default(PENDENTE)
   departmentId   String?
   department     Unit?           @relation("DepartmentMembers", fields: [departmentId], references: [id], onDelete: Restrict)
@@ -72,6 +72,7 @@ model User {
   requestsHandled   CrossDeptRequest[] @relation("HandlerRelation")
   miningRuns        MiningRun[]
   assignedCompanies Company[]
+  approachMessages  ApproachMessage[]
 
   @@index([departmentId])
   @@index([status])
@@ -108,7 +109,7 @@ model AuditLog {
   id           String   @id @default(uuid())
   actorId      String?
   actor        User?    @relation("AuditActor", fields: [actorId], references: [id], onDelete: SetNull)
-  action       String   // USER_APPROVED, DEPARTMENT_ROLE_CHANGED, SECTOR_MEMBER_ADDED, ...
+  action       String // USER_APPROVED, DEPARTMENT_ROLE_CHANGED, SECTOR_MEMBER_ADDED, ...
   targetUserId String?
   targetUser   User?    @relation("AuditTarget", fields: [targetUserId], references: [id], onDelete: SetNull)
   unitId       String?
@@ -130,7 +131,7 @@ model Pipe {
   description String?
   unitId      String
   unit        Unit     @relation(fields: [unitId], references: [id], onDelete: Restrict)
-  icon        String?  // Nome do ícone lucide
+  icon        String? // Nome do ícone lucide
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
 
@@ -160,8 +161,8 @@ model Field {
   id        String   @id @default(uuid())
   name      String
   label     String
-  type      String   // TEXT, NUMBER, CURRENCY, DATE, SELECT, TEXTAREA
-  options   String?  // Array JSON de opções (SELECT)
+  type      String // TEXT, NUMBER, CURRENCY, DATE, SELECT, TEXTAREA
+  options   String? // Array JSON de opções (SELECT)
   required  Boolean  @default(false)
   order     Int      @default(0)
   phaseId   String
@@ -214,9 +215,9 @@ model CardActivity {
   card        Card     @relation(fields: [cardId], references: [id], onDelete: Cascade)
   userId      String?
   user        User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
-  type        String   // PHASE_CHANGE, CARD_CREATED, FIELD_UPDATED, COMMENT
+  type        String // PHASE_CHANGE, CARD_CREATED, FIELD_UPDATED, COMMENT
   description String
-  metadata    String?  // Payload JSON
+  metadata    String? // Payload JSON
   createdAt   DateTime @default(now())
 
   @@index([cardId])
@@ -229,8 +230,8 @@ model ProspectLead {
   id           String   @id @default(uuid())
   companyName  String
   contactName  String?
-  contactInfo  String?  // Telefone, e-mail ou link
-  actionPlan   String   // O que deve ser feito com esse lead
+  contactInfo  String? // Telefone, e-mail ou link
+  actionPlan   String // O que deve ser feito com esse lead
   notes        String?
   segment      String?
   status       String   @default("PENDING") // RAW, PENDING, IN_PROGRESS, CONVERTED_TO_PIPE, DISCARDED
@@ -275,6 +276,22 @@ enum LeadPriority {
   BAIXA
 }
 
+// Etapa 3 (lead-miner-enrichment)
+enum CnpjOrigin {
+  SITE
+  MANUAL
+}
+
+enum ApproachChannel {
+  WHATSAPP
+  EMAIL
+}
+
+enum ApproachOrigin {
+  IA
+  MODELO
+}
+
 model Company {
   id              String           @id @default(uuid())
   googlePlaceId   String?          @unique // Etapa 3
@@ -282,7 +299,7 @@ model Company {
   cnpj            String?          @unique // Etapa 3
   nome            String
   nomeNormalizado String
-  nicho           String           // id do nicho (lib/leads/config.ts)
+  nicho           String // id do nicho (lib/leads/config.ts)
   endereco        String?
   bairro          String?
   cidade          String?
@@ -305,17 +322,71 @@ model Company {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
 
-  analyses     CompanyAnalysis[]
-  runs         MiningRunCompany[]
-  aliases      CompanyAlias[]
-  prospectLead ProspectLead?
+  // ── Etapa 3 (lead-miner-enrichment) ──
+  // nome: nome próprio (OSM/manual); '' para Empresa só do Google
+  nomeExibicao        String      @default("") // Nome_Exibicao para ordenação; mantido junto do cache/Dados_CNPJ
+  instagramOsm        String? // tag contact:instagram normalizada
+  whatsappOsm         String? // tag contact:whatsapp normalizada
+  cnpjOrigem          CnpjOrigin?
+  cnpjCandidatos      Json        @default("[]") // CnpjCandidate[]
+  cnpjStatus          String? // "CNPJ não encontrado na Receita" | "Consulta à Receita indisponível" | "CNPJ do site é de outra UF…"
+  cnpjDadosCnpj       String? // CNPJ a que os Dados_CNPJ se referem
+  cnpjConsultadoEm    DateTime?
+  cnpjRazaoSocial     String?
+  cnpjNomeFantasia    String?
+  situacaoCadastral   String? // snapshot (filtro e alerta)
+  cnpjSituacaoData    String?
+  cnpjCnaeCodigo      String?
+  cnpjCnaeDescricao   String?
+  cnpjPorte           String?
+  cnpjNatureza        String?
+  cnpjMei             Boolean?
+  cnpjInicioAtividade String?
+  cnpjMunicipio       String?
+  cnpjUf              String?
+  temInstagram        Boolean? // snapshot
+  temWhatsapp         Boolean? // snapshot
+  desempenhoRuim      Boolean? // snapshot (filtro do ranking)
+  reanaliseAte        DateTime? // lease da Reanalise
+
+  analyses         CompanyAnalysis[]
+  runs             MiningRunCompany[]
+  aliases          CompanyAlias[]
+  prospectLead     ProspectLead?
+  googleCache      GooglePlaceCache?
+  approachMessages ApproachMessage[]
 
   @@index([scoreFinal(sort: Desc), nome])
+  @@index([scoreFinal(sort: Desc), nomeExibicao])
+  @@index([situacaoCadastral])
   @@index([nomeNormalizado])
   @@index([uf, cidade, bairro])
   @@index([nicho])
   @@index([assignedTo])
   @@index([lastAnalyzedAt])
+}
+
+/// Cache_Google: todo Conteudo_Google da Empresa, válido por 30 dias (Req. 6.1).
+model GooglePlaceCache {
+  companyId      String   @id
+  company        Company  @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  placeId        String
+  nome           String
+  endereco       String?
+  bairro         String?
+  cidade         String?
+  uf             String?
+  telefone       String?
+  website        String?
+  latitude       Float?
+  longitude      Float?
+  mapsUri        String?
+  businessStatus String?
+  tipos          Json     @default("[]")
+  obtidoEm       DateTime
+  expiraEm       DateTime
+
+  @@index([expiraEm])
 }
 
 // Identificadores externos fundidos numa Empresa (ex.: osmId de um elemento que casou por
@@ -345,12 +416,12 @@ model CompanyAnalysis {
   isHttps         Boolean
   sslValid        Boolean
   sslProblem      String?
-  responseTime    Int?            // ms
+  responseTime    Int? // ms
   lento           Boolean         @default(false)
   motivoFalha     String?
   finalUrl        String?
   categoria       CompanyCategory
-  motivos         Json            // string[]
+  motivos         Json // string[]
   scoreDigital    Int
   scoreIcp        Int
   scoreObjetivo   Int
@@ -358,46 +429,61 @@ model CompanyAnalysis {
   scoreFinal      Int
   prioridade      LeadPriority
   iaAplicada      Boolean         @default(false)
-  iaMotivo        String?         // "IA desabilitada" | "sem resposta" | "resposta inválida"
+  iaMotivo        String? // "IA desabilitada" | "sem resposta" | "resposta inválida"
   oportunidadeIa  String?
   justificativaIa String?
-  detalhamento    Json            // ScoreBreakdown
-  pagespeed       Json?           // Etapa 3
-  tecnologias     Json?           // Etapa 3
+  detalhamento    Json // ScoreBreakdown
+  pagespeed       Json? // Etapa 3
+  tecnologias     Json? // Etapa 3
+  versaoScore     Int             @default(2) // 1 = análises anteriores à Etapa 3 (Req. 13.1)
+  sinais          Json? // SinaisDigitais
+  pagespeedMotivo String? // PageSpeedAbsence quando pagespeed é null
+  cnpjEncontrados Json? // string[] encontrados no HTML (diagnóstico; sem HTML)
   createdAt       DateTime        @default(now())
 
-  runLink MiningRunCompany?
+  runLink          MiningRunCompany?
+  approachMessages ApproachMessage[]
 
   @@index([companyId, createdAt(sort: Desc)])
 }
 
 // Índice único parcial "MiningRun_one_active_per_author_params" criado via SQL na migração.
 model MiningRun {
-  id                String       @id @default(uuid())
-  bairro            String
-  cidade            String
-  uf                String
-  bairroNorm        String
-  cidadeNorm        String
-  nichos            Json         // string[]
-  excluirRedes      Boolean      @default(false)
-  iaEnabled         Boolean      @default(false)
-  iaDisabledReason  String?      // "SEM_CHAVE" quando iaEnabled foi forçado a false (Req. 7.9)
-  paramsKey         String       // buildRunParamsKey(bairro, cidade, uf, nichos) (Req. 18.7)
-  fonte             MiningSource @default(OSM)
-  status            MiningStatus @default(PENDENTE)
-  total             Int          @default(0)
-  processados       Int          @default(0)
-  area              Json?        // SearchArea obtida no Nominatim
-  nichosProcessados Json         @default("[]")
-  nichosFalhos      Json         @default("[]") // string[] de ids (Req. 2.14–2.17)
-  errorMessage      String?
-  lockedUntil       DateTime?    // lease da descoberta
-  createdById       String
-  createdBy         User         @relation(fields: [createdById], references: [id], onDelete: Restrict)
-  createdAt         DateTime     @default(now())
-  updatedAt         DateTime     @updatedAt
-  finishedAt        DateTime?
+  id                      String       @id @default(uuid())
+  bairro                  String
+  cidade                  String
+  uf                      String
+  bairroNorm              String
+  cidadeNorm              String
+  nichos                  Json // string[]
+  excluirRedes            Boolean      @default(false)
+  iaEnabled               Boolean      @default(false)
+  iaDisabledReason        String? // "SEM_CHAVE" quando iaEnabled foi forçado a false (Req. 7.9)
+  paramsKey               String // buildRunParamsKey(bairro, cidade, uf, nichos) (Req. 18.7)
+  fonte                   MiningSource @default(OSM)
+  status                  MiningStatus @default(PENDENTE)
+  total                   Int          @default(0)
+  processados             Int          @default(0)
+  area                    Json? // SearchArea obtida no Nominatim
+  nichosProcessados       Json         @default("[]")
+  nichosFalhos            Json         @default("[]") // string[] de ids (Req. 2.14–2.17)
+  errorMessage            String?
+  lockedUntil             DateTime? // lease da descoberta
+  createdById             String
+  createdBy               User         @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  createdAt               DateTime     @default(now())
+  updatedAt               DateTime     @updatedAt
+  finishedAt              DateTime?
+  // ── Etapa 3 (lead-miner-enrichment) ── (fonte = Fonte_Efetiva)
+  fonteSolicitada         MiningSource @default(OSM)
+  pagespeedEnabled        Boolean      @default(false)
+  pagespeedMotivo         String? // COTA_ESGOTADA quando forçado a false
+  cnpjEnabled             Boolean      @default(false)
+  googleMotivo            String? // SEM_CHAVE | COTA_ESGOTADA | ERRO
+  googleNichosAfetados    Json         @default("[]")
+  nichosGoogleProcessados Json         @default("[]")
+  nichosGoogleFalhos      Json         @default("[]")
+  googleCursor            Json? // { nicheId, page, pageToken }
 
   companies MiningRunCompany[]
   analyses  CompanyAnalysis[]
@@ -415,7 +501,7 @@ model MiningRunCompany {
   companyId    String
   company      Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
   isNew        Boolean
-  nicho        String           // nicho da 1ª ocorrência nesta mineração
+  nicho        String // nicho da 1ª ocorrência nesta mineração
   claimToken   String?
   claimedAt    DateTime?
   processedAt  DateTime?
@@ -423,6 +509,7 @@ model MiningRunCompany {
   errorMessage String?
   analysisId   String?          @unique
   analysis     CompanyAnalysis? @relation(fields: [analysisId], references: [id], onDelete: SetNull)
+  origem       MiningSource     @default(OSM) // fonte(s) que trouxeram a Empresa nesta Mineracao (Etapa 3)
   createdAt    DateTime         @default(now())
 
   @@unique([runId, companyId])
@@ -431,11 +518,30 @@ model MiningRunCompany {
 
 model ApiUsage {
   id       String @id @default(uuid())
-  provider String // "gemini" | "places"
+  provider String // "gemini" | "places" | "pagespeed"
   month    String // "AAAA-MM"
   count    Int    @default(0)
 
   @@unique([provider, month])
+}
+
+// Mensagem_Abordagem gerada para uma Empresa (Etapa 3).
+model ApproachMessage {
+  id         String           @id @default(uuid())
+  companyId  String
+  company    Company          @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  analysisId String?
+  analysis   CompanyAnalysis? @relation(fields: [analysisId], references: [id], onDelete: SetNull)
+  canal      ApproachChannel
+  origem     ApproachOrigin
+  fallback   String? // ApproachFallbackReason
+  assunto    String?
+  texto      String
+  authorId   String
+  author     User             @relation(fields: [authorId], references: [id], onDelete: Restrict)
+  createdAt  DateTime         @default(now())
+
+  @@index([companyId, createdAt(sort: Desc)])
 }
 
 // Tarefas pertencem a uma unidade (departamento ou setor). unitId nulo = tarefa geral.
@@ -490,7 +596,7 @@ model FinancialTransaction {
   id            String    @id @default(uuid())
   description   String
   amount        Float
-  type          String    // INFLOW ou OUTFLOW
+  type          String // INFLOW ou OUTFLOW
   category      String
   status        String    @default("PENDING") // PENDING, PAID, CANCELLED
   invoiceUrl    String?

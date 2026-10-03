@@ -47,7 +47,8 @@ const arbHop: fc.Arbitrary<Hop> = fc.oneof(
   ),
 );
 
-const ALLOWED_KEYS = new Set(['url', 'address', 'family', 'method', 'signal', 'maxBodyBytes']);
+// `captureBody` (Etapa 3, Req. 7.1) só controla a leitura do corpo da resposta; não envia nada.
+const ALLOWED_KEYS = new Set(['url', 'address', 'family', 'method', 'signal', 'maxBodyBytes', 'captureBody']);
 
 describe('site-analyzer — Property 11', () => {
   it('cadeia de redirecionamentos segura', async () => {
