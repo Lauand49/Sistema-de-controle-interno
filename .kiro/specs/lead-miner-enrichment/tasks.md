@@ -296,10 +296,10 @@ Convenções:
   - [x]* 11.11 Escrever teste de propriedade da validação dos parâmetros novos
     - **Property 46: Validação dos parâmetros novos**
     - **Validates: Requirements 11.7, 20.5**
-  - [ ] 11.12 Implementar `lib/leads/reanalysis.ts`
+  - [x]* 11.12 Implementar `lib/leads/reanalysis.ts`
     - Lease atômico com `NOT EXISTS` de Analise < 10 min (`RECENTE`/`EM_CURSO`), `refreshGoogleCache` quando necessário (sem website → `semWebsite`), `analyzeCompany` com o deadline da rota, `persistReanalysis`, liberação do lease em `finally`
     - _Requirements: 16.2, 16.3, 16.4, 16.5, 16.6_
-  - [ ] 11.13 Escrever testes de integração da reanálise
+  - [x]* 11.13 Escrever testes de integração da reanálise
     - `integration/reanalysis.int.test.ts` (`RUN_DB_TESTS=1`, fakes externos): duas Reanalises simultâneas (uma conclui, a outra 409 `EM_CURSO`); Analise com menos de 10 minutos (409 `RECENTE`); falha na gravação mantém Analise e snapshot anteriores
     - _Requirements: 16.4, 16.5, 16.6, 21.9_
 
