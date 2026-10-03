@@ -5,7 +5,8 @@ import {
   type AnalyzeOptions,
   type AnalyzeTarget,
 } from "./analysis";
-import { refreshGoogleCache, type GooglePlacesDeps } from "./google-cache";
+import { refreshGoogleCache } from "./google-cache";
+import type { GooglePlacesDeps } from "./sources/google-places";
 import { persistReanalysis } from "./repository";
 import { parseCandidates } from "./cnpj";
 import { cnpjAiFields } from "./ai";

@@ -303,7 +303,7 @@ Convenções:
     - `integration/reanalysis.int.test.ts` (`RUN_DB_TESTS=1`, fakes externos): duas Reanalises simultâneas (uma conclui, a outra 409 `EM_CURSO`); Analise com menos de 10 minutos (409 `RECENTE`); falha na gravação mantém Analise e snapshot anteriores
     - _Requirements: 16.4, 16.5, 16.6, 21.9_
 
-- [ ] 12. Checkpoint — pipeline
+- [x]* 12. Checkpoint — pipeline
   - Rodar `npm test` (zero falhas, sem rede) e `npm run build`; ensure all tests pass, ask the user if questions arise.
 
 - [ ] 13. Rotas, filtros, CSV e triagem
