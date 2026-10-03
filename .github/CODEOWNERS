@@ -1,0 +1,9 @@
+# Revisão automática obrigatória nestes caminhos.
+# Qualquer um dos listados pode atender à revisão (ninguém aprova o próprio PR).
+
+/lib/permissions.ts   @Lauand49 @brinelso
+/auth.ts              @Lauand49 @brinelso
+/auth.config.ts       @Lauand49 @brinelso
+/middleware.ts        @Lauand49 @brinelso
+/prisma/              @Lauand49 @brinelso
+/.github/             @Lauand49 @brinelso
