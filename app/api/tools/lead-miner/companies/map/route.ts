@@ -37,7 +37,7 @@ export const GET = withAuth(async (req, { actor }) => {
       take: MAP_MAX,
       select: {
         id: true,
-        nome: true,
+        nomeExibicao: true,
         latitude: true,
         longitude: true,
         categoria: true,

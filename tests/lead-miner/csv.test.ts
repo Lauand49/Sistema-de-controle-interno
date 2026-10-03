@@ -17,6 +17,14 @@ const baseRow: ExportRow = {
   prioridade: 'ALTA',
   responsavelNome: 'Fulano',
   ultimaAnaliseEm: new Date('2026-03-05T15:00:00Z'),
+  // Etapa 3
+  cnpj: '11.111.111/0001-11',
+  situacaoCadastral: 'ATIVA',
+  instagram: 'clinica_sorriso',
+  whatsapp: '5512999994444',
+  desempenhoRuim: false,
+  fonte: 'OSM',
+  googlePlaceId: null,
 };
 
 describe('buildCsv — formato', () => {
@@ -26,10 +34,12 @@ describe('buildCsv — formato', () => {
     expect(csv).toBe(`${BOM}${CSV_HEADER.join(';')}\r\na;b`);
   });
 
-  it('cabeçalho tem 13 colunas na ordem do requisito', () => {
-    expect(CSV_HEADER).toHaveLength(13);
+  it('cabeçalho tem 20 colunas na ordem do requisito (13 Etapa 1 + 7 Etapa 3)', () => {
+    expect(CSV_HEADER).toHaveLength(20);
     expect(CSV_HEADER[0]).toBe('Nome');
     expect(CSV_HEADER[12]).toBe('Data da última análise');
+    expect(CSV_HEADER[13]).toBe('CNPJ');
+    expect(CSV_HEADER[19]).toBe('Link Google Maps');
   });
 });
 
@@ -63,7 +73,9 @@ describe('sanitizeCell — neutralização de fórmulas', () => {
 
 describe('round-trip', () => {
   it('parseCsv recupera as células (com o prefixo de proteção)', () => {
-    const rows = [[...CSV_HEADER], toCsvRow(baseRow), toCsvRow({ ...baseRow, telefone: '+55 12 9999', nome: 'A "B"; C\nD' })];
+    // Usamos instagram: null para evitar o prefixo ' do sanitizeCell (@ é formula-trigger).
+    const base = { ...baseRow, instagram: null };
+    const rows = [[...CSV_HEADER], toCsvRow(base), toCsvRow({ ...base, telefone: '+55 12 9999', nome: 'A "B"; C\nD' })];
     const parsed = parseCsv(buildCsv(rows));
     expect(parsed).toHaveLength(3);
     expect(parsed[1]).toEqual(rows[1]);
@@ -75,13 +87,39 @@ describe('round-trip', () => {
 describe('toCsvRow — formatação', () => {
   it('converte nicho, categoria, score, prioridade e data', () => {
     const row = toCsvRow(baseRow);
-    expect(row).toHaveLength(13);
+    expect(row).toHaveLength(20);
     expect(row[1]).toBe('Clínica odontológica');
     expect(row[8]).toBe('Otimização / Segurança');
     expect(row[9]).toBe('72');
     expect(row[10]).toBe('Alta');
     expect(row[11]).toBe('Fulano');
     expect(row[12]).toBe('05/03/2026');
+  });
+
+  it('formata as colunas da Etapa 3 corretamente', () => {
+    const row = toCsvRow(baseRow);
+    expect(row[13]).toBe('11.111.111/0001-11'); // CNPJ
+    expect(row[14]).toBe('ATIVA'); // Situação
+    expect(row[15]).toBe('@clinica_sorriso'); // Instagram com @
+    expect(row[16]).toBe('5512999994444'); // WhatsApp
+    expect(row[17]).toBe('Bom'); // Desempenho ok
+    expect(row[18]).toBe('OSM'); // Fonte
+    expect(row[19]).toBe(''); // sem Place_ID
+  });
+
+  it('inclui link Google Maps quando há Place_ID', () => {
+    const row = toCsvRow({ ...baseRow, googlePlaceId: 'ChIJabc123' });
+    expect(row[19]).toBe('https://www.google.com/maps/place/?q=place_id:ChIJabc123');
+  });
+
+  it('desempenho ruim exibe "Ruim"', () => {
+    const row = toCsvRow({ ...baseRow, desempenhoRuim: true });
+    expect(row[17]).toBe('Ruim');
+  });
+
+  it('desempenho ausente exibe célula vazia', () => {
+    const row = toCsvRow({ ...baseRow, desempenhoRuim: null });
+    expect(row[17]).toBe('');
   });
 
   it('campos ausentes viram células vazias', () => {

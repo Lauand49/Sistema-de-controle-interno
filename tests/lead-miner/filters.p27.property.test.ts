@@ -9,7 +9,7 @@ describe('Property 27: Ordenação do ranking', () => {
   it('score não crescente, nome crescente nos empates e sem análise ao final', () => {
     expect(RANKING_ORDER).toEqual([
       { scoreFinal: { sort: 'desc', nulls: 'last' } },
-      { nome: 'asc' },
+      { nomeExibicao: 'asc' },
       { id: 'asc' },
     ]);
 
@@ -32,8 +32,8 @@ describe('Property 27: Ordenação do ranking', () => {
             expect(prev.scoreFinal).toBeGreaterThanOrEqual(cur.scoreFinal);
           }
           if (prev.scoreFinal === cur.scoreFinal) {
-            expect(prev.nome <= cur.nome).toBe(true);
-            if (prev.nome === cur.nome) expect(prev.id < cur.id).toBe(true);
+            expect(prev.nomeExibicao <= cur.nomeExibicao).toBe(true);
+            if (prev.nomeExibicao === cur.nomeExibicao) expect(prev.id < cur.id).toBe(true);
           }
         }
       }),

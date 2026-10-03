@@ -31,18 +31,30 @@ export const POST = withAuth(async (req, { actor }) => {
       where: { id: { in: ids } },
       select: {
         id: true,
-        nome: true,
+        nomeExibicao: true,
         nicho: true,
         telefone: true,
         website: true,
         categoria: true,
         assignedTo: true,
+        googleCache: { select: { placeId: true } },
       },
     });
     if (companies.length === 0) return 0;
 
     const leads = await tx.prospectLead.createManyAndReturn({
-      data: companies.map(buildTriageLead),
+      data: companies.map((c) =>
+        buildTriageLead({
+          id: c.id,
+          nomeExibicao: c.nomeExibicao,
+          nicho: c.nicho,
+          telefone: c.telefone,
+          website: c.website,
+          categoria: c.categoria as import('@/lib/leads/types').CategoryCode | null,
+          assignedTo: c.assignedTo,
+          googlePlaceId: c.googleCache?.placeId ?? null,
+        }),
+      ),
       skipDuplicates: true,
       select: { id: true, companyId: true },
     });

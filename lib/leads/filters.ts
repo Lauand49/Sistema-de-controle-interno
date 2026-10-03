@@ -409,6 +409,11 @@ export interface CompanyFilters {
   /** `AAAA-MM-DD`, inclusivo. */
   analyzedTo?: string;
   runId?: string;
+  temInstagram?: boolean;
+  temWhatsapp?: boolean;
+  temCnpj?: boolean;
+  situacao?: string;
+  desempenhoRuim?: boolean;
 }
 
 const companyFiltersShape = {
@@ -435,6 +440,11 @@ const companyFiltersShape = {
   analyzedFrom: optionalDate,
   analyzedTo: optionalDate,
   runId: optionalUuid(MSG.mineracao),
+  temInstagram: optionalBool,
+  temWhatsapp: optionalBool,
+  temCnpj: optionalBool,
+  situacao: optionalText,
+  desempenhoRuim: optionalBool,
 };
 
 type FiltersShapeOutput = z.infer<z.ZodObject<typeof companyFiltersShape>>;
@@ -477,6 +487,8 @@ export function buildCompanyWhere(f: CompanyFilters): Prisma.CompanyWhereInput {
     and.push({
       OR: [
         { nome: { contains: f.q, mode: insensitive } },
+        { cnpjNomeFantasia: { contains: f.q, mode: insensitive } },
+        { googleCache: { nome: { contains: f.q, mode: insensitive } } },
         { endereco: { contains: f.q, mode: insensitive } },
         { telefone: { contains: f.q, mode: insensitive } },
       ],
@@ -517,6 +529,13 @@ export function buildCompanyWhere(f: CompanyFilters): Prisma.CompanyWhereInput {
     });
   }
   if (f.runId) and.push({ runs: { some: { runId: f.runId } } });
+  if (f.temInstagram !== undefined) and.push({ temInstagram: f.temInstagram });
+  if (f.temWhatsapp !== undefined) and.push({ temWhatsapp: f.temWhatsapp });
+  if (f.temCnpj !== undefined) {
+    and.push(f.temCnpj ? { cnpj: { not: null } } : { cnpj: null });
+  }
+  if (f.situacao) and.push({ situacaoCadastral: { equals: f.situacao, mode: insensitive } });
+  if (f.desempenhoRuim !== undefined) and.push({ desempenhoRuim: f.desempenhoRuim });
 
   return and.length > 0 ? { AND: and } : {};
 }
@@ -528,13 +547,13 @@ export function buildCompanyWhere(f: CompanyFilters): Prisma.CompanyWhereInput {
 /** Ordenação única de lista, mapa e CSV: score desc (sem análise ao final), nome asc, id asc. */
 export const RANKING_ORDER: Prisma.CompanyOrderByWithRelationInput[] = [
   { scoreFinal: { sort: 'desc', nulls: 'last' } },
-  { nome: 'asc' },
+  { nomeExibicao: 'asc' },
   { id: 'asc' },
 ];
 
 export interface RankKey {
   id: string;
-  nome: string;
+  nomeExibicao: string;
   scoreFinal: number | null;
 }
 
@@ -548,7 +567,7 @@ export function compareRanking(a: RankKey, b: RankKey): number {
   if (!aNull && !bNull && a.scoreFinal !== b.scoreFinal) {
     return (b.scoreFinal as number) - (a.scoreFinal as number);
   }
-  return cmpStr(a.nome, b.nome) || cmpStr(a.id, b.id);
+  return cmpStr(a.nomeExibicao, b.nomeExibicao) || cmpStr(a.id, b.id);
 }
 
 /**
@@ -594,6 +613,11 @@ const RANKING_KEYS: readonly Exclude<keyof CompanyFilters, 'scoreMin' | 'scoreMa
   'analyzedFrom',
   'analyzedTo',
   'runId',
+  'temInstagram',
+  'temWhatsapp',
+  'temCnpj',
+  'situacao',
+  'desempenhoRuim',
 ];
 
 /** Inteiro 0–100 a partir do texto do campo; `null` = vazio; `NaN` = inválido. */

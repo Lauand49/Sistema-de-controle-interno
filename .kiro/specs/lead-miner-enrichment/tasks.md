@@ -307,7 +307,7 @@ Convenções:
   - Rodar `npm test` (zero falhas, sem rede) e `npm run build`; ensure all tests pass, ask the user if questions arise.
 
 - [ ] 13. Rotas, filtros, CSV e triagem
-  - [ ] 13.1 Estender `filters.ts` (listagem), `csv.ts` e `triage.ts`
+  - [x] 13.1 Estender `filters.ts` (listagem), `csv.ts` e `triage.ts`
     - `CompanyFilters`/`buildCompanyWhere(f, now)` com `temInstagram`, `temWhatsapp`, `temCnpj`, `situacao`, `desempenhoRuim`; `q` em `nome`, `cnpjNomeFantasia` e `googleCache.nome` válido, sempre `mode: 'insensitive'`; `RANKING_ORDER`/`RankKey`/`compareRanking` com `nomeExibicao`
     - `csv.ts`: 7 colunas novas na ordem do Req. 18.4, `ExportRow` estendido, valores de `ownFields`
     - `triage.ts`: `companyName = nomeExibicao`, `contactInfo` só com valores próprios + link do Google Maps

@@ -1,5 +1,5 @@
 /**
- * Exportador CSV do Minerador de Leads (Req. 17.2–17.7).
+ * Exportador CSV do Minerador de Leads (Req. 17.2–17.7, 18.4).
  *
  * Módulo puro e isomórfico: sem imports de Node, Prisma ou `server-only`.
  *
@@ -11,13 +11,13 @@
  */
 
 import { CATEGORY_LABEL, EXPORT_MAX, NICHES, PRIORITY_LABEL } from './config';
-import type { CategoryCode, PriorityCode } from './types';
+import type { CategoryCode, PriorityCode, SourceMode } from './types';
 
 // ---------------------------------------------------------------------------
 // Cabeçalho e linha (Req. 17.2, 17.3)
 // ---------------------------------------------------------------------------
 
-/** Rótulos das 13 colunas, na ordem do Req. 17.2. */
+/** Rótulos das 20 colunas (13 da Etapa 1 + 7 novas da Etapa 3), na ordem do Req. 17.2 / 18.4. */
 export const CSV_HEADER: readonly string[] = [
   'Nome',
   'Nicho',
@@ -32,6 +32,14 @@ export const CSV_HEADER: readonly string[] = [
   'Prioridade',
   'Responsável',
   'Data da última análise',
+  // ── Etapa 3 (Req. 18.4) ──
+  'CNPJ',
+  'Situação cadastral',
+  'Instagram',
+  'WhatsApp',
+  'Desempenho PageSpeed',
+  'Fonte',
+  'Link Google Maps',
 ];
 
 /** Dados de uma Empresa necessários para uma linha do CSV. */
@@ -52,6 +60,20 @@ export interface ExportRow {
   responsavelNome: string | null;
   /** Data da última análise; null quando a Empresa nunca foi analisada. */
   ultimaAnaliseEm: Date | string | null;
+  // ── Etapa 3 (Req. 18.4) ──
+  /** CNPJ formatado (XX.XXX.XXX/XXXX-XX); null quando não há. */
+  cnpj: string | null;
+  situacaoCadastral: string | null;
+  /** Handle do Instagram (sem "@"); null quando não há. */
+  instagram: string | null;
+  /** Número normalizado do WhatsApp; null quando não há. */
+  whatsapp: string | null;
+  /** true = desempenho ruim; false = ok; null = não avaliado. */
+  desempenhoRuim: boolean | null;
+  /** Fonte de descoberta da empresa. */
+  fonte: SourceMode | null;
+  /** Place_ID do Google; montado como link completo na célula. */
+  googlePlaceId: string | null;
 }
 
 const NICHE_LABEL: ReadonlyMap<string, string> = new Map(NICHES.map((n) => [n.id, n.label]));
@@ -84,8 +106,10 @@ function formatScore(value: number | null): string {
 
 const text = (v: string | null | undefined): string => v ?? '';
 
-/** Converte uma Empresa nas 13 células (sem escape nem sanitização). */
+/** Converte uma Empresa nas 20 células (sem escape nem sanitização). */
 export function toCsvRow(c: ExportRow): string[] {
+  const mapsLink =
+    c.googlePlaceId ? `https://www.google.com/maps/place/?q=place_id:${c.googlePlaceId}` : '';
   return [
     text(c.nome),
     c.nicho ? (NICHE_LABEL.get(c.nicho) ?? c.nicho) : '',
@@ -100,6 +124,18 @@ export function toCsvRow(c: ExportRow): string[] {
     c.prioridade ? PRIORITY_LABEL[c.prioridade] : '',
     text(c.responsavelNome),
     formatDate(c.ultimaAnaliseEm),
+    // ── Etapa 3 (Req. 18.4) ──
+    text(c.cnpj),
+    text(c.situacaoCadastral),
+    c.instagram ? `@${c.instagram}` : '',
+    text(c.whatsapp),
+    c.desempenhoRuim === null || c.desempenhoRuim === undefined
+      ? ''
+      : c.desempenhoRuim
+        ? 'Ruim'
+        : 'Bom',
+    text(c.fonte),
+    mapsLink,
   ];
 }
 
