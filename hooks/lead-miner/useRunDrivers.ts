@@ -18,6 +18,8 @@ export interface UseRunDriversResult {
   add: (run: string | RunProgress) => void;
   /** Remove o card (e para o driver, se ainda estiver ativo). */
   dismiss: (runId: string) => void;
+  /** Aplica um progresso recebido de fora (ex.: após parar a mineração). */
+  applyProgress: (progress: RunProgress) => void;
 }
 
 export function useRunDrivers(seed: readonly RunProgress[] = [], options: { api?: RunDriverApi } = {}): UseRunDriversResult {
@@ -48,8 +50,9 @@ export function useRunDrivers(seed: readonly RunProgress[] = [], options: { api?
 
   const add = useCallback((run: string | RunProgress) => poolRef.current!.add(run), []);
   const dismiss = useCallback((runId: string) => poolRef.current!.remove(runId), []);
+  const applyProgress = useCallback((progress: RunProgress) => poolRef.current!.applyProgress(progress), []);
 
-  return { runs, add, dismiss };
+  return { runs, add, dismiss, applyProgress };
 }
 
 export default useRunDrivers;

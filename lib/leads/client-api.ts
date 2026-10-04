@@ -509,6 +509,9 @@ export const leadMinerApi = {
 
   batch: (id: string, opts?: RequestOptions) => postJson<RunProgress>(`/runs/${enc(id)}/batch`, undefined, opts),
 
+  /** Para a mineração (T1). Idempotente; 409 se já terminou; 403 sem permissão. */
+  cancelRun: (id: string, opts?: RequestOptions) => postJson<RunProgress>(`/runs/${enc(id)}/cancel`, undefined, opts),
+
   /** Aceita filtros tipados ou a query já montada (ex.: `buildRankingQuery(ui).query`). */
   listCompanies: (params: (CompanyFilters & { page?: number }) | URLSearchParams = {}, opts?: RequestOptions) =>
     getJson<CompaniesResponse>(`/companies${toQueryString(params)}`, opts),

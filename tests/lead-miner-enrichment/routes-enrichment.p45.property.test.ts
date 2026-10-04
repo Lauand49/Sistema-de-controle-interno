@@ -38,7 +38,7 @@ function forbiddenProxy(mark: () => void): unknown {
       throw new Error('chamada ao banco/serviço não deveria ocorrer na negação');
     },
   };
-  return new Proxy(() => {}, handler);
+  return new Proxy(() => { }, handler);
 }
 
 vi.mock('@/lib/prisma', () => ({ prisma: forbiddenProxy(() => (prismaTouched = true)) }));
@@ -69,6 +69,7 @@ const routes = {
   reanalyze: () => import('@/app/api/tools/lead-miner/companies/[id]/reanalyze/route'),
   cnpj: () => import('@/app/api/tools/lead-miner/companies/[id]/cnpj/route'),
   approach: () => import('@/app/api/tools/lead-miner/companies/[id]/approach/route'),
+  cancel: () => import('@/app/api/tools/lead-miner/runs/[id]/cancel/route'),
 };
 
 interface Target {
@@ -90,6 +91,7 @@ const TARGETS: Target[] = [
   { name: 'PUT /cnpj', load: routes.cnpj, method: 'PUT', export: 'PUT', body: { cnpj: '11222333000181' }, params: { id: 'c1' } },
   { name: 'DELETE /cnpj', load: routes.cnpj, method: 'DELETE', export: 'DELETE', params: { id: 'c1' } },
   { name: 'POST /approach', load: routes.approach, method: 'POST', export: 'POST', body: { canal: 'WHATSAPP' }, params: { id: 'c1' } },
+  { name: 'POST /runs/[id]/cancel', load: routes.cancel, method: 'POST', export: 'POST', params: { id: 'r1' } },
 ];
 
 async function callTarget(t: Target): Promise<Response> {

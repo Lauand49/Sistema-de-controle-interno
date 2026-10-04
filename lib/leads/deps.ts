@@ -166,6 +166,7 @@ async function requestJson(
   url: string,
   init: RequestInit,
   timeoutMs: number,
+  external?: AbortSignal,
 ): Promise<{ status: number; json: unknown }> {
   const controller = new AbortController();
   let timedOut = false;
@@ -174,6 +175,10 @@ async function requestJson(
     timedOut = true;
     controller.abort();
   }, ms);
+  // Cancelamento da mineração (T1): encerra o fetch em curso (não conta como timeout).
+  const onExternalAbort = () => controller.abort();
+  if (external?.aborted) controller.abort();
+  else external?.addEventListener('abort', onExternalAbort, { once: true });
   try {
     const res = await fetchFn(url, { ...init, signal: controller.signal, cache: 'no-store', redirect: 'error' });
     const text = await res.text();
@@ -188,6 +193,7 @@ async function requestJson(
     throw genericError(timedOut);
   } finally {
     clearTimeout(timer);
+    external?.removeEventListener('abort', onExternalAbort);
   }
 }
 
@@ -224,13 +230,13 @@ export function createPageSpeedHttp(
   fetchFn: FetchFn = (u, i) => fetch(u, i),
 ): PageSpeedHttp {
   return {
-    async run(query, timeoutMs) {
+    async run(query, timeoutMs, signal) {
       const params = new URLSearchParams(query);
       params.delete('key'); // a chave nunca vai na URL
       const url = `${PAGESPEED_ENDPOINT}?${params.toString()}`;
       const headers: Record<string, string> = { accept: 'application/json' };
       if (apiKey) headers['x-goog-api-key'] = apiKey;
-      return requestJson(fetchFn, url, { method: 'GET', headers }, timeoutMs);
+      return requestJson(fetchFn, url, { method: 'GET', headers }, timeoutMs, signal);
     },
   };
 }
@@ -239,13 +245,19 @@ export function createPageSpeedHttp(
 export function createBrasilApiHttp(fetchFn: FetchFn = (u, i) => fetch(u, i)): BrasilApiHttp {
   const origin = new URL(BRASILAPI_HOST).origin;
   return {
-    async getCnpj(cnpj, timeoutMs) {
+    async getCnpj(cnpj, timeoutMs, signal) {
       const path = brasilApiPath(cnpj);
       const url = new URL(path, BRASILAPI_HOST);
       if (url.origin !== origin) throw new Error('host não permitido');
       // Recusa CNPJ que vire segmento de ponto/vazio (o parser subiria no path).
       if (url.pathname !== path || !isSingleSegmentUnder(url.pathname, BRASILAPI_CNPJ_PREFIX)) throw genericError(false);
-      return requestJson(fetchFn, url.toString(), { method: 'GET', headers: { accept: 'application/json' } }, timeoutMs);
+      return requestJson(
+        fetchFn,
+        url.toString(),
+        { method: 'GET', headers: { accept: 'application/json' } },
+        timeoutMs,
+        signal,
+      );
     },
   };
 }

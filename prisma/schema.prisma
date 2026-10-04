@@ -262,6 +262,7 @@ enum MiningStatus {
   EM_ANDAMENTO
   CONCLUIDA
   ERRO
+  CANCELADA // parada pelo usuário (migração 20261016000000); libera o índice parcial de mineração ativa
 }
 
 enum CompanyCategory {

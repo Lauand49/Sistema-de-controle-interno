@@ -7,7 +7,7 @@ import type { MiningSource, MiningStatus, RunsListParams } from '@/lib/leads/cli
 import { UFS } from '@/lib/leads/config';
 import { MSG, isValidDateString } from '@/lib/leads/filters';
 
-export const RUN_STATUS_OPTIONS: readonly MiningStatus[] = ['PENDENTE', 'EM_ANDAMENTO', 'CONCLUIDA', 'ERRO'];
+export const RUN_STATUS_OPTIONS: readonly MiningStatus[] = ['PENDENTE', 'EM_ANDAMENTO', 'CONCLUIDA', 'ERRO', 'CANCELADA'];
 export const RUN_SOURCE_OPTIONS: readonly MiningSource[] = ['OSM', 'GOOGLE', 'MISTA'];
 
 export const RUN_STATUS_LABEL: Record<MiningStatus, string> = {
@@ -15,6 +15,7 @@ export const RUN_STATUS_LABEL: Record<MiningStatus, string> = {
   EM_ANDAMENTO: 'Em andamento',
   CONCLUIDA: 'Concluída',
   ERRO: 'Erro',
+  CANCELADA: 'Cancelada',
 };
 
 export const RUN_SOURCE_LABEL: Record<MiningSource, string> = {

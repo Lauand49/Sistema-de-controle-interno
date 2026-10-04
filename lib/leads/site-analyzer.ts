@@ -36,6 +36,8 @@ export interface SiteAnalyzerDeps {
   now: () => number;
   /** Temporizador injetável (testes usam um falso); padrão: `setTimeout`. */
   setTimer?: SetTimer;
+  /** Cancelamento da mineração (T1): aborta a análise em curso (mesmo efeito do orçamento total). */
+  signal?: AbortSignal;
 }
 
 const REDIRECT_STATUSES = new Set([301, 302, 303, 307, 308]);
@@ -286,7 +288,16 @@ export async function analyzeSiteWithBody(website: string | null, deps: SiteAnal
   const setTimer = deps.setTimer ?? defaultSetTimer;
   const startedAt = deps.now();
   const total = new AbortController();
-  const cancelTotal = setTimer(() => total.abort(), SITE_TIMEOUT_MS);
+  const cancelTimer = setTimer(() => total.abort(), SITE_TIMEOUT_MS);
+  // Cancelamento externo encerra a análise como o orçamento total esgotado.
+  const external = deps.signal;
+  const onExternalAbort = () => total.abort();
+  if (external?.aborted) total.abort();
+  else external?.addEventListener('abort', onExternalAbort, { once: true });
+  const cancelTotal = () => {
+    cancelTimer();
+    external?.removeEventListener('abort', onExternalAbort);
+  };
 
   let sslProblem: SslProblem | null = null;
   let last: Failure = { reason: 'TIMEOUT', retryable: false };

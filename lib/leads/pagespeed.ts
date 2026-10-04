@@ -15,7 +15,7 @@ import { monthKey, type UsageGate } from './usage';
 
 export interface PageSpeedHttp {
   /** Resolve `{ status, json }`; rejeita em erro de rede ou timeout (aborta no próprio `timeoutMs`). */
-  run(query: URLSearchParams, timeoutMs: number): Promise<{ status: number; json: unknown }>;
+  run(query: URLSearchParams, timeoutMs: number, signal?: AbortSignal): Promise<{ status: number; json: unknown }>;
 }
 
 export interface PageSpeedDeps {
@@ -81,7 +81,7 @@ export function parsePageSpeed(json: unknown, finalUrl: string): PageSpeedResult
   };
 }
 
-class PageSpeedTimeoutError extends Error {}
+class PageSpeedTimeoutError extends Error { }
 
 function isTimeoutError(e: unknown): boolean {
   if (e instanceof PageSpeedTimeoutError) return true;
@@ -93,12 +93,14 @@ function isTimeoutError(e: unknown): boolean {
 export async function runPageSpeed(
   finalUrl: string,
   deps: PageSpeedDeps,
-  opts: { timeoutMs?: number } = {},
+  opts: { timeoutMs?: number; /** Cancelamento da mineração (T1): aborta a requisição em curso. */ signal?: AbortSignal } = {},
 ): Promise<PageSpeedOutcome> {
   try {
     const timeoutMs = Math.min(opts.timeoutMs ?? PAGESPEED_TIMEOUT_MS, PAGESPEED_TIMEOUT_MS);
     // Sem tempo restante: não gasta cota nem envia.
     if (!Number.isFinite(timeoutMs) || timeoutMs <= 0) return { ok: false, reason: 'TIMEOUT' };
+    // Cancelada antes de começar: não gasta cota nem envia.
+    if (opts.signal?.aborted) return { ok: false, reason: 'ERRO' };
 
     // Reserva antes do envio: o contador sobe também em erro/timeout (Req. 2.4, 2.5).
     const reserved = await deps.usage.reserve('pagespeed', monthKey(deps.now()), deps.limit);
@@ -107,19 +109,27 @@ export async function runPageSpeed(
     const query = buildPageSpeedQuery(finalUrl);
     let timer: ReturnType<typeof setTimeout> | undefined;
     // Proteção extra caso o cliente não respeite o próprio timeout.
+    const signal = opts.signal;
+    let onAbort: (() => void) | undefined;
     const backstop = new Promise<never>((_, reject) => {
       timer = setTimeout(() => reject(new PageSpeedTimeoutError('timeout')), timeoutMs);
+      // Cancelamento: devolve o controle na hora, sem esperar o cliente HTTP terminar.
+      if (signal) {
+        onAbort = () => reject(new Error('cancelada'));
+        signal.addEventListener('abort', onAbort, { once: true });
+      }
     });
     let reply: { status: number; json: unknown };
     try {
-      const call = Promise.resolve().then(() => deps.http.run(query, timeoutMs));
-      call.catch(() => {});
+      const call = Promise.resolve().then(() => deps.http.run(query, timeoutMs, signal));
+      call.catch(() => { });
       reply = await Promise.race([call, backstop]);
     } catch (e) {
       return { ok: false, reason: isTimeoutError(e) ? 'TIMEOUT' : 'ERRO' };
     } finally {
       clearTimeout(timer);
-      backstop.catch(() => {});
+      if (signal && onAbort) signal.removeEventListener('abort', onAbort);
+      backstop.catch(() => { });
     }
 
     // 429: cota do Google esgotada — não repete a requisição (Req. 10.6).

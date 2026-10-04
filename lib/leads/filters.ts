@@ -36,6 +36,7 @@ const RUN_STATUSES = [
   'EM_ANDAMENTO',
   'CONCLUIDA',
   'ERRO',
+  'CANCELADA',
 ] as const satisfies readonly MiningStatus[];
 /** Status possíveis de `ProspectLead.status`. */
 export const LEAD_STATUSES = ['RAW', 'PENDING', 'IN_PROGRESS', 'CONVERTED_TO_PIPE', 'DISCARDED'] as const;

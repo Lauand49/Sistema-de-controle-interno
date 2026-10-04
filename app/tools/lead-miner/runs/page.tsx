@@ -32,6 +32,7 @@ import {
 import { leadMinerApi, type RunListItem, type RunsListResponse } from '@/lib/leads/client-api';
 import { useActiveRuns } from '@/hooks/lead-miner/useActiveRuns';
 import { useRunDrivers } from '@/hooks/lead-miner/useRunDrivers';
+import { useProfile } from '@/contexts/ProfileContext';
 
 function RunsScreen() {
   const router = useRouter();
@@ -78,7 +79,8 @@ function RunsScreen() {
 
   // Minerações ativas do autor: retomada automática e cards de progresso (Req. 8.6, 8.15).
   const active = useActiveRuns();
-  const { runs: drivers, dismiss } = useRunDrivers(active.runs);
+  const { runs: drivers, dismiss, applyProgress } = useRunDrivers(active.runs);
+  const { currentProfile } = useProfile();
   const doneCount = drivers.filter((d) => d.done).length;
 
   const [data, setData] = useState<RunsListResponse | null>(null);
@@ -170,7 +172,16 @@ function RunsScreen() {
           </h2>
           <div className="grid grid-cols-1 gap-3 md:grid-cols-2">
             {drivers.map((r) => (
-              <RunProgressCard key={r.runId} run={r} title={locationById.get(r.runId)} onDismiss={dismiss} />
+              <RunProgressCard
+                key={r.runId}
+                run={r}
+                title={locationById.get(r.runId)}
+                onDismiss={dismiss}
+                onStopped={(p) => {
+                  applyProgress(p);
+                  setReloadNonce((n) => n + 1);
+                }}
+              />
             ))}
           </div>
         </section>
@@ -219,7 +230,15 @@ function RunsScreen() {
       {data && !empty && (
         <>
           <div className={loading ? 'opacity-60 transition-opacity' : 'transition-opacity'}>
-            <RunsTable items={items} busy={loading} />
+            <RunsTable
+              items={items}
+              busy={loading}
+              actor={currentProfile}
+              onStopped={(p) => {
+                applyProgress(p);
+                setReloadNonce((n) => n + 1);
+              }}
+            />
           </div>
           <Pagination page={data.page} totalPages={data.totalPages} onPageChange={onPageChange} disabled={loading} />
         </>

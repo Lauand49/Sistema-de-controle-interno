@@ -62,6 +62,19 @@ export interface AnalyzeOptions {
   cnpjEnabled: boolean;
   /** Instante limite (ms, mesma base de `deps.now()`). */
   deadline: number;
+  /** Cancelamento da mineração (T1): aborta as requisições em curso e descarta a análise. */
+  signal?: AbortSignal;
+}
+
+/**
+ * A análise foi interrompida pelo cancelamento da mineração. O resultado seria parcial (ex.: um
+ * site abortado parece "offline"), então o chamador NÃO deve gravá-lo: a empresa volta ao pool.
+ */
+export class AnalysisAbortedError extends Error {
+  constructor() {
+    super('Análise interrompida: mineração cancelada');
+    this.name = 'AnalysisAbortedError';
+  }
 }
 
 const NICHE_BY_ID = new Map<string, Niche>(NICHES.map((n) => [n.id, n]));
@@ -153,8 +166,12 @@ export async function analyzeCompany(
   const niche = NICHE_BY_ID.get(t.nicho);
   if (!niche) throw new Error(`Nicho desconhecido: ${t.nicho}`);
 
+  const signal = o.signal;
+  if (signal?.aborted) throw new AnalysisAbortedError();
+
   // 1) Site + Corpo_HTML (≤ 10 s, Guarda_SSRF).
-  const fetched = await analyzeSiteWithBody(targetWebsite(t), deps.site);
+  const fetched = await analyzeSiteWithBody(targetWebsite(t), signal ? { ...deps.site, signal } : deps.site);
+  if (signal?.aborted) throw new AnalysisAbortedError();
   const site = fetched.analysis;
   let html: string | null = fetched.html;
 
@@ -172,13 +189,15 @@ export async function analyzeCompany(
   const pagespeedTask: Promise<PageSpeedOutcome> = skip
     ? Promise.resolve(skip)
     : runPageSpeed(site.finalUrl as string, deps.pagespeed, {
-        timeoutMs: boundedTimeout(PAGESPEED_TIMEOUT_MS, o.deadline, deps.now()),
-      });
+      timeoutMs: boundedTimeout(PAGESPEED_TIMEOUT_MS, o.deadline, deps.now()),
+      signal,
+    });
 
   const lookupTask: Promise<CnpjLookupOutcome | null> = target
     ? lookupCnpj(target.cnpj, deps.cnpj, {
-        deadline: deps.cnpj.now().getTime() + Math.max(0, o.deadline - deps.now() - ANALYSIS_WRITE_MARGIN_MS),
-      })
+      deadline: deps.cnpj.now().getTime() + Math.max(0, o.deadline - deps.now() - ANALYSIS_WRITE_MARGIN_MS),
+      signal,
+    })
     : Promise.resolve(null);
 
   const aiTask: Promise<AiOutcome | null> = (() => {
@@ -195,10 +214,12 @@ export async function analyzeCompany(
       // Somente Dados_CNPJ já gravados e sem razão social (Req. 12.8, 14.1).
       cnpj: cnpjAiFields(t.cnpjAi),
     };
-    return analyzeWithAi(input, { ...deps.ai, timeoutMs });
+    return analyzeWithAi(input, { ...deps.ai, timeoutMs, ...(signal ? { signal } : {}) });
   })();
 
   const [pagespeed, lookup, ai] = await Promise.all([pagespeedTask, lookupTask, aiTask]);
+  // Cancelada durante o bloco paralelo: os desfechos acima são parciais e não podem ser gravados.
+  if (signal?.aborted) throw new AnalysisAbortedError();
 
   // 5) CNPJ: resolução após a BrasilAPI (Req. 12.3, 12.4, 12.5).
   const cnpj = cnpjOutcome(t, plan, found, target, lookup);
@@ -267,13 +288,13 @@ export function approachInputFrom(
     sinais: parseSinais(latestAnalysis.sinais),
     cnpj: hasData
       ? cnpjAiFields({
-          nomeFantasia: company.cnpjNomeFantasia,
-          cnaeCodigo: company.cnpjCnaeCodigo,
-          cnaeDescricao: company.cnpjCnaeDescricao,
-          porte: company.cnpjPorte,
-          situacao: company.situacaoCadastral,
-          inicioAtividade: company.cnpjInicioAtividade,
-        })
+        nomeFantasia: company.cnpjNomeFantasia,
+        cnaeCodigo: company.cnpjCnaeCodigo,
+        cnaeDescricao: company.cnpjCnaeDescricao,
+        porte: company.cnpjPorte,
+        situacao: company.situacaoCadastral,
+        inicioAtividade: company.cnpjInicioAtividade,
+      })
       : null,
     oportunidadeIa: latestAnalysis.oportunidadeIa,
     canal,

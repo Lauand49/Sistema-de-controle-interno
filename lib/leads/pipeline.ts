@@ -15,7 +15,8 @@
 import { Prisma, type MiningRun, type MiningStatus, type PrismaClient } from '@prisma/client';
 import { ApiError, notFound } from '@/lib/api-error';
 import type { AiDeps } from './ai';
-import { analyzeCompany, ANALYSIS_WRITE_MARGIN_MS } from './analysis';
+import { analyzeCompany, AnalysisAbortedError, ANALYSIS_WRITE_MARGIN_MS } from './analysis';
+import { isRunCancelled, registerRunAbort, watchRunCancellation } from './cancel';
 import type { BrasilApiDeps } from './brasilapi';
 import {
   BATCH_SIZE,
@@ -627,8 +628,14 @@ export async function discoverStep(runId: string, deps: PipelineDeps, deadline: 
 
     // 3) Nichos pendentes, em ordem, até o deadline.
     let paused = false;
+    // Cancelada pelo usuário (T1): sai sem gravar nada novo; o que já foi salvo permanece.
+    let cancelled = false;
     for (const nicheId of pending) {
       if (deps.now() >= deadline) break;
+      if (await isRunCancelled(db, runId)) {
+        cancelled = true;
+        break;
+      }
       const niche = NICHE_BY_ID.get(nicheId);
       const st: NichePlanState = {
         googleAvailable: googleMotivo === null && rect !== null && niche !== undefined,
@@ -647,7 +654,18 @@ export async function discoverStep(runId: string, deps: PipelineDeps, deadline: 
             break;
           }
           const c: GoogleCursor = cursor?.nicheId === nicheId ? cursor : { nicheId, page: 0, pageToken: null };
+          if (await isRunCancelled(db, runId)) {
+            cancelled = true;
+            paused = true;
+            break;
+          }
           const r = await searchGooglePage(niche as Niche, place, rect as Rect, c.pageToken, deps.google);
+          // Cancelada durante a requisição: descarta a página (não grava empresas novas).
+          if (await isRunCancelled(db, runId)) {
+            cancelled = true;
+            paused = true;
+            break;
+          }
           if (r.ok) {
             const ids = await linkedIds();
             // Place_ID já trazido por outro Nicho (ou página) desta Mineracao: mantém o 1º (Req. 3.6).
@@ -685,7 +703,17 @@ export async function discoverStep(runId: string, deps: PipelineDeps, deadline: 
             paused = true; // o estado do Google deste Nicho já está gravado
             break;
           }
+          if (await isRunCancelled(db, runId)) {
+            cancelled = true;
+            paused = true;
+            break;
+          }
           const result = niche ? await searchNiche(niche, area, deps.osm) : ({ ok: false } as const);
+          if (await isRunCancelled(db, runId)) {
+            cancelled = true;
+            paused = true;
+            break;
+          }
           if (result.ok) {
             const ids = await linkedIds();
             const found = run.excluirRedes ? excludeChains(result.companies) : result.companies;
@@ -710,6 +738,9 @@ export async function discoverStep(runId: string, deps: PipelineDeps, deadline: 
       }
       if (paused) break;
     }
+
+    // Cancelada: não finaliza a descoberta (o `updateMany` final só vale em PENDENTE de qualquer forma).
+    if (cancelled) return getRunProgress(runId, db);
 
     // 4) Fim da descoberta quando todos os nichos foram tratados.
     const treated = new Set([...processados, ...falhos]);
@@ -784,7 +815,8 @@ async function processItem(
   token: string,
   deps: PipelineDeps,
   deadline: number,
-): Promise<void> {
+  signal?: AbortSignal,
+): Promise<'DONE' | 'ABORTED'> {
   let data: Parameters<typeof persistAnalysis>[3] | null = null;
   let failure: string | null = null;
   try {
@@ -795,10 +827,14 @@ async function processItem(
         pagespeedEnabled: run.pagespeedEnabled === true,
         cnpjEnabled: run.cnpjEnabled === true,
         deadline,
+        signal,
       },
       deps,
     );
   } catch (e) {
+    // Cancelada no meio da análise: o resultado seria parcial. Não grava nada (nem falha):
+    // a empresa volta ao pool e, se a mineração for cancelada, simplesmente fica sem análise.
+    if (e instanceof AnalysisAbortedError || signal?.aborted) return 'ABORTED';
     failure = errorText(e);
   }
 
@@ -809,6 +845,7 @@ async function processItem(
   } catch (e) {
     throw new BatchDbError(e);
   }
+  return 'DONE';
 }
 
 /**
@@ -842,6 +879,14 @@ export async function runBatch(runId: string, deps: PipelineDeps, deadline: numb
   let stop = false;
   let dbError: unknown = null;
   const started = new Set<string>();
+  /** Itens cuja análise foi interrompida pelo cancelamento: nada foi gravado, voltam ao pool. */
+  const aborted = new Set<string>();
+
+  // Cancelamento (T1): o controlador é abortado na hora pelo pedido de cancelamento que chegar a
+  // esta instância (`abortRunLocally`) ou, se vier de outra instância, pelo vigia do banco.
+  const { controller, dispose } = registerRunAbort(runId);
+  const stopWatching = watchRunCancellation(db, runId, controller);
+  const signal = controller.signal;
 
   const worker = async () => {
     while (!stop && next < items.length) {
@@ -849,19 +894,31 @@ export async function runBatch(runId: string, deps: PipelineDeps, deadline: numb
         stop = true;
         return;
       }
+      // Entre itens: cancelada → não inicia mais nada (o vigia pode demorar até um ciclo).
+      if (signal.aborted || (await isRunCancelled(db, runId))) {
+        controller.abort();
+        stop = true;
+        return;
+      }
       const item = items[next++];
       started.add(item.id);
       try {
-        await processItem(run, item, token, deps, deadline);
+        const outcome = await processItem(run, item, token, deps, deadline, signal);
+        if (outcome === 'ABORTED') aborted.add(item.id);
       } catch (e) {
         dbError ??= e instanceof BatchDbError ? e.cause : e;
         stop = true;
       }
     }
   };
-  await Promise.all(Array.from({ length: Math.min(BATCH_CONCURRENCY, items.length) }, worker));
+  try {
+    await Promise.all(Array.from({ length: Math.min(BATCH_CONCURRENCY, items.length) }, worker));
+  } finally {
+    stopWatching();
+    dispose();
+  }
 
-  const notStarted = items.filter((i) => !started.has(i.id)).map((i) => i.id);
+  const notStarted = items.filter((i) => !started.has(i.id) || aborted.has(i.id)).map((i) => i.id);
   try {
     await releaseClaims(db, token, notStarted);
   } catch (e) {

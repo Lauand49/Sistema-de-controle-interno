@@ -701,15 +701,23 @@ async function markProcessed(
   return count > 0;
 }
 
-/** processados += 1; CONCLUIDA/finishedAt ao atingir `total` (Req. 8.5, 8.7). */
+/**
+ * processados += 1; CONCLUIDA/finishedAt ao atingir `total` (Req. 8.5, 8.7). Em mineração
+ * CANCELADA (T1) uma análise que termina depois do cancelamento ainda conta em `processados`,
+ * mas o status nunca volta a CONCLUIDA.
+ */
 async function incrementProcessed(tx: Prisma.TransactionClient, runId: string): Promise<void> {
   await tx.$executeRaw`
     UPDATE "MiningRun" SET
       processados = processados + 1,
-      status = CASE WHEN processados + 1 >= total THEN 'CONCLUIDA'::"MiningStatus" ELSE status END,
-      "finishedAt" = CASE WHEN processados + 1 >= total THEN now() ELSE "finishedAt" END,
+      status = CASE WHEN status = 'EM_ANDAMENTO'::"MiningStatus" AND processados + 1 >= total
+                    THEN 'CONCLUIDA'::"MiningStatus" ELSE status END,
+      "finishedAt" = CASE WHEN status = 'EM_ANDAMENTO'::"MiningStatus" AND processados + 1 >= total
+                          THEN now() ELSE "finishedAt" END,
       "updatedAt" = now()
-    WHERE id = ${runId} AND status = 'EM_ANDAMENTO'::"MiningStatus" AND processados < total`;
+    WHERE id = ${runId}
+      AND status IN ('EM_ANDAMENTO'::"MiningStatus", 'CANCELADA'::"MiningStatus")
+      AND processados < total`;
 }
 
 // ---------------------------------------------------------------------------

@@ -35,6 +35,8 @@ export interface AiDeps {
   timeoutMs?: number;
   /** Padrão: setTimeout/clearTimeout globais. Injetável para testes sem espera real. */
   setTimer?: SetTimer;
+  /** Cancelamento da mineração (T1): aborta a chamada ao Gemini em curso. */
+  signal?: AbortSignal;
 }
 
 export interface AiInput {
@@ -95,12 +97,12 @@ export function promptData(input: AiInput) {
     // Só presença e rótulos: o perfil e o número de WhatsApp não são enviados.
     ...(sinais
       ? {
-          presencaDigital: {
-            instagram: sinais.instagram !== null,
-            whatsapp: sinais.whatsapp !== null,
-            tecnologias: sinais.tecnologias.map((t) => t.label),
-          },
-        }
+        presencaDigital: {
+          instagram: sinais.instagram !== null,
+          whatsapp: sinais.whatsapp !== null,
+          tecnologias: sinais.tecnologias.map((t) => t.label),
+        },
+      }
       : {}),
     ...(cnpj ? { cnpj } : {}),
   };
@@ -156,7 +158,7 @@ export function parseAiResponse(raw: string): AiOutcome {
   return { ok: true, result: { score: normalized, oportunidade, justificativa } };
 }
 
-class AiTimeoutError extends Error {}
+class AiTimeoutError extends Error { }
 
 export async function analyzeWithAi(input: AiInput, deps: AiDeps): Promise<AiOutcome> {
   try {
@@ -170,22 +172,29 @@ export async function analyzeWithAi(input: AiInput, deps: AiDeps): Promise<AiOut
     const prompt = buildPrompt(input);
     const controller = new AbortController();
     const setTimer = deps.setTimer ?? defaultSetTimer;
-    let cancel: () => void = () => {};
+    let cancel: () => void = () => { };
+    const external = deps.signal;
+    // Mineração cancelada: aborta o pedido ao Gemini e libera a corrida.
+    const onExternalAbort = () => controller.abort();
+    if (external?.aborted) controller.abort();
+    else external?.addEventListener('abort', onExternalAbort, { once: true });
     const timeout = new Promise<never>((_, reject) => {
       cancel = setTimer(() => {
         controller.abort();
         reject(new AiTimeoutError('timeout'));
       }, deps.timeoutMs ?? GEMINI_TIMEOUT_MS);
+      controller.signal.addEventListener('abort', () => reject(new AiTimeoutError('abortada')), { once: true });
     });
     let raw: string;
     try {
       const call = Promise.resolve().then(() => client.generate(prompt, { signal: controller.signal }));
       // Evita rejeição não tratada se o timeout vencer a corrida.
-      call.catch(() => {});
+      call.catch(() => { });
       raw = await Promise.race([call, timeout]);
     } finally {
       cancel();
-      timeout.catch(() => {});
+      external?.removeEventListener('abort', onExternalAbort);
+      timeout.catch(() => { });
     }
     return parseAiResponse(raw);
   } catch {

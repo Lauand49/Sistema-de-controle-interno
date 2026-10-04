@@ -3,6 +3,7 @@
  */
 import { toast } from 'sonner';
 import type { RunProgress } from '@/lib/leads/client-api';
+import { cancelledLabel } from '@/lib/leads/run-cancel';
 import type { DriveResult } from './driveRun';
 
 export interface RunDriverState {
@@ -63,5 +64,8 @@ export function notifyRunOutcome(result: DriveResult, openRanking: (href: string
     });
   } else if (p.status === 'ERRO') {
     toast.error('A mineração terminou com erro', { description: p.errorMessage || DEFAULT_RUN_ERROR });
+  } else if (p.status === 'CANCELADA') {
+    // Parada por outra pessoa/aba (quem clica em "Parar" já recebe o próprio toast).
+    toast.info('Mineração cancelada', { description: cancelledLabel(p) });
   }
 }
