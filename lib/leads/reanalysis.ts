@@ -35,6 +35,17 @@ export const MSG_REANALYSIS = {
 
 /** Duração do lease da Reanalise, em segundos (Req. 16.5). */
 const LEASE_SECONDS = 90;
+/** Janela que barra uma nova Reanalise após a última Analise (Req. 16.4). */
+const RECENT_ANALYSIS_MINUTES = 10;
+
+/**
+ * Formata um instante como `timestamp` naïve em UTC (`YYYY-MM-DD HH:MM:SS.mmm`), para comparar
+ * com as colunas `timestamp` sem fuso que o Prisma grava (que guardam o relógio UTC). Evita a
+ * coerção pelo fuso da sessão do Postgres que `now()` (timestamptz) provocaria.
+ */
+function naiveUtc(d: Date): string {
+  return d.toISOString().replace('T', ' ').replace('Z', '');
+}
 
 /** `true` quando o site próprio está vazio. */
 const emptyOwnSite = (website: string | null): boolean => (website ?? '').trim() === '';
@@ -68,26 +79,33 @@ export async function reanalyzeCompany(
 ): Promise<ReanalysisResult> {
   const { db } = deps;
 
+  // Instantes de referência calculados no processo (UTC) e comparados como `timestamp` naïve, a
+  // mesma forma em que o Prisma grava `createdAt`/`reanaliseAte` (colunas sem fuso). Comparar com
+  // `now()` (timestamptz) seria sensível ao fuso da sessão do Postgres e podia classificar errado.
+  const nowMs = deps.now();
+  const nowNaive = naiveUtc(new Date(nowMs));
+  const leaseUntil = naiveUtc(new Date(nowMs + LEASE_SECONDS * 1000));
+  const recentCutoff = naiveUtc(new Date(nowMs - RECENT_ANALYSIS_MINUTES * 60_000));
+
   // 1) Lease atômico (Req. 16.4, 16.5). Único UPDATE … RETURNING: grava o lease só se não há
   //    outro em curso e nenhuma Analise nos últimos 10 minutos.
   const leased = await db.$queryRaw<Array<{ id: string }>>`
-    UPDATE "Company" SET "reanaliseAte" = now() + (${LEASE_SECONDS}::int * interval '1 second')
-    WHERE id = ${companyId} AND ("reanaliseAte" IS NULL OR "reanaliseAte" < now())
+    UPDATE "Company" SET "reanaliseAte" = ${leaseUntil}::timestamp
+    WHERE id = ${companyId} AND ("reanaliseAte" IS NULL OR "reanaliseAte" < ${nowNaive}::timestamp)
       AND NOT EXISTS (
         SELECT 1 FROM "CompanyAnalysis" a
-        WHERE a."companyId" = ${companyId} AND a."createdAt" > now() - interval '10 minutes'
+        WHERE a."companyId" = ${companyId} AND a."createdAt" > ${recentCutoff}::timestamp
       )
     RETURNING id`;
 
   if (leased.length === 0) {
-    // Distingue 404 / RECENTE / EM_CURSO. A comparação dos 10 minutos usa o relógio do banco
-    // (mesma base do lease), não o relógio do processo.
+    // Distingue 404 / RECENTE / EM_CURSO, usando o mesmo corte naïve do lease.
     const existing = await db.company.findUnique({ where: { id: companyId }, select: { id: true } });
     if (!existing) throw notFound(MSG_REANALYSIS.naoEncontrada);
 
     const recente = await db.$queryRaw<Array<{ id: string }>>`
       SELECT id FROM "CompanyAnalysis"
-      WHERE "companyId" = ${companyId} AND "createdAt" > now() - interval '10 minutes'
+      WHERE "companyId" = ${companyId} AND "createdAt" > ${recentCutoff}::timestamp
       LIMIT 1`;
     return { ok: false, status: 409, reason: recente.length > 0 ? 'RECENTE' : 'EM_CURSO' };
   }
