@@ -18,7 +18,7 @@ export const EVALUATION_BATCH_SIZE = 10;
 export const EVALUATION_AUTO_CAP = 30;
 /** Máximo de leads por pedido manual (botão "Avaliar"). */
 export const EVALUATION_MANUAL_MAX = 30;
-export const EVALUATION_TIMEOUT_MS = 25_000;
+export const EVALUATION_TIMEOUT_MS = 20_000;
 export const RESUMO_MAX = 300;
 export const SUGESTAO_MAX = 400;
 

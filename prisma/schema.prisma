@@ -484,6 +484,7 @@ model MiningRun {
   createdAt               DateTime     @default(now())
   updatedAt               DateTime     @updatedAt
   finishedAt              DateTime?
+  avaliacaoIniciadaEm     DateTime? // P3: marca única da avaliação automática dos sem contato (ao concluir)
   // ── Etapa 3 (lead-miner-enrichment) ── (fonte = Fonte_Efetiva)
   fonteSolicitada         MiningSource @default(OSM)
   pagespeedEnabled        Boolean      @default(false)

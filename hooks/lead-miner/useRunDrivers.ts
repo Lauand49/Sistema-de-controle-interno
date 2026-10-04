@@ -22,17 +22,6 @@ export interface UseRunDriversResult {
   applyProgress: (progress: RunProgress) => void;
 }
 
-/**
- * T5: ao concluir uma mineração acompanhada aqui, pede a avaliação automática dos leads sem contato
- * (até 30; o resto fica para o botão "Avaliar"). É melhor esforço e nunca afeta a mineração: erros
- * (inclusive 409/403) são ignorados.
- */
-function requestAutoEvaluation(runId: string): void {
-  void Promise.resolve()
-    .then(() => leadMinerApi.evaluateRun(runId))
-    .catch(() => undefined);
-}
-
 export function useRunDrivers(seed: readonly RunProgress[] = [], options: { api?: RunDriverApi } = {}): UseRunDriversResult {
   const router = useRouter();
   const routerRef = useRef(router);
@@ -45,10 +34,6 @@ export function useRunDrivers(seed: readonly RunProgress[] = [], options: { api?
       onChange: setRuns,
       onOutcome: (result, sawActive) => {
         if (sawActive || result.kind === 'failed') notifyRunOutcome(result, (href) => routerRef.current.push(href));
-        // Só com a API real (testes que injetam `api` não disparam chamadas extras).
-        if (!options.api && sawActive && result.kind === 'finished' && result.progress.status === 'CONCLUIDA') {
-          requestAutoEvaluation(result.progress.id);
-        }
       },
     });
   }

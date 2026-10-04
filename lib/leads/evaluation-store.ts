@@ -79,6 +79,15 @@ async function save(db: Db, results: readonly EvaluationResult[], now: Date): Pr
   }
 }
 
+/**
+ * Resultados que não podem ser gravados: a IA nem foi tentada por falta de tempo até o prazo da
+ * função. Gravá-los como "regras" esconderia o lead do próximo "Avaliar" automático; ficam pendentes.
+ */
+function splitDeferred(results: readonly EvaluationResult[]): { keep: EvaluationResult[]; deferred: number } {
+  const keep = results.filter((r) => !(r.fonte === 'REGRA' && r.motivo === 'IA_SEM_TEMPO'));
+  return { keep, deferred: results.length - keep.length };
+}
+
 function summarize(results: readonly EvaluationResult[], restantes: number): EvaluationSummary {
   const porIa = results.filter((r) => r.fonte === 'IA').length;
   const semIa = results.find((r) => r.fonte === 'REGRA');
@@ -111,9 +120,10 @@ export async function evaluateCompanyIds(
   const now = deps.now();
   const rows = await db.company.findMany({ where: manualWhere(ids, now), select: SELECT, orderBy: RANKING_ORDER });
   if (rows.length === 0) return EMPTY;
-  const results = await evaluateMany(rows.map(toEvaluationInput), deps, rows.length);
-  await save(db, results, now);
-  return summarize(results, 0);
+  const all = await evaluateMany(rows.map(toEvaluationInput), deps, rows.length);
+  const { keep, deferred } = splitDeferred(all);
+  await save(db, keep, now);
+  return summarize(keep, deferred);
 }
 
 export class RunNotFinishedError extends Error {
@@ -141,7 +151,10 @@ export async function evaluateRunAuto(
     where: { AND: [linked, semContato, { avaliadoEm: { gte: run.createdAt } }] },
   });
   const remaining = Math.max(0, EVALUATION_AUTO_CAP - done);
-  const pendingWhere: Prisma.CompanyWhereInput = { AND: [linked, semContato, { avaliadoEm: null }] };
+  // Idempotente: quem já tem avaliação (texto ou data) nunca é reavaliado por este caminho.
+  const pendingWhere: Prisma.CompanyWhereInput = {
+    AND: [linked, semContato, { avaliadoEm: null }, { avaliacaoResumo: null }],
+  };
 
   if (remaining === 0) {
     return { ...EMPTY, restantes: await db.company.count({ where: pendingWhere }) };
@@ -153,8 +166,9 @@ export async function evaluateRunAuto(
     take: remaining,
   });
   if (rows.length === 0) return EMPTY;
-  const results = await evaluateMany(rows.map(toEvaluationInput), deps, remaining);
-  await save(db, results, now);
+  const all = await evaluateMany(rows.map(toEvaluationInput), deps, remaining);
+  const { keep } = splitDeferred(all);
+  await save(db, keep, now);
   const restantes = await db.company.count({ where: pendingWhere });
-  return summarize(results, restantes);
+  return summarize(keep, restantes);
 }

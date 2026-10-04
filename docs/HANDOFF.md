@@ -15,14 +15,23 @@ Atualizado ao fim dos ajustes pós-etapa 3 (T1–T6). Leia junto com `docs/PLANO
 | T3 Resultados progressivos | polling de 3 s, selo "analisando…", ordem `recentes`, contadores ao vivo, coluna "Contato" | nenhuma |
 | T5 Avaliação dos sem contato | Gemini em lote (10), teto 30 por mineração, fallback por regras "sem IA", botão "Avaliar", seção na Ficha | `20261018000000_company_avaliacao` |
 | T6 Documentação | `PLANO-INTEGRACAO.md` 8.4.1 e este arquivo | — |
+| P3 (correção) Avaliação automática no servidor | disparo único ao concluir, no lote que conclui | `20261019000000_mining_run_avaliacao_iniciada` |
 
 Detalhes, decisões e limitações de cada uma: `docs/PLANO-INTEGRACAO.md`, seção 8.4.1.
+
+## Como a mineração avança (quem dispara cada etapa)
+
+1. **Criar** (`POST /runs`): o servidor grava a mineração `PENDENTE`. Nada roda em segundo plano: não há worker, fila nem cron.
+2. **Descoberta e análise são dirigidas pelo navegador do autor** (`hooks/lead-miner/driveRun.ts`): ele chama `POST /runs/[id]/discover` enquanto `PENDENTE` e `POST /runs/[id]/batch` enquanto `EM_ANDAMENTO`, um passo de até ~55 s por requisição (`maxDuration` 60), com retentativa em falha de rede.
+3. **Dentro de cada passo tudo é do servidor**: as consultas a Nominatim/Overpass/Google Places, a análise (site, PageSpeed, CNPJ, IA) e a gravação. O servidor marca a mineração `CONCLUIDA` na requisição de lote que termina o último item.
+4. **Sem a aba do autor aberta a mineração para** e retoma quando ele volta (estado no banco); isso NÃO foi reestruturado. "Parar" é um `POST /cancel` de qualquer usuário autorizado.
+5. **Avaliação automática dos sem contato (P3)**: é disparada pelo servidor, na mesma requisição de lote que vê `CONCLUIDA` (`lib/leads/auto-evaluation.ts`), uma única vez (marca atômica `MiningRun.avaliacaoIniciadaEm`, migração `20261019000000`). Depende do navegador só na medida em que o lote final depende dele; o botão "Avaliar" continua existindo.
 
 ## Como validar
 
 ```bash
 export PATH=$HOME/.local/bin:$PATH
-npx prisma migrate deploy      # aplica as 3 migrações novas (aditivas, não destrutivo)
+npx prisma migrate deploy      # aplica as migrações novas (aditivas, não destrutivo); a 20261019 NÃO foi aplicada pelo agente
 npx prisma generate
 npx tsc --noEmit
 npm test                       # offline; não usa RUN_DB_TESTS
@@ -48,7 +57,8 @@ As mesmas do `.env.example`; nenhuma nova. Sem `GEMINI_API_KEY` a avaliação do
 - Abrir o PR de `etapa-3-melhorias` (base `etapa-2-paineis`) e fazer o `git push` quando o usuário autorizar.
 - Decisões em aberto com o usuário:
   - e-mail de contato hoje vem só da tag OSM; extrair e-mail do site exige decidir sobre guardar dado pessoal (LGPD);
-  - avaliação automática depende do navegador aberto ao concluir a mineração; se precisar rodar sem ninguém na tela, mover para um job/cron na Etapa 4.
+  - a mineração inteira depende do navegador do autor (ver "Como a mineração avança"); rodar sem ninguém na tela exige worker/cron (Etapa 4). A avaliação automática já é do servidor, mas só dispara quando o lote final chega;
+  - se o lote final usar quase todo o orçamento de 60 s, a avaliação automática não tem tempo de chamar a IA e deixa os leads pendentes (não grava regras no lugar): use o botão "Avaliar".
 - Etapa 4 (deploy) continua a fazer. Lembretes: limitadores em memória (Nominatim, BrasilAPI) e os caches de cidades/bairros são por instância (Cloud Run com `max-instances=1` ou mover para o banco); a purga do Cache_Google continua oportunista.
 - Nomes das migrações: as três novas usam datas a partir de `20261016` para ficar depois de `20261015000000_lead_miner_enrichment`, não a data real do dia (regra de `AGENTS.md`). Se o time preferir a data real, é preciso renomear antes de qualquer deploy em banco que ainda não as aplicou.
 

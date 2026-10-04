@@ -1,6 +1,8 @@
 /**
- * POST /api/tools/lead-miner/runs/[id]/evaluate — Avaliação automática dos leads "Sem contato" ao
- * fim da mineração (T5). Chamada pelo navegador quando a mineração conclui; idempotente.
+ * POST /api/tools/lead-miner/runs/[id]/evaluate — Avaliação dos leads "Sem contato" de uma mineração
+ * concluída (T5), sob demanda/retentativa. A avaliação AUTOMÁTICA já é disparada pelo servidor na
+ * requisição de lote que conclui a mineração (`lib/leads/auto-evaluation.ts`, P3); esta rota não
+ * depende dessa marca e é idempotente (não reavalia quem já tem avaliação; teto de 30 por mineração).
  *
  * - avalia até `EVALUATION_AUTO_CAP` (30) leads sem contato por mineração, em lotes de 10 no Gemini;
  *   o restante fica para o botão "Avaliar";

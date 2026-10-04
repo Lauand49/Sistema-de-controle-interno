@@ -558,7 +558,7 @@ export const leadMinerApi = {
     getJson<NeighborhoodsResponse>(`/localidades/bairros${toQueryString({ uf, cidade })}`, opts),
 
   /** Para a mineração (T1). Idempotente; 409 se já terminou; 403 sem permissão. */
-  /** Avaliação automática dos leads sem contato ao fim da mineração (T5); idempotente. */
+  /** Avaliação sob demanda dos leads sem contato de uma mineração concluída; idempotente (o disparo automático é do servidor). */
   evaluateRun: (id: string, opts?: RequestOptions) =>
     postJson<EvaluationSummaryDto>(`/runs/${enc(id)}/evaluate`, undefined, opts),
 
