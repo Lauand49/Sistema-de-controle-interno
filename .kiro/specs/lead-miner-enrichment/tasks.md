@@ -343,11 +343,11 @@ Convenções:
     - **Validates: Requirements 20.1, 20.2**
 
 - [ ] 14. Telas e componentes
-  - [ ] 14.1 Criar `components/lead-miner/enrichment-helpers.ts` e componentes compartilhados
+  - [x] 14.1 Criar `components/lead-miner/enrichment-helpers.ts` e componentes compartilhados
     - `enrichment-helpers.ts`: `pageSpeedBand`, `formatWhatsapp`, `situacaoAlert`, `fallbackLabel`, `unavailableLabel`, `sourceSummary`, `cnpjOriginLabel`
     - `GoogleAttribution.tsx` ("Google Maps" com `translate="no"`), `GoogleContent.tsx` (contêiner com borda/fundo próprios e atribuição) e `GoogleUnusedNote.tsx` (três textos do Req. 4.9)
     - _Requirements: 4.9, 6.4, 12.6, 15.4, 17.2, 17.6, 20.6_
-  - [ ]* 14.2 Escrever teste de propriedade das faixas do PageSpeed
+  - [x]* 14.2 Escrever teste de propriedade das faixas do PageSpeed
     - **Property 42: Faixas das notas do PageSpeed**
     - **Validates: Requirements 17.2**
   - [ ] 14.3 Atualizar a Tela_Minerar
