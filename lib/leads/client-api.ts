@@ -9,9 +9,22 @@ import type { CompanyCategory, LeadPriority, MiningSource, MiningStatus } from '
 import type { IaDisabledReason, RunProgress } from './pipeline';
 import type { CompanyFilters, LeadStatus, RunsListQuery } from './filters';
 import type { PresetId } from './config';
+import type { ServicesStatus } from './services';
+import type { NameOrigin } from './display';
+import type { ApproachChannel, ApproachFallbackReason } from './approach';
+import type {
+  CnpjData,
+  CnpjCandidate,
+  CnpjOrigin,
+  PageSpeedAbsence,
+  PageSpeedResult,
+  SinaisDigitais,
+  SourceMode,
+} from './types';
 
 export type { IaDisabledReason, RunProgress, CompanyFilters, LeadStatus, RunsListQuery };
 export type { CompanyCategory, LeadPriority, MiningSource, MiningStatus };
+export type { ServicesStatus, NameOrigin, ApproachChannel, ApproachFallbackReason };
 
 const BASE = '/api/tools/lead-miner';
 
@@ -97,15 +110,18 @@ async function getJson<T>(path: string, opts: RequestOptions = {}): Promise<T> {
   return (await res.json()) as T;
 }
 
-async function postJson<T>(path: string, body: unknown, opts: RequestOptions = {}): Promise<T> {
+async function bodyJson<T>(method: 'POST' | 'PUT' | 'DELETE', path: string, body: unknown, opts: RequestOptions = {}): Promise<T> {
   const res = await send(path, {
-    method: 'POST',
+    method,
     headers: { 'Content-Type': 'application/json' },
     body: body === undefined ? undefined : JSON.stringify(body),
     signal: opts.signal,
   });
   return (await res.json()) as T;
 }
+
+const postJson = <T>(path: string, body: unknown, opts: RequestOptions = {}): Promise<T> =>
+  bodyJson<T>('POST', path, body, opts);
 
 /** Monta a query string omitindo valores vazios/indefinidos. */
 export function toQueryString(params: object | URLSearchParams | undefined): string {
@@ -138,6 +154,8 @@ export interface UserRef {
 
 export interface LeadMinerConfig {
   iaAvailable: boolean;
+  /** Estado e uso do mês de Google Places, PageSpeed e Gemini (Req. 2.6). */
+  services: ServicesStatus;
 }
 
 export interface CreateRunInput {
@@ -148,6 +166,12 @@ export interface CreateRunInput {
   preset?: PresetId;
   excluirRedes: boolean;
   iaEnabled: boolean;
+  /** Fonte de descoberta; padrão `MISTA` (Req. 4.3). */
+  fonte?: SourceMode;
+  /** Analisar desempenho com o PageSpeed; padrão `true` (Req. 10.1). */
+  pagespeedEnabled?: boolean;
+  /** Consultar CNPJ na BrasilAPI; padrão `true` (Req. 12.7). */
+  cnpjEnabled?: boolean;
 }
 
 export interface RunListItem extends RunProgress {
@@ -191,6 +215,11 @@ export interface RunLookup {
 export interface CompanyRow {
   id: string;
   nome: string;
+  /** Origem do Nome_Exibicao (para a Atribuicao_Google na UI, Req. 6.4). */
+  nomeOrigem: NameOrigin;
+  /** Campos exibidos que vêm do Conteudo_Google (Req. 6.4). */
+  googleFields: GoogleField[];
+  googlePlaceId: string | null;
   nicho: string;
   bairro: string | null;
   cidade: string | null;
@@ -206,9 +235,18 @@ export interface CompanyRow {
   lastAnalyzedAt: string | null;
   latitude: number | null;
   longitude: number | null;
+  /** Snapshots da Etapa 3 (filtros e badges do ranking). */
+  temInstagram: boolean | null;
+  temWhatsapp: boolean | null;
+  cnpjFormatado: string | null;
+  situacaoCadastral: string | null;
+  desempenhoRuim: boolean | null;
   assignedUser: UserRef | null;
   prospectLead: { id: string; status: LeadStatus } | null;
 }
+
+/** Campo de exibição que pode vir do Cache_Google (espelha `display.GoogleField`). */
+export type GoogleField = 'nome' | 'endereco' | 'bairro' | 'cidade' | 'uf' | 'telefone' | 'website' | 'coords';
 
 export interface CompaniesResponse {
   items: CompanyRow[];
@@ -232,6 +270,8 @@ export interface MapResponse {
   points: MapPoint[];
   shown: number;
   total: number;
+  /** Empresas filtradas sem coordenadas próprias, só com coordenadas no Cache_Google (Req. 6.5). */
+  semCoordsProprias: number;
 }
 
 export interface CompanyAnalysis {
@@ -261,6 +301,12 @@ export interface CompanyAnalysis {
   justificativaIa: string | null;
   /** `ScoreBreakdown` serializado. */
   detalhamento: unknown;
+  /** 1 = análise anterior à Etapa 3 (regras da Etapa 1); 2 = Etapa 3 (Req. 13.1, 17.4). */
+  versaoScore: 1 | 2;
+  sinais: SinaisDigitais | null;
+  pagespeed: PageSpeedResult | null;
+  pagespeedMotivo: PageSpeedAbsence | null;
+  tecnologias: string[];
   createdAt: string;
 }
 
@@ -281,9 +327,33 @@ export interface CompanyRunEntry {
   };
 }
 
+/** Mensagem de abordagem gravada, como devolvida pelas rotas (Req. 15.8). */
+export interface ApproachMessageDto {
+  id: string;
+  canal: ApproachChannel;
+  origem: 'IA' | 'MODELO';
+  assunto: string | null;
+  texto: string;
+  fallback: ApproachFallbackReason | null;
+  analysisId: string | null;
+  author: UserRef;
+  createdAt: string;
+  /** `https://wa.me/{num}?text=…` quando o canal é WHATSAPP e há número (Req. 15.7). */
+  whatsappLink: string | null;
+}
+
+/** Candidato a CNPJ enriquecido com a forma mascarada e o possível conflito (Req. 17.3). */
+export type CnpjCandidateDto = CnpjCandidate & {
+  formatado: string;
+  conflito: { id: string; nome: string } | null;
+};
+
 export interface CompanyDetail {
   id: string;
   nome: string;
+  /** Nome_Exibicao e sua origem (Req. 6.3, 6.4). */
+  nomeOrigem: NameOrigin;
+  googleFields: GoogleField[];
   nicho: string;
   endereco: string | null;
   bairro: string | null;
@@ -303,9 +373,23 @@ export interface CompanyDetail {
   lastAnalyzedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  /** Conteudo_Google para a UI; nunca o objeto de cache cru (Req. 6.8–6.10). */
+  google: {
+    placeId: string;
+    mapsLink: string;
+    cacheStatus: 'VALIDO' | 'AUSENTE';
+    aviso: 'INDISPONIVEL' | 'NAO_ENCONTRADO' | null;
+  } | null;
+  osmId: string | null;
+  cnpj: { valor: string; formatado: string; origem: CnpjOrigin; dados: CnpjData | null; status: string | null } | null;
+  cnpjCandidatos: CnpjCandidateDto[];
+  temInstagram: boolean | null;
+  temWhatsapp: boolean | null;
+  situacaoCadastral: string | null;
   assignedUser: UserRef | null;
   prospectLead: { id: string; status: LeadStatus; assignedTo: string | null; createdAt: string } | null;
   analyses: CompanyAnalysis[];
+  mensagens: ApproachMessageDto[];
   runs: CompanyRunEntry[];
 }
 
@@ -321,6 +405,23 @@ export interface ExportResult {
 export interface TriageResult {
   created: number;
   ignored: number;
+}
+
+/** Resposta de `POST /companies/[id]/reanalyze` (Req. 16.2). */
+export interface ReanalyzeResult {
+  analysisId: string;
+  semWebsite: boolean;
+  googleRefresh: string | null;
+  company: CompanyDetail;
+}
+
+/** Resultado da consulta à BrasilAPI num `setCnpj` (Req. 12). */
+export type CnpjLookupOutcome = 'OK' | 'NAO_ENCONTRADO' | 'INDISPONIVEL' | 'EM_CACHE';
+
+/** Resposta de `PUT /companies/[id]/cnpj` (Req. 11.6). */
+export interface SetCnpjResult {
+  company: CompanyDetail;
+  lookup: CnpjLookupOutcome;
 }
 
 export interface AssignResult {
@@ -356,6 +457,21 @@ export function conflictAssignee(e: LeadMinerApiError): UserRef | null {
 /** `runId` informado num 409 de `POST /runs`. */
 export function conflictRunId(e: LeadMinerApiError): string | null {
   return typeof e.data.runId === 'string' ? e.data.runId : null;
+}
+
+/** `reason` (`RECENTE`/`EM_CURSO`) de um 409 de reanálise. */
+export function reanalyzeConflictReason(e: LeadMinerApiError): 'RECENTE' | 'EM_CURSO' | null {
+  return e.data.reason === 'RECENTE' || e.data.reason === 'EM_CURSO' ? e.data.reason : null;
+}
+
+/** Empresa em conflito (`{ id, nome }`) num 409 de `PUT /cnpj`. */
+export function conflictCnpjCompany(e: LeadMinerApiError): { id: string; nome: string } | null {
+  const c = e.data.conflito;
+  if (c && typeof c === 'object') {
+    const o = c as Record<string, unknown>;
+    if (typeof o.id === 'string' && typeof o.nome === 'string') return { id: o.id, nome: o.nome };
+  }
+  return null;
 }
 
 function filenameFrom(disposition: string | null): string {
@@ -401,6 +517,22 @@ export const leadMinerApi = {
     getJson<MapResponse>(`/companies/map${toQueryString(params)}`, opts),
 
   getCompany: (id: string, opts?: RequestOptions) => getJson<CompanyDetail>(`/companies/${enc(id)}`, opts),
+
+  /** Reanalisa a Empresa sob demanda (Req. 16). 409 → `LeadMinerApiError` com `reason` em `e.data`. */
+  reanalyze: (id: string, opts?: RequestOptions) =>
+    postJson<ReanalyzeResult>(`/companies/${enc(id)}/reanalyze`, undefined, opts),
+
+  /** Define/atualiza o CNPJ manual da Empresa (Req. 11.6, 11.7). 409 de conflito em `e.data.conflito`. */
+  setCnpj: (id: string, cnpj: string, opts?: RequestOptions) =>
+    bodyJson<SetCnpjResult>('PUT', `/companies/${enc(id)}/cnpj`, { cnpj }, opts),
+
+  /** Remove o CNPJ da Empresa (Req. 11.10). */
+  removeCnpj: (id: string, opts?: RequestOptions) =>
+    bodyJson<{ company: CompanyDetail }>('DELETE', `/companies/${enc(id)}/cnpj`, undefined, opts),
+
+  /** Gera e grava uma mensagem de abordagem (Req. 15). 409 sem Analise. */
+  generateApproach: (id: string, canal: ApproachChannel, opts?: RequestOptions) =>
+    postJson<{ message: ApproachMessageDto }>(`/companies/${enc(id)}/approach`, { canal }, opts),
 
   exportCsv: async (req: ExportRequest, opts?: RequestOptions): Promise<ExportResult> => {
     const res = await send('/companies/export', {

@@ -262,7 +262,7 @@ Convenções:
     - `integration/repository-enrichment.int.test.ts` (`RUN_DB_TESTS=1`): `prismaUsageGate` com `places` e `pagespeed` sob 50 reservas concorrentes e limite 10 (exatamente 10 por provedor, independentes); aplicações concorrentes do mesmo CNPJ em Empresas diferentes (uma aplica, a outra vira `CONFLITO`); Google + OSM no mesmo Nicho `MISTA` resultando numa Empresa `MISTA`; reingestão idempotente
     - _Requirements: 19.3, 11.8, 5.4, 5.6, 21.9_
 
-- [ ] 11. Análise da empresa, pipeline e reanálise
+- [x] 11. Análise da empresa, pipeline e reanálise
   - [x] 11.1 Implementar `lib/leads/analysis.ts`
     - `analyzeCompany` (site + corpo → sinais e CNPJs → `planCnpj` → PageSpeed, BrasilAPI e IA em paralelo com timeouts limitados pelo deadline → `resolveSiteCnpj` → `classify`/`score` v2; descarta o HTML) e `approachInputFrom`
     - _Requirements: 7.1, 7.5, 8.8, 9.5, 10.2, 10.3, 10.7, 10.8, 11.3, 11.4, 11.5, 11.9, 12.1, 12.3, 12.4, 12.5, 12.7, 12.8, 13.1, 13.8, 14.1, 16.2_
@@ -332,7 +332,7 @@ Convenções:
     - `companies/[id]/cnpj/route.ts` (`PUT` com validação, `MANUAL`, auditoria `LEAD_COMPANY_CNPJ_SET`, 409 de conflito com `{ id, nome }`, consulta à BrasilAPI; `DELETE` com auditoria `LEAD_COMPANY_CNPJ_REMOVED`)
     - `companies/[id]/approach/route.ts` (`POST`, `canal`, primeiro nome da sessão, 409 sem Analise, grava `ApproachMessage`, devolve `ApproachMessageDto` com `whatsappLink`)
     - _Requirements: 11.6, 11.7, 11.8, 11.10, 12.1, 15.2, 15.6, 15.7, 16.2, 16.4, 16.5, 16.6, 20.1, 20.2, 20.3, 20.5_
-  - [ ] 13.8 Estender `lib/leads/client-api.ts`
+  - [x] 13.8 Estender `lib/leads/client-api.ts`
     - Tipos `ServicesStatus`, `RunProgress`/`RunListItem` estendidos, `CompanyRow`/`CompanyDetail` v2, `ApproachMessageDto`, `MapResponse.semCoordsProprias`; chamadas `reanalyze`, `setCnpj`, `removeCnpj`, `generateApproach`; `CreateRunInput` com `fonte`, `pagespeedEnabled`, `cnpjEnabled`
     - _Requirements: 2.6, 4.1, 11.6, 15.2, 16.2_
   - [ ] 13.9 Escrever testes das rotas
