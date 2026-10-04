@@ -3,10 +3,17 @@
  *
  * Um lead tem contato quando há telefone, WhatsApp, e-mail ou Instagram conhecidos.
  *
- * - `Company.temContato` é persistido e mantido por um trigger do Postgres
- *   (migração `20261017000000_company_tem_contato`), que aplica exatamente `computeTemContato`
- *   a cada INSERT/UPDATE. Assim nenhum ponto de escrita (descoberta, análise, reanálise,
- *   edição manual) precisa lembrar de recalcular.
+ * - `Company.temContato` é persistido e mantido por um trigger do Postgres, que aplica exatamente
+ *   `temContato()` (abaixo) a cada INSERT/UPDATE. Assim nenhum ponto de escrita (descoberta,
+ *   análise, reanálise, edição manual) precisa lembrar de recalcular.
+ * - A REGRA MORA EM DOIS LUGARES QUE DEVEM MUDAR JUNTOS:
+ *     1. a função `company_set_tem_contato()` — definida em `prisma/migrations/20261017000000_company_tem_contato`
+ *        e REDEFINIDA pela migração mais recente que a altera (hoje
+ *        `20261020000000_tem_contato_whitespace`); migrações antigas nunca são editadas, a mudança
+ *        da regra entra numa migração nova com `CREATE OR REPLACE FUNCTION` + backfill;
+ *     2. esta função TypeScript `temContato()`.
+ *   O teste de integração `tests/lead-miner-enrichment/integration/tem-contato-trigger.int.test.ts`
+ *   (só em `scitec_test`) confere que as duas coincidem, inclusive com vazio, espaços e nulos.
  * - O telefone do Cache_Google NÃO é persistido na Empresa (vale 30 dias). Por isso a consulta
  *   (`contatoWhere`) também considera o telefone do Cache_Google ainda válido: o que a tela mostra
  *   como telefone nunca cai em "Sem contato".
@@ -27,10 +34,24 @@ export interface ContactSource {
   temInstagram?: boolean | null;
 }
 
-const filled = (v: string | null | undefined): boolean => typeof v === 'string' && v.trim() !== '';
+/**
+ * Caracteres que o trigger descarta nas pontas (`btrim(x, E' \t\n\r\f\v')`): espaço, tab, quebras de
+ * linha, avanço de página e tab vertical. Espaços Unicode (ex.: NBSP, largura zero) contam como
+ * conteúdo nos dois lados — NÃO use `String.prototype.trim()`, que também remove esses.
+ */
+export const CONTACT_BLANK_CHARS = ' \t\n\r\f\v';
 
-/** Espelho em TypeScript do trigger `company_set_tem_contato` (mesma regra, mesmos campos). */
-export function computeTemContato(c: ContactSource): boolean {
+// Mesmo conjunto de CONTACT_BLANK_CHARS (ver teste: as duas definições são conferidas).
+const BLANK_ENDS = /^[ \t\n\r\f\v]+|[ \t\n\r\f\v]+$/g;
+
+const filled = (v: string | null | undefined): boolean => typeof v === 'string' && v.replace(BLANK_ENDS, '') !== '';
+
+/**
+ * REGRA DE CONTATO (pura): telefone, WhatsApp, e-mail ou Instagram conhecidos — texto não vazio
+ * depois de descartar `CONTACT_BLANK_CHARS` nas pontas — ou snapshot de análise `true`.
+ * Espelho exato do trigger `company_set_tem_contato` (nulos contam como vazio/falso).
+ */
+export function temContato(c: ContactSource): boolean {
   return (
     filled(c.telefone) ||
     filled(c.whatsappOsm) ||
@@ -40,6 +61,9 @@ export function computeTemContato(c: ContactSource): boolean {
     c.temInstagram === true
   );
 }
+
+/** Nome anterior de `temContato` (mantido para os chamadores existentes). */
+export const computeTemContato = temContato;
 
 const EMAIL_RE = /^[a-z0-9._%+-]+@[a-z0-9-]+(\.[a-z0-9-]+)+$/;
 

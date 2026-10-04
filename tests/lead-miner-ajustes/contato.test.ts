@@ -6,7 +6,9 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import {
+  CONTACT_BLANK_CHARS,
   computeTemContato,
+  temContato,
   contatoWhere,
   normalizeEmail,
   type ContactSource,
@@ -25,6 +27,33 @@ import {
 } from '@/components/lead-miner/ranking-helpers';
 
 const NOW = new Date('2026-10-20T12:00:00Z');
+
+describe('temContato (regra pura, espelho do trigger)', () => {
+  it('computeTemContato é o mesmo nome antigo da função', () => {
+    expect(computeTemContato).toBe(temContato);
+  });
+
+  it('vazio, só espaço/tab/quebra de linha e nulos não contam', () => {
+    for (const blank of ['', ' ', '   ', '\t', '\n', '\r\n', '\f', '\v', ' \t\n\r\f\v ', null, undefined]) {
+      expect(temContato({ telefone: blank }), JSON.stringify(blank)).toBe(false);
+      expect(temContato({ emailOsm: blank }), JSON.stringify(blank)).toBe(false);
+    }
+  });
+
+  it('espaços Unicode contam como conteúdo (igual ao btrim do trigger, que não os remove)', () => {
+    for (const s of ['\u00a0', '\u200b', '\u2003', ' \u00a0 ']) {
+      expect(temContato({ whatsappOsm: s }), JSON.stringify(s)).toBe(true);
+    }
+  });
+
+  it('texto com conteúdo e espaços nas pontas conta', () => {
+    expect(temContato({ instagramOsm: '  loja.x \n' })).toBe(true);
+  });
+
+  it('o conjunto de brancos é o documentado', () => {
+    expect(CONTACT_BLANK_CHARS).toBe(' \t\n\r\f\v');
+  });
+});
 
 describe('computeTemContato', () => {
   it('sem nenhum dado → false', () => {
@@ -152,6 +181,22 @@ describe('migração do trigger', () => {
       expect(sql).toContain(`NEW."${col}"`);
     }
     expect(sql).toMatch(/BEFORE INSERT OR UPDATE ON "Company"/);
+  });
+
+  it('a migração 20261020 redefine o trigger com o mesmo conjunto de brancos da função TypeScript', () => {
+    const next = readFileSync(
+      join(process.cwd(), 'prisma/migrations/20261020000000_tem_contato_whitespace/migration.sql'),
+      'utf8',
+    );
+    // E' \t\n\r\f\v' no SQL = os mesmos caracteres de CONTACT_BLANK_CHARS (escapes literais no arquivo).
+    const sqlSet = CONTACT_BLANK_CHARS.replace(/[\t\n\r\f\v]/g, (c) => ({ '\t': '\\t', '\n': '\\n', '\r': '\\r', '\f': '\\f', '\v': '\\v' })[c]!);
+    expect(next).toContain("CREATE OR REPLACE FUNCTION \"company_set_tem_contato\"()");
+    for (const col of ['telefone', 'whatsappOsm', 'instagramOsm', 'emailOsm']) {
+      expect(next).toContain(`btrim(COALESCE(NEW."${col}", ''), E'${sqlSet}') <> ''`);
+    }
+    expect(next).toContain('COALESCE(NEW."temWhatsapp", false)');
+    expect(next).toContain('COALESCE(NEW."temInstagram", false)');
+    expect(next).toContain('UPDATE "Company" SET "telefone" = "telefone"');
   });
 
   it('cria as colunas, o backfill e o índice', () => {
