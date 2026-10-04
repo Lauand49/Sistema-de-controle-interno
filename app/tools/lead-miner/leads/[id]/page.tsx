@@ -14,6 +14,11 @@ import { AiInsight } from '@/components/lead-miner/ficha/AiInsight';
 import { AnalysisHistory } from '@/components/lead-miner/ficha/AnalysisHistory';
 import { CompanyRuns } from '@/components/lead-miner/ficha/CompanyRuns';
 import { ClaimLeadButton } from '@/components/lead-miner/ficha/ClaimLeadButton';
+import { DigitalPresence } from '@/components/lead-miner/ficha/DigitalPresence';
+import { PageSpeedCard } from '@/components/lead-miner/ficha/PageSpeedCard';
+import { CnpjSection } from '@/components/lead-miner/ficha/CnpjSection';
+import { ApproachMessages } from '@/components/lead-miner/ficha/ApproachMessages';
+import { ReanalyzeButton } from '@/components/lead-miner/ficha/ReanalyzeButton';
 import { COMPANY_NOT_FOUND, NOT_ANALYZED, sortByDateDesc } from '@/components/lead-miner/ficha/ficha-helpers';
 import { isLeadMinerApiError, leadMinerApi, type CompanyDetail, type UserRef } from '@/lib/leads/client-api';
 
@@ -52,6 +57,11 @@ function FichaContent({ id }: { id: string }) {
 
   const setAssignee = useCallback((assignee: UserRef) => {
     setState((s) => (s.kind === 'ready' ? { kind: 'ready', company: { ...s.company, assignedUser: assignee } } : s));
+  }, []);
+
+  /** Substitui a empresa carregada após reanálise ou mudança de CNPJ, sem recarregar a página. */
+  const replaceCompany = useCallback((company: CompanyDetail) => {
+    setState({ kind: 'ready', company });
   }, []);
 
   const handleClaimed = useCallback(
@@ -134,9 +144,12 @@ function FichaContent({ id }: { id: string }) {
       <CompanyHeader
         company={company}
         claimSlot={
-          company.assignedUser ? undefined : (
-            <ClaimLeadButton companyId={company.id} onClaimed={handleClaimed} onConflict={handleConflict} />
-          )
+          <div className="flex flex-wrap items-center gap-2">
+            <ReanalyzeButton companyId={company.id} onReanalyzed={replaceCompany} />
+            {!company.assignedUser && (
+              <ClaimLeadButton companyId={company.id} onClaimed={handleClaimed} onConflict={handleConflict} />
+            )}
+          </div>
         }
       />
 
@@ -150,11 +163,16 @@ function FichaContent({ id }: { id: string }) {
         </p>
       )}
 
+      <CnpjSection company={company} onUpdated={replaceCompany} />
+
       {latest ? (
         <>
           <SiteDiagnosis analysis={latest} companyHasWebsite={hasWebsite} />
+          <DigitalPresence sinais={latest.sinais} />
+          <PageSpeedCard pagespeed={latest.pagespeed} motivo={latest.pagespeedMotivo} />
           <ScoreBreakdownCard analysis={latest} />
           <AiInsight analysis={latest} />
+          <ApproachMessages companyId={company.id} initialMessages={company.mensagens} />
           <AnalysisHistory analyses={company.analyses} />
         </>
       ) : (

@@ -359,7 +359,7 @@ Convenções:
   - [x] 14.5 Atualizar a Tela_Ranking e o Mapa
     - `RankingFilters` com os 5 filtros novos (sincronizados na URL por `ranking-helpers`); `RankingTable` com Nome_Exibicao, alerta de situação e `GoogleAttribution` nas células com Conteudo_Google; `CompanyMap` com o aviso "N empresas do Google Places não aparecem no mapa (termos do Google)" e popup sem Conteudo_Google
     - _Requirements: 18.1, 18.2, 12.6, 6.4, 6.5_
-  - [ ] 14.6 Atualizar a Ficha_Empresa
+  - [x] 14.6 Atualizar a Ficha_Empresa
     - `CompanyHeader` (Nome_Exibicao, alerta de situação, "Ver no Google Maps", `GoogleContent`, `OdblAttribution` com `osmId`, avisos do Google); novas seções `ficha/DigitalPresence.tsx`, `ficha/PageSpeedCard.tsx`, `ficha/CnpjSection.tsx`, `ficha/ApproachMessages.tsx`, `ficha/ReanalyzeButton.tsx`; `AnalysisHistory` com Versao_Score e "regras da Etapa 1"; `ficha-helpers` sem recalcular Analises antigas
     - _Requirements: 6.4, 6.9, 6.10, 11.5, 11.6, 11.7, 11.8, 12.4, 12.6, 13.7, 15.1, 15.4, 15.6, 15.7, 15.8, 15.9, 16.1, 16.3, 16.6, 16.7, 17.1, 17.2, 17.3, 17.4, 17.5, 17.6, 20.6_
   - [ ]* 14.7 Escrever testes de componentes

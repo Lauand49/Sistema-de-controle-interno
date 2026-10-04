@@ -1,11 +1,18 @@
 import React from 'react';
-import { Building2 } from 'lucide-react';
+import { Building2, ExternalLink, MapPin } from 'lucide-react';
 import type { CompanyDetail } from '@/lib/leads/client-api';
 import { PriorityBadge } from '@/components/lead-miner/PriorityBadge';
+import { GoogleAttribution } from '@/components/lead-miner/GoogleAttribution';
+import { situacaoAlert } from '@/components/lead-miner/enrichment-helpers';
 import { Field, Muted } from './Section';
 import { NOT_INFORMED, NOT_IN_TRIAGE, leadStatusText, nicheInfo, orNotInformed } from './ficha-helpers';
 
 const SOURCE_LABEL: Record<string, string> = { OSM: 'OpenStreetMap', GOOGLE: 'Google', MISTA: 'Mista' };
+
+const GOOGLE_NOTICE_TEXT: Record<'INDISPONIVEL' | 'NAO_ENCONTRADO', string> = {
+  INDISPONIVEL: 'Dados do Google indisponíveis no momento',
+  NAO_ENCONTRADO: 'Lugar não encontrado no Google',
+};
 
 /** Valor textual; marcadores de ausência aparecem apagados. */
 const Val: React.FC<{ v: string | null | undefined }> = ({ v }) => {
@@ -59,7 +66,33 @@ export const CompanyHeader: React.FC<{ company: CompanyDetail; claimSlot?: React
               {company.scoreFinal !== null && (
                 <span className="font-semibold text-slate-200">Score {company.scoreFinal}/100</span>
               )}
+              {(() => {
+                const sit = situacaoAlert(company.situacaoCadastral);
+                return sit && sit.alerta ? (
+                  <span className={`rounded-full border border-amber-700/60 bg-amber-950/60 px-2 py-0.5 font-semibold ${sit.className}`}>
+                    {sit.label}
+                  </span>
+                ) : null;
+              })()}
             </div>
+            {company.google && (
+              <div className="flex flex-wrap items-center gap-3 pt-1">
+                <a
+                  href={company.google.mapsLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1 rounded text-xs text-purple-300 underline hover:text-purple-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+                >
+                  <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
+                  Ver no Google Maps
+                  <ExternalLink className="h-3 w-3" aria-hidden="true" />
+                  <span className="sr-only"> (abre em nova aba)</span>
+                </a>
+                {company.google.aviso && (
+                  <span className="text-xs text-amber-400/90">{GOOGLE_NOTICE_TEXT[company.google.aviso]}</span>
+                )}
+              </div>
+            )}
           </div>
         </div>
         {claimSlot}
@@ -118,6 +151,9 @@ export const CompanyHeader: React.FC<{ company: CompanyDetail; claimSlot?: React
         </Field>
         <Field label="Status na triagem">{status === NOT_IN_TRIAGE ? <Muted>{status}</Muted> : status}</Field>
       </dl>
+
+      {/* Alguns campos acima vêm do Cache_Google: exige a Atribuicao_Google no mesmo contêiner (Req. 6.4, 17.5). */}
+      {company.googleFields.length > 0 && <GoogleAttribution className="mt-4" />}
     </section>
   );
 };

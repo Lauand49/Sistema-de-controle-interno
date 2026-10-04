@@ -18,7 +18,8 @@ export const AnalysisHistory: React.FC<{ analyses: readonly CompanyAnalysis[] }>
               <th scope="col" className="py-2 pr-4 font-semibold">Data</th>
               <th scope="col" className="py-2 pr-4 font-semibold">Score final</th>
               <th scope="col" className="py-2 pr-4 font-semibold">Prioridade</th>
-              <th scope="col" className="py-2 font-semibold">Categoria</th>
+              <th scope="col" className="py-2 pr-4 font-semibold">Categoria</th>
+              <th scope="col" className="py-2 font-semibold">Versão</th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-800 text-slate-200">
@@ -29,7 +30,14 @@ export const AnalysisHistory: React.FC<{ analyses: readonly CompanyAnalysis[] }>
                 <td className="py-2 pr-4">
                   <PriorityBadge prioridade={a.prioridade} />
                 </td>
-                <td className="py-2">{categoryLabel(a.categoria)}</td>
+                <td className="py-2 pr-4">{categoryLabel(a.categoria)}</td>
+                <td className="py-2 text-xs text-slate-400">
+                  {a.versaoScore === 1 ? (
+                    <span title="Calculada pelas regras da Etapa 1">v1 · regras da Etapa 1</span>
+                  ) : (
+                    <span>v2</span>
+                  )}
+                </td>
               </tr>
             ))}
           </tbody>
