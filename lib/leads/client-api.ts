@@ -12,6 +12,7 @@ import type { PresetId } from './config';
 import type { ServicesStatus } from './services';
 import type { NameOrigin } from './display';
 import type { ApproachChannel, ApproachFallbackReason } from './approach';
+import type { EvaluationDto } from './evaluation';
 import type {
   CnpjData,
   CnpjCandidate,
@@ -262,6 +263,8 @@ export interface CompanyRow {
   contatoWhatsapp: boolean;
   contatoInstagram: boolean;
   contatoEmail: boolean;
+  /** T5: avaliação básica (só para leads sem contato); `null` se ainda não avaliado. */
+  avaliacao: EvaluationDto | null;
   cnpjFormatado: string | null;
   situacaoCadastral: string | null;
   desempenhoRuim: boolean | null;
@@ -271,6 +274,15 @@ export interface CompanyRow {
 
 /** Campo de exibição que pode vir do Cache_Google (espelha `display.GoogleField`). */
 export type GoogleField = 'nome' | 'endereco' | 'bairro' | 'cidade' | 'uf' | 'telefone' | 'website' | 'coords';
+
+/** Resposta das rotas de avaliação (T5). */
+export interface EvaluationSummaryDto {
+  avaliados: number;
+  porIa: number;
+  porRegra: number;
+  restantes: number;
+  motivoSemIa: string | null;
+}
 
 export interface CompaniesResponse {
   items: CompanyRow[];
@@ -412,6 +424,8 @@ export interface CompanyDetail {
   temInstagram: boolean | null;
   temWhatsapp: boolean | null;
   situacaoCadastral: string | null;
+  /** T5: avaliação básica dos leads sem contato. */
+  avaliacao: EvaluationDto | null;
   assignedUser: UserRef | null;
   prospectLead: { id: string; status: LeadStatus; assignedTo: string | null; createdAt: string } | null;
   analyses: CompanyAnalysis[];
@@ -544,6 +558,14 @@ export const leadMinerApi = {
     getJson<NeighborhoodsResponse>(`/localidades/bairros${toQueryString({ uf, cidade })}`, opts),
 
   /** Para a mineração (T1). Idempotente; 409 se já terminou; 403 sem permissão. */
+  /** Avaliação automática dos leads sem contato ao fim da mineração (T5); idempotente. */
+  evaluateRun: (id: string, opts?: RequestOptions) =>
+    postJson<EvaluationSummaryDto>(`/runs/${enc(id)}/evaluate`, undefined, opts),
+
+  /** Botão "Avaliar": 1 a 30 empresas (o servidor só avalia as que estão em "Sem contato"). */
+  evaluateCompanies: (ids: string[], opts?: RequestOptions) =>
+    postJson<EvaluationSummaryDto>('/companies/evaluate', { ids }, opts),
+
   cancelRun: (id: string, opts?: RequestOptions) => postJson<RunProgress>(`/runs/${enc(id)}/cancel`, undefined, opts),
 
   /** Aceita filtros tipados ou a query já montada (ex.: `buildRankingQuery(ui).query`). */

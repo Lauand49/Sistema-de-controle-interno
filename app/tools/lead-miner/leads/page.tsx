@@ -9,7 +9,7 @@ import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
-import { ArrowLeft, History, List, Loader2, Map as MapIcon, Pickaxe, Trophy } from 'lucide-react';
+import { ArrowLeft, ClipboardCheck, History, List, Loader2, Map as MapIcon, Pickaxe, Trophy } from 'lucide-react';
 import { SciTecNavbar } from '@/components/navigation/SciTecNavbar';
 import { useProfile } from '@/contexts/ProfileContext';
 import { canAssignLeads } from '@/lib/permissions';
@@ -45,6 +45,8 @@ import {
   contatoTab,
   contatoTabPatch,
   emptyMessageFor,
+  evaluationMessage,
+  evaluationTargets,
   exportRequestFor,
   exportSuccessMessage,
   exportTruncationNotice,
@@ -256,6 +258,26 @@ function RankingScreen() {
     }
   };
 
+  // ---- Avaliação dos leads sem contato (T5) --------------------------------
+  const [evaluating, setEvaluating] = useState(false);
+  const evalIds = useMemo(() => evaluationTargets(list.rows, selected), [list.rows, selected]);
+
+  const onEvaluate = async () => {
+    if (evalIds.length === 0) return;
+    setEvaluating(true);
+    try {
+      const result = await leadMinerApi.evaluateCompanies(evalIds);
+      const msg = evaluationMessage(result);
+      if (msg.kind === 'success') toast.success(msg.text);
+      else toast.info(msg.text);
+      setReloadToken((n) => n + 1);
+    } catch (e) {
+      toast.error(errorMessage(e, 'Não foi possível avaliar os leads.'));
+    } finally {
+      setEvaluating(false);
+    }
+  };
+
   const onExport = async () => {
     if (selectedIds.length === 0 && !list.loading && !list.error && list.total === 0) {
       toast.warning(EXPORT_EMPTY_MESSAGE);
@@ -354,6 +376,25 @@ function RankingScreen() {
             </>
           )}
         </p>
+        {tab === 'sem' && (
+          <button
+            type="button"
+            onClick={onEvaluate}
+            disabled={evaluating || list.loading || evalIds.length === 0}
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-bold text-slate-200 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {evaluating ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <ClipboardCheck className="h-4 w-4" aria-hidden="true" />
+            )}
+            {evaluating
+              ? 'Avaliando…'
+              : evalIds.length > 0
+                ? `Avaliar (${evalIds.length})`
+                : 'Avaliar (nada pendente)'}
+          </button>
+        )}
         <div role="group" aria-label="Modo de visualização" className="inline-flex gap-1 rounded-xl border border-slate-800 bg-slate-900 p-1">
           <button type="button" aria-pressed={view === 'lista'} onClick={() => setView('lista')} className={tabClass(view === 'lista')}>
             <List className="h-4 w-4" aria-hidden="true" />
@@ -424,6 +465,7 @@ function RankingScreen() {
               onTogglePage={() => setSelected((s) => togglePageSelection(s, list.rows.map((r) => r.id)))}
               offset={(currentPage - 1) * RANKING_PAGE_SIZE}
               live={live}
+            showEvaluation={tab === 'sem'}
             />
           </div>
         )}

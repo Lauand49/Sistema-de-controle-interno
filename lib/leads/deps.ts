@@ -14,6 +14,7 @@ import { promises as dnsPromises } from 'node:dns';
 import { prisma } from '@/lib/prisma';
 import type { GeminiClient } from './ai';
 import type { ApproachDeps } from './approach';
+import type { EvaluationDeps } from './evaluation';
 import { BRASILAPI_HOST, brasilApiPath, type BrasilApiHttp } from './brasilapi';
 import { geminiMonthlyLimit, pagespeedMonthlyLimit, placesMonthlyLimit } from './config';
 import { createNodeTransport } from './net/http-transport';
@@ -299,6 +300,11 @@ export function getApproachDeps(): ApproachDeps {
     limit: geminiMonthlyLimit(process.env.GEMINI_MONTHLY_LIMIT),
     now: nowDate,
   };
+}
+
+/** Dependências da avaliação dos leads sem contato (T5): mesmo cliente e mesma cota do Gemini. */
+export function getEvaluationDeps(): EvaluationDeps {
+  return getApproachDeps();
 }
 
 /** Dependências da Fonte_OSM (Nominatim com limitador global + Overpass). */

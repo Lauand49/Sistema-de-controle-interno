@@ -10,7 +10,7 @@
 - [x] **T2** Localização em cascata UF → Cidade → Bairro
 - [x] **T4** Abas "Com contato" / "Sem contato"
 - [x] **T3** Resultados progressivos
-- [ ] **T5** Avaliação básica dos "sem contato"
+- [x] **T5** Avaliação básica dos "sem contato"
 - [ ] **T6** Documentação (`PLANO-INTEGRACAO.md` 8.4.1 + este arquivo)
 
 ## Bloqueios

@@ -17,6 +17,7 @@ import {
   type GoogleField,
   type NameOrigin,
 } from './display';
+import { evaluationDto } from './evaluation';
 import { isValidCoord } from './geo';
 import type { CnpjCandidate, CnpjData, CnpjOrigin, PageSpeedAbsence, SinaisDigitais } from './types';
 
@@ -272,6 +273,7 @@ export async function buildCompanyDetail(
     temInstagram: company.temInstagram,
     temWhatsapp: company.temWhatsapp,
     situacaoCadastral: company.situacaoCadastral,
+    avaliacao: evaluationDto(company),
     assignedUser: company.assignedUser ? { id: company.assignedUser.id, name: company.assignedUser.name } : null,
     prospectLead: company.prospectLead,
     analyses,

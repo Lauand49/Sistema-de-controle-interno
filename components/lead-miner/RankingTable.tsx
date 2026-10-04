@@ -6,6 +6,7 @@ import { AtSign, Globe, Loader2, Lock, Mail, MessageCircle, Unlock } from 'lucid
 import { CATEGORY_LABEL, NICHES } from '@/lib/leads/config';
 import type { CompanyRow } from '@/lib/leads/client-api';
 import { PriorityBadge } from './PriorityBadge';
+import { EvaluationView } from './EvaluationView';
 import { GoogleAttribution } from './GoogleAttribution';
 import { situacaoAlert } from './enrichment-helpers';
 import { LEAD_STATUS_LABEL, formatDate, isAnalyzing, pageSelectionState } from './ranking-helpers';
@@ -24,6 +25,8 @@ interface RankingTableProps {
   offset: number;
   /** T3: mineração filtrada ainda em andamento; linhas sem análise mostram "analisando…". */
   live?: boolean;
+  /** T5: aba "Sem contato" — mostra a avaliação básica (resumo + sugestão) de cada lead. */
+  showEvaluation?: boolean;
 }
 
 function place(r: CompanyRow): string {
@@ -59,7 +62,7 @@ const ContactCell: React.FC<{ row: CompanyRow }> = ({ row }) => {
 };
 
 /** Listagem do ranking com seleção por linha (Req. 12.1, 12.5, 19.7). */
-export const RankingTable: React.FC<RankingTableProps> = ({ rows, selected, onToggle, onTogglePage, offset, live = false }) => {
+export const RankingTable: React.FC<RankingTableProps> = ({ rows, selected, onToggle, onTogglePage, offset, live = false, showEvaluation = false }) => {
   const headerRef = useRef<HTMLInputElement>(null);
   const pageState = pageSelectionState(
     selected,
@@ -101,6 +104,11 @@ export const RankingTable: React.FC<RankingTableProps> = ({ rows, selected, onTo
             <th scope="col" className="px-3 py-3">
               Site
             </th>
+            {showEvaluation && (
+              <th scope="col" className="px-3 py-3">
+                Avaliação
+              </th>
+            )}
             <th scope="col" className="px-3 py-3">
               Categoria
             </th>
@@ -174,6 +182,11 @@ export const RankingTable: React.FC<RankingTableProps> = ({ rows, selected, onTo
                     </span>
                   )}
                 </td>
+                {showEvaluation && (
+                  <td className="min-w-[260px] max-w-sm px-3 py-3">
+                    <EvaluationView avaliacao={r.avaliacao} />
+                  </td>
+                )}
                 <td className="px-3 py-3 text-xs text-slate-300">{r.categoria ? CATEGORY_LABEL[r.categoria] : '—'}</td>
                 <td className="px-3 py-3 text-right font-mono font-semibold text-white">
                   {isAnalyzing(r, live) ? (

@@ -17,6 +17,7 @@ import { ClaimLeadButton } from '@/components/lead-miner/ficha/ClaimLeadButton';
 import { DigitalPresence } from '@/components/lead-miner/ficha/DigitalPresence';
 import { PageSpeedCard } from '@/components/lead-miner/ficha/PageSpeedCard';
 import { CnpjSection } from '@/components/lead-miner/ficha/CnpjSection';
+import { BasicEvaluation } from '@/components/lead-miner/ficha/BasicEvaluation';
 import { ApproachMessages } from '@/components/lead-miner/ficha/ApproachMessages';
 import { ReanalyzeButton } from '@/components/lead-miner/ficha/ReanalyzeButton';
 import { COMPANY_NOT_FOUND, NOT_ANALYZED, sortByDateDesc } from '@/components/lead-miner/ficha/ficha-helpers';
@@ -164,6 +165,7 @@ function FichaContent({ id }: { id: string }) {
       )}
 
       <CnpjSection company={company} onUpdated={replaceCompany} />
+      <BasicEvaluation avaliacao={company.avaliacao} />
 
       {latest ? (
         <>

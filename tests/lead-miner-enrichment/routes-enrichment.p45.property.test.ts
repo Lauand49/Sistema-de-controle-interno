@@ -72,6 +72,8 @@ const routes = {
   cancel: () => import('@/app/api/tools/lead-miner/runs/[id]/cancel/route'),
   cidades: () => import('@/app/api/tools/lead-miner/localidades/cidades/route'),
   bairros: () => import('@/app/api/tools/lead-miner/localidades/bairros/route'),
+  evalCompanies: () => import('@/app/api/tools/lead-miner/companies/evaluate/route'),
+  evalRun: () => import('@/app/api/tools/lead-miner/runs/[id]/evaluate/route'),
 };
 
 interface Target {
@@ -96,6 +98,8 @@ const TARGETS: Target[] = [
   { name: 'POST /runs/[id]/cancel', load: routes.cancel, method: 'POST', export: 'POST', params: { id: 'r1' } },
   { name: 'GET /localidades/cidades', load: routes.cidades, method: 'GET', export: 'GET' },
   { name: 'GET /localidades/bairros', load: routes.bairros, method: 'GET', export: 'GET' },
+  { name: 'POST /companies/evaluate', load: routes.evalCompanies, method: 'POST', export: 'POST', body: { ids: ['7c9e6679-7425-40de-944b-e07fc1f90ae7'] } },
+  { name: 'POST /runs/[id]/evaluate', load: routes.evalRun, method: 'POST', export: 'POST', params: { id: 'r1' } },
 ];
 
 async function callTarget(t: Target): Promise<Response> {

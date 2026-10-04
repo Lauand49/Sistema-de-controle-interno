@@ -83,6 +83,7 @@ export const MSG = {
   campoDesconhecido: 'Campo não permitido.',
   contato: 'Aba de contato inválida (use com ou sem).',
   ordem: 'Ordenação inválida (use score ou recentes).',
+  avaliar: 'Selecione de 1 a 30 empresas para avaliar.',
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -298,6 +299,16 @@ const dropAuthorIds = (raw: unknown): unknown => {
   for (const key of AUTHOR_ID_KEYS) delete obj[key];
   return obj;
 };
+
+/** T5 — `POST /companies/evaluate`: 1 a 30 uuids distintos. */
+export const evaluateIdsSchema: z.ZodType<string[], z.ZodTypeDef, unknown> = z
+  .array(z.string({ invalid_type_error: MSG.bulkId }).uuid(MSG.bulkId), {
+    required_error: MSG.avaliar,
+    invalid_type_error: MSG.avaliar,
+  })
+  .min(1, MSG.avaliar)
+  .max(30, MSG.avaliar)
+  .refine((ids) => new Set(ids).size === ids.length, MSG.bulkRepetido);
 
 /** `POST /companies/[id]/approach`: `{ canal: 'WHATSAPP' | 'EMAIL' }`; outros campos → 400. */
 export const approachBodySchema: z.ZodType<{ canal: ApproachChannel }, z.ZodTypeDef, unknown> = z.preprocess(

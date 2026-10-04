@@ -14,7 +14,15 @@ import {
 } from '@/lib/leads/filters';
 import { BULK_MAX, EXPORT_MAX } from '@/lib/leads/config';
 import { CONTATO_TABS, DEFAULT_CONTATO_TAB, type ContatoTab } from '@/lib/leads/contact';
-import type { CompanyRow, ExportRequest, ExportResult, TriageResult, UserRef } from '@/lib/leads/client-api';
+import type {
+  CompanyRow,
+  EvaluationSummaryDto,
+  ExportRequest,
+  ExportResult,
+  TriageResult,
+  UserRef,
+} from '@/lib/leads/client-api';
+import { EVALUATION_MANUAL_MAX } from '@/lib/leads/evaluation';
 
 // ---------------------------------------------------------------------------
 // Estado da URL
@@ -349,4 +357,45 @@ export function formatDate(iso: string | null | undefined): string {
     month: '2-digit',
     year: 'numeric',
   }).format(d);
+}
+
+// ---------------------------------------------------------------------------
+// Avaliação dos leads sem contato (T5)
+// ---------------------------------------------------------------------------
+
+/**
+ * Ids que o botão "Avaliar" envia (no máximo 30): a seleção, se houver; senão os leads da página
+ * ainda sem avaliação ou só com a de regras (que a IA pode refazer).
+ */
+export function evaluationTargets(
+  rows: readonly Pick<CompanyRow, 'id' | 'avaliacao'>[],
+  selected: ReadonlySet<string>,
+  max: number = EVALUATION_MANUAL_MAX,
+): string[] {
+  const ids =
+    selected.size > 0
+      ? rows.filter((r) => selected.has(r.id)).map((r) => r.id)
+      : rows.filter((r) => r.avaliacao === null || r.avaliacao.fonte === 'REGRA').map((r) => r.id);
+  return ids.slice(0, Math.max(0, max));
+}
+
+const SEM_IA_REASON: Record<string, string> = {
+  IA_SEM_CHAVE: 'a IA não está configurada',
+  IA_COTA_ESGOTADA: 'a cota mensal da IA acabou',
+  IA_ERRO: 'a IA não respondeu',
+  IA_TIMEOUT: 'a IA demorou demais',
+  IA_RESPOSTA_INVALIDA: 'a resposta da IA foi inválida',
+  IA_SEM_TEMPO: 'faltou tempo para chamar a IA',
+};
+
+/** Mensagem do toast após "Avaliar". */
+export function evaluationMessage(r: EvaluationSummaryDto): { kind: 'success' | 'info'; text: string } {
+  if (r.avaliados === 0) {
+    return { kind: 'info', text: 'Nenhum lead precisava de avaliação (já avaliados ou com contato).' };
+  }
+  const base = `${plural(r.avaliados, 'lead avaliado', 'leads avaliados')}`;
+  if (r.porRegra === 0) return { kind: 'success', text: `${base} por IA.` };
+  const why = r.motivoSemIa ? SEM_IA_REASON[r.motivoSemIa] ?? 'a IA não foi usada' : 'a IA não foi usada';
+  if (r.porIa === 0) return { kind: 'info', text: `${base} por regras (sem IA): ${why}.` };
+  return { kind: 'info', text: `${base}: ${r.porIa} por IA e ${r.porRegra} por regras (sem IA), pois ${why}.` };
 }

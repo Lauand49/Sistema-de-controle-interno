@@ -17,6 +17,7 @@ import { displayCompany } from '@/lib/leads/display';
 import { purgeExpiredGoogleCache } from '@/lib/leads/google-cache';
 import { safeFormatCnpj } from '@/lib/leads/cnpj';
 import { contatoWhere } from '@/lib/leads/contact';
+import { evaluationDto } from '@/lib/leads/evaluation';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -49,6 +50,10 @@ const LIST_SELECT = {
   instagramOsm: true,
   emailOsm: true,
   temContato: true,
+  avaliacaoResumo: true,
+  sugestaoAcao: true,
+  avaliadoEm: true,
+  fonteAvaliacao: true,
   situacaoCadastral: true,
   desempenhoRuim: true,
   assignedUser: { select: { id: true, name: true } },
@@ -146,6 +151,7 @@ export const GET = withAuth(async (req, { actor }) => {
       contatoWhatsapp: c.temWhatsapp === true || !!c.whatsappOsm,
       contatoInstagram: c.temInstagram === true || !!c.instagramOsm,
       contatoEmail: !!c.emailOsm,
+      avaliacao: evaluationDto(c),
       cnpjFormatado: c.cnpj ? safeFormatCnpj(c.cnpj) : null,
       situacaoCadastral: c.situacaoCadastral,
       desempenhoRuim: c.desempenhoRuim,
