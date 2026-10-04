@@ -7,7 +7,7 @@
 ## Ajustes pós-Etapa 3 (sem spec; um commit `[kiro] ...` por tarefa)
 
 - [x] **T1** Parar mineração (status `CANCELADA`, rota `POST /runs/[id]/cancel`, botão "Parar")
-- [ ] **T2** Localização em cascata UF → Cidade → Bairro
+- [x] **T2** Localização em cascata UF → Cidade → Bairro
 - [ ] **T4** Abas "Com contato" / "Sem contato"
 - [ ] **T3** Resultados progressivos
 - [ ] **T5** Avaliação básica dos "sem contato"

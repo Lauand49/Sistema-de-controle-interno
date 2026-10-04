@@ -70,6 +70,8 @@ const routes = {
   cnpj: () => import('@/app/api/tools/lead-miner/companies/[id]/cnpj/route'),
   approach: () => import('@/app/api/tools/lead-miner/companies/[id]/approach/route'),
   cancel: () => import('@/app/api/tools/lead-miner/runs/[id]/cancel/route'),
+  cidades: () => import('@/app/api/tools/lead-miner/localidades/cidades/route'),
+  bairros: () => import('@/app/api/tools/lead-miner/localidades/bairros/route'),
 };
 
 interface Target {
@@ -92,6 +94,8 @@ const TARGETS: Target[] = [
   { name: 'DELETE /cnpj', load: routes.cnpj, method: 'DELETE', export: 'DELETE', params: { id: 'c1' } },
   { name: 'POST /approach', load: routes.approach, method: 'POST', export: 'POST', body: { canal: 'WHATSAPP' }, params: { id: 'c1' } },
   { name: 'POST /runs/[id]/cancel', load: routes.cancel, method: 'POST', export: 'POST', params: { id: 'r1' } },
+  { name: 'GET /localidades/cidades', load: routes.cidades, method: 'GET', export: 'GET' },
+  { name: 'GET /localidades/bairros', load: routes.bairros, method: 'GET', export: 'GET' },
 ];
 
 async function callTarget(t: Target): Promise<Response> {

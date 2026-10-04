@@ -18,15 +18,23 @@ import {
   type RunProgress,
 } from '@/lib/leads/client-api';
 import type { ServicesStatus } from '@/lib/leads/client-api';
+import { useCities, useNeighborhoods } from '@/hooks/lead-miner/useLocalidades';
+import { Combobox } from './Combobox';
+import { findExactOption } from './combobox-helpers';
 import { NicheChecklist } from './NicheChecklist';
 import { PresetPicker } from './PresetPicker';
 import { PreviousRunNotice } from './PreviousRunNotice';
 import { ServiceStatusPanel } from './ServiceStatusPanel';
 import { SourcePicker } from './SourcePicker';
 import {
+  applyCidadeChange,
+  applyUfChange,
+  bairroEnabled,
   buildCreateRunInput,
   canSubmit,
+  cidadeEnabled,
   defaultSource,
+  LOCALIDADE_HINTS,
   IA_UNAVAILABLE_TEXT,
   INITIAL_FORM_VALUES,
   lookupParams,
@@ -87,6 +95,70 @@ export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
   const pagespeedBlocked = pagespeedUnavailableReason(services);
   const pending = pendingFields(values);
   const enabled = canSubmit(values, submitting);
+
+  // ---- Localização em cascata: UF → Cidade → Bairro (T2) ----
+  const cidadeOk = cidadeEnabled(values);
+  const bairroOk = bairroEnabled(values);
+  const cities = useCities(values.uf);
+  /** Cidade confirmada (escolhida/Enter/saída do campo) para a qual se buscam os bairros no OSM. */
+  const [cidadeCommitted, setCidadeCommitted] = useState('');
+  /** Cidade digitada que não está na lista do IBGE: usada como digitada, sem consultar o OSM. */
+  const [cidadeForaDaLista, setCidadeForaDaLista] = useState(false);
+  const bairros = useNeighborhoods(values.uf, cidadeCommitted);
+
+  const clearServerErrors = (...keys: MiningFormField[]) =>
+    setServerErrors((e) => {
+      if (!keys.some((k) => k in e)) return e;
+      const next = { ...e };
+      for (const k of keys) delete next[k];
+      return next;
+    });
+
+  const changeUf = (uf: string) => {
+    setValues((v) => applyUfChange(v, uf));
+    setCidadeCommitted('');
+    setCidadeForaDaLista(false);
+    clearServerErrors('uf', 'cidade', 'bairro');
+  };
+  const changeCidade = (cidade: string) => {
+    setValues((v) => applyCidadeChange(v, cidade));
+    setCidadeCommitted('');
+    setCidadeForaDaLista(false);
+    clearServerErrors('cidade', 'bairro');
+  };
+  const commitCidade = (typed: string) => {
+    const text = typed.trim();
+    if (text === '') return;
+    const exact = findExactOption(cities.items, text);
+    // Grafia canônica do IBGE ("sao paulo" → "São Paulo") sem apagar o bairro (é a mesma cidade).
+    if (exact && exact !== typed) setValues((v) => (v.cidade === typed ? { ...v, cidade: exact } : v));
+    const known = exact !== null;
+    if (known || cities.status !== 'ready') {
+      setCidadeForaDaLista(false);
+      setCidadeCommitted(exact ?? text);
+    } else {
+      // Lista do IBGE carregada e a cidade não consta: digitação livre, sem consulta ao OSM.
+      setCidadeForaDaLista(true);
+      setCidadeCommitted('');
+    }
+  };
+
+  const cidadeNote = !cidadeOk
+    ? LOCALIDADE_HINTS.escolhaUf
+    : cities.status === 'loading'
+      ? LOCALIDADE_HINTS.carregandoCidades
+      : cities.status === 'unavailable'
+        ? LOCALIDADE_HINTS.cidadesIndisponiveis
+        : cidadeForaDaLista
+          ? LOCALIDADE_HINTS.cidadeForaDaLista
+          : null;
+  const bairroNote = !bairroOk
+    ? LOCALIDADE_HINTS.escolhaCidade
+    : bairros.status === 'loading'
+      ? LOCALIDADE_HINTS.carregandoBairros
+      : bairros.status === 'unavailable' || cidadeForaDaLista
+        ? LOCALIDADE_HINTS.bairrosIndisponiveis
+        : null;
 
   const update = <K extends keyof MiningFormValues>(key: K, value: MiningFormValues[K]) => {
     setValues((v) => ({ ...v, [key]: value }));
@@ -149,6 +221,9 @@ export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
   };
   const describedBy = (field: MiningFormField) =>
     serverErrors[field] || pending[field] ? `mining-${field}-hint` : undefined;
+  const joinIds = (...ids: Array<string | undefined>) => ids.filter(Boolean).join(' ') || undefined;
+  const cidadeHintId = joinIds(describedBy('cidade'), cidadeNote ? 'mining-cidade-note' : undefined);
+  const bairroHintId = joinIds(describedBy('bairro'), bairroNote ? 'mining-bairro-note' : undefined);
   const border = (field: MiningFormField) => (serverErrors[field] ? 'border-red-500/70' : 'border-slate-700');
 
   const pendingCount = Object.keys(pending).length;
@@ -165,45 +240,8 @@ export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
     >
       <ServiceStatusPanel services={services} loading={ia === 'loading'} />
 
-      <div className="grid gap-4 md:grid-cols-[1fr_1fr_8rem]">
-        <div>
-          <label htmlFor="mining-bairro" className="mb-1 block text-sm font-semibold text-slate-200">
-            Bairro
-          </label>
-          <input
-            id="mining-bairro"
-            type="text"
-            value={values.bairro}
-            maxLength={TEXT_MAX}
-            autoComplete="off"
-            placeholder="Ex.: Vila Mariana"
-            onChange={(e) => update('bairro', e.target.value)}
-            aria-describedby={describedBy('bairro')}
-            aria-invalid={!!serverErrors.bairro || undefined}
-            aria-required="true"
-            className={`${inputClass} ${border('bairro')}`}
-          />
-          {hint('bairro')}
-        </div>
-        <div>
-          <label htmlFor="mining-cidade" className="mb-1 block text-sm font-semibold text-slate-200">
-            Cidade
-          </label>
-          <input
-            id="mining-cidade"
-            type="text"
-            value={values.cidade}
-            maxLength={TEXT_MAX}
-            autoComplete="off"
-            placeholder="Ex.: São Paulo"
-            onChange={(e) => update('cidade', e.target.value)}
-            aria-describedby={describedBy('cidade')}
-            aria-invalid={!!serverErrors.cidade || undefined}
-            aria-required="true"
-            className={`${inputClass} ${border('cidade')}`}
-          />
-          {hint('cidade')}
-        </div>
+      {/* Localização em cascata: UF → Cidade → Bairro (T2). Cada campo só habilita após o anterior. */}
+      <div className="grid gap-4 md:grid-cols-[8rem_1fr_1fr]">
         <div>
           <label htmlFor="mining-uf" className="mb-1 block text-sm font-semibold text-slate-200">
             UF
@@ -211,7 +249,7 @@ export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
           <select
             id="mining-uf"
             value={values.uf}
-            onChange={(e) => update('uf', e.target.value)}
+            onChange={(e) => changeUf(e.target.value)}
             aria-describedby={describedBy('uf')}
             aria-invalid={!!serverErrors.uf || undefined}
             aria-required="true"
@@ -225,6 +263,57 @@ export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
             ))}
           </select>
           {hint('uf')}
+        </div>
+        <div>
+          <label htmlFor="mining-cidade" className="mb-1 block text-sm font-semibold text-slate-200">
+            Cidade
+          </label>
+          <Combobox
+            id="mining-cidade"
+            value={values.cidade}
+            options={cities.items}
+            loading={cities.status === 'loading'}
+            disabled={!cidadeOk}
+            maxLength={TEXT_MAX}
+            placeholder="Ex.: São Paulo"
+            onChange={changeCidade}
+            onCommit={commitCidade}
+            aria-describedby={cidadeHintId}
+            aria-invalid={!!serverErrors.cidade || undefined}
+            aria-required
+            className={`${inputClass} ${border('cidade')}`}
+          />
+          {hint('cidade')}
+          {cidadeNote && (
+            <p id="mining-cidade-note" className="mt-1 text-xs text-slate-400">
+              {cidadeNote}
+            </p>
+          )}
+        </div>
+        <div>
+          <label htmlFor="mining-bairro" className="mb-1 block text-sm font-semibold text-slate-200">
+            Bairro
+          </label>
+          <Combobox
+            id="mining-bairro"
+            value={values.bairro}
+            options={bairros.items}
+            loading={bairros.status === 'loading'}
+            disabled={!bairroOk}
+            maxLength={TEXT_MAX}
+            placeholder="Ex.: Vila Mariana"
+            onChange={(t) => update('bairro', t)}
+            aria-describedby={bairroHintId}
+            aria-invalid={!!serverErrors.bairro || undefined}
+            aria-required
+            className={`${inputClass} ${border('bairro')}`}
+          />
+          {hint('bairro')}
+          {bairroNote && (
+            <p id="mining-bairro-note" className="mt-1 text-xs text-slate-400">
+              {bairroNote}
+            </p>
+          )}
         </div>
       </div>
 

@@ -23,7 +23,9 @@ import { PAGESPEED_ENDPOINT, type PageSpeedHttp } from './pagespeed';
 import type { PipelineDeps } from './pipeline';
 import { serviceStatus, type ServicesStatus } from './services';
 import { buildPlacesUrl, PLACES_HOST, SEARCH_TEXT_PATH, type PlacesHttp } from './sources/google-places';
-import type { HttpJsonClient } from './sources/osm';
+import { createCitiesService, type CitiesService } from './localidades';
+import type { HttpJsonClient, OsmDeps } from './sources/osm';
+import { createNeighborhoodsService, type NeighborhoodsService } from './sources/osm-bairros';
 import { brasilApiLimiter, nominatimLimiter } from './sources/rate-limit';
 import { prismaUsageGate, type UsageGate } from './usage';
 
@@ -297,6 +299,27 @@ export function getApproachDeps(): ApproachDeps {
     limit: geminiMonthlyLimit(process.env.GEMINI_MONTHLY_LIMIT),
     now: nowDate,
   };
+}
+
+/** Dependências da Fonte_OSM (Nominatim com limitador global + Overpass). */
+export function getOsmDeps(): OsmDeps {
+  return { http: fetchJsonClient, limiter: nominatimLimiter, sleep };
+}
+
+const globalForLocalidades = globalThis as unknown as {
+  __leadMinerLocalidades?: { cities: CitiesService; bairros: NeighborhoodsService };
+};
+
+/**
+ * Serviços de localidades do formulário (T2): cidades (IBGE) e bairros (OpenStreetMap), com cache
+ * em memória compartilhado pelo processo (sobrevive ao hot reload). Nenhuma chave é necessária.
+ */
+export function getLocalidadesServices(): { cities: CitiesService; bairros: NeighborhoodsService } {
+  globalForLocalidades.__leadMinerLocalidades ??= {
+    cities: createCitiesService(),
+    bairros: createNeighborhoodsService(getOsmDeps()),
+  };
+  return globalForLocalidades.__leadMinerLocalidades;
 }
 
 export function getPipelineDeps(): PipelineDeps {

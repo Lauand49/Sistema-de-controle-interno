@@ -158,6 +158,23 @@ export interface LeadMinerConfig {
   services: ServicesStatus;
 }
 
+export interface CityDto {
+  id: number;
+  nome: string;
+}
+
+/** Resposta de `GET /localidades/cidades` (T2). */
+export interface CitiesResponse {
+  items: CityDto[];
+  indisponivel?: boolean;
+}
+
+/** Resposta de `GET /localidades/bairros` (T2). */
+export interface NeighborhoodsResponse {
+  items: string[];
+  indisponivel?: boolean;
+}
+
 export interface CreateRunInput {
   bairro: string;
   cidade: string;
@@ -508,6 +525,14 @@ export const leadMinerApi = {
   discover: (id: string, opts?: RequestOptions) => postJson<RunProgress>(`/runs/${enc(id)}/discover`, undefined, opts),
 
   batch: (id: string, opts?: RequestOptions) => postJson<RunProgress>(`/runs/${enc(id)}/batch`, undefined, opts),
+
+  /** Cidades da UF (IBGE, via servidor). Falha do IBGE vem como `indisponivel: true` com lista vazia. */
+  listCities: (uf: string, opts?: RequestOptions) =>
+    getJson<CitiesResponse>(`/localidades/cidades${toQueryString({ uf })}`, opts),
+
+  /** Bairros da cidade (OpenStreetMap, via servidor). Vazio/`indisponivel` → digitação livre. */
+  listNeighborhoods: (uf: string, cidade: string, opts?: RequestOptions) =>
+    getJson<NeighborhoodsResponse>(`/localidades/bairros${toQueryString({ uf, cidade })}`, opts),
 
   /** Para a mineração (T1). Idempotente; 409 se já terminou; 403 sem permissão. */
   cancelRun: (id: string, opts?: RequestOptions) => postJson<RunProgress>(`/runs/${enc(id)}/cancel`, undefined, opts),

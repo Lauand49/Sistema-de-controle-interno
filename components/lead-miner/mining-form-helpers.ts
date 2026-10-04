@@ -43,6 +43,44 @@ export const PENDING_MESSAGES: Record<MiningFormField, string> = {
   nichos: 'Selecione ao menos um nicho.',
 };
 
+// ---------------------------------------------------------------------------
+// Localização em cascata UF → Cidade → Bairro (T2)
+// ---------------------------------------------------------------------------
+
+/** Trocar a UF limpa cidade e bairro (a lista de cidades e a de bairros dependem dela). */
+export function applyUfChange(v: MiningFormValues, uf: string): MiningFormValues {
+  if (uf === v.uf) return v;
+  return { ...v, uf, cidade: '', bairro: '' };
+}
+
+/** Trocar a cidade limpa o bairro (a lista de bairros depende da cidade). */
+export function applyCidadeChange(v: MiningFormValues, cidade: string): MiningFormValues {
+  if (cidade === v.cidade) return v;
+  return { ...v, cidade, bairro: '' };
+}
+
+const UF_LIST_SET: ReadonlySet<string> = new Set(UFS);
+
+/** A cidade só habilita depois de escolhida a UF. */
+export function cidadeEnabled(v: Pick<MiningFormValues, 'uf'>): boolean {
+  return UF_LIST_SET.has(v.uf);
+}
+
+/** O bairro só habilita depois de informada a cidade (e, portanto, a UF). */
+export function bairroEnabled(v: Pick<MiningFormValues, 'uf' | 'cidade'>): boolean {
+  return cidadeEnabled(v) && v.cidade.trim() !== '';
+}
+
+export const LOCALIDADE_HINTS = {
+  escolhaUf: 'Selecione a UF para habilitar a cidade.',
+  escolhaCidade: 'Informe a cidade para habilitar o bairro.',
+  carregandoCidades: 'Carregando cidades…',
+  cidadesIndisponiveis: 'Lista de cidades indisponível no momento. Digite o nome da cidade.',
+  cidadeForaDaLista: 'Cidade não encontrada na lista do IBGE; será usada como digitada.',
+  carregandoBairros: 'Buscando bairros no OpenStreetMap…',
+  bairrosIndisponiveis: 'Não encontramos bairros na lista. Digite o nome do bairro.',
+} as const;
+
 export const IA_UNAVAILABLE_TEXT = 'IA indisponível: chave não configurada';
 export const RUN_NOT_STARTED_TEXT = 'A mineração não foi iniciada.';
 

@@ -93,15 +93,20 @@ async function withRetries<T>(attempt: () => Promise<T>, sleep: (ms: number) => 
 // Nominatim
 // ---------------------------------------------------------------------------
 
-export function buildNominatimUrl(bairro: string, cidade: string, uf: string): string {
+/** URL de busca do Nominatim para um texto livre (ex.: "Santos, SP"). */
+export function buildNominatimQueryUrl(q: string): string {
   const params = new URLSearchParams({
     format: 'jsonv2',
     limit: '1',
     countrycodes: 'br',
     addressdetails: '0',
-    q: `${bairro}, ${cidade}, ${uf}`,
+    q,
   });
   return `${NOMINATIM_SEARCH_URL}?${params.toString()}`;
+}
+
+export function buildNominatimUrl(bairro: string, cidade: string, uf: string): string {
+  return buildNominatimQueryUrl(`${bairro}, ${cidade}, ${uf}`);
 }
 
 function toFiniteNumber(v: unknown): number | null {
@@ -138,7 +143,12 @@ function bboxFromNominatim(bb: unknown): BBox | null {
 }
 
 export async function geocode(bairro: string, cidade: string, uf: string, deps: OsmDeps): Promise<GeocodeResult> {
-  const url = buildNominatimUrl(bairro, cidade, uf);
+  return geocodeText(`${bairro}, ${cidade}, ${uf}`, deps);
+}
+
+/** Geocodifica um texto livre (mesmo limitador, timeout e retentativas de `geocode`). */
+export async function geocodeText(query: string, deps: OsmDeps): Promise<GeocodeResult> {
+  const url = buildNominatimQueryUrl(query);
   let results: unknown[];
   try {
     results = await withRetries(
