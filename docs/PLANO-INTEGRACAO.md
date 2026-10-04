@@ -188,7 +188,7 @@ Em Negócios → Ferramentas, o card **"Minerador de Leads"** substitui o placeh
 | 0 — Fundação | Postgres; Auth.js Google + login dev; middleware; hierarquia (seção 4/5) com permissões no servidor em **todas** as APIs; gestão de pessoas; correção dos problemas da seção 2 | concluída na branch `etapa-0-fundacao` (PR pendente; login Google real depende das credenciais OAuth — ver 8.1) |
 | 1 — Minerador | Porte TS, persistência cumulativa, telas Minerar/Minerações/Ranking/Ficha/Mapa, integração com triagem existente | concluída em 2026-09-29 na branch `etapa-1-minerador` (PR pendente; ver 8.2) |
 | 2 — Painéis | Departamento, setor e membro | concluída em 2026-10-01 na branch `etapa-2-paineis` (PR pendente; ver 8.3) |
-| 3 — Melhorias | Google Places + fallback OSM; PageSpeed Insights; enriquecimento CNPJ (BrasilAPI); detecção Instagram/WhatsApp/tecnologias; mensagem de abordagem por IA | concluída em 2026-10-04 na branch `etapa-3-melhorias` (PR pendente; ver 8.4) |
+| 3 — Melhorias | Google Places + fallback OSM; PageSpeed Insights; enriquecimento CNPJ (BrasilAPI); detecção Instagram/WhatsApp/tecnologias; mensagem de abordagem por IA | concluída em 2026-10-04 na branch `etapa-3-melhorias` (PR pendente; ver 8.4); ajustes pós-etapa 3 (parar mineração, localização em cascata, abas com/sem contato, resultados progressivos, avaliação dos sem contato) na mesma branch (ver 8.4.1) |
 | 4 — Deploy | Dockerfile standalone, Cloud Run, Neon, OAuth Internal, orçamento/quotas, guia passo a passo | a fazer |
 
 Cada etapa: branch própria a partir desta, PR para `main`, `npm run build` passando antes de entregar.
@@ -281,6 +281,48 @@ Spec completa em `.kiro/specs/lead-miner-enrichment/` (requisitos, design e tare
 - **Fuso no lease da reanálise.** `CompanyAnalysis.createdAt` e `Company.reanaliseAte` são `timestamp` sem fuso; comparar com `now()` (timestamptz) é sensível ao fuso da sessão do Postgres. O lease usa cortes UTC naïve calculados no processo (`naiveUtc`), não `now()`. Bug pego pelos testes de integração com `RUN_DB_TESTS=1`.
 - **PR encadeado** com base `etapa-2-paineis` (as PRs das Etapas 0–2 ainda não foram mergeadas); retargetar para `main` depois.
 - **Testes.** `npm test` roda offline (sem rede e sem chaves). Integração: `RUN_DB_TESTS=1 npx vitest run tests/lead-miner/integration tests/lead-miner-enrichment/integration` num banco descartável; cobre a migração, o Portao_Uso de `places`/`pagespeed`, a unicidade de CNPJ e a concorrência da reanálise.
+
+### 8.4.1 Ajustes pós-etapa 3
+
+Cinco ajustes feitos na branch `etapa-3-melhorias` depois da Etapa 3, sem spec própria (um commit `[kiro] T<n>: ...` por ajuste). Migrações novas, todas aditivas: `20261016000000_mining_run_cancelada`, `20261017000000_company_tem_contato`, `20261018000000_company_avaliacao`. Ordem em que foram feitos: T1, T2, T4, T3, T5.
+
+**T1 — Parar mineração**
+
+- Status novo `CANCELADA` e rota `POST /api/tools/lead-miner/runs/[id]/cancel`. Idempotente (repetir devolve 200), 404 se não existe, 409 se a mineração já terminou (`CONCLUIDA`/`ERRO`).
+- Permissão no servidor, compondo helpers que já existem em `lib/permissions.ts` (`canUseNegociosTools` + `canAssignLeads`): quem iniciou, gerência de Negócios e Presidência/Vice. A matriz em `lib/permissions.ts` não foi alterada.
+- Botão "Parar" com confirmação nas telas Minerar e Minerações, visível em `PENDENTE` (descoberta) e `EM_ANDAMENTO`. O card mostra "Cancelada (N de M processados)".
+- O cancelamento vale no banco (fonte da verdade) e aborta as requisições da análise em curso (`AbortSignal` em site, PageSpeed, BrasilAPI e Gemini) na instância que recebeu o pedido; outras instâncias percebem por um vigia de 1,5 s. Análise abortada **não** é gravada (nem como falha). Empresas e análises já salvas ficam.
+- Limitação: a **descoberta** confere o cancelamento entre nichos e páginas, mas não interrompe uma requisição ao Nominatim/Overpass/Places que já esteja em voo (termina e o resultado é descartado).
+
+**T2 — Localização em cascata UF → Cidade → Bairro**
+
+- Campos na ordem UF, Cidade, Bairro; cada um só habilita depois do anterior; trocar a UF limpa cidade e bairro, trocar a cidade limpa o bairro. UF continua sendo o `<select>` com as 27 UFs (estática). Cidade e Bairro são comboboxes acessíveis (teclado, `aria-*`), com busca sem acento e sem diferenciar maiúsculas.
+- Cidades: `GET /api/tools/lead-miner/localidades/cidades?uf=` consulta o servidor do IBGE (`https://servicodados.ibge.gov.br/api/v1/localidades/estados/{UF}/municipios?orderBy=nome`). Bairros: `GET .../localidades/bairros?uf=&cidade=` geocodifica a cidade no Nominatim (mesmo limitador de 1 req/s) e lista `place=suburb|neighbourhood|quarter` no Overpass.
+- Cache **em memória do processo**: cidades 24 h (falha 60 s), bairros 7 dias (falha 2 min). Não há tabela nova. Bairros só são buscados depois que a cidade é confirmada (escolha, Enter ou sair do campo) e não são buscados para cidade que o IBGE não lista.
+- Lista vazia ou falha (IBGE/OSM fora do ar, timeout) nunca bloqueia: as rotas respondem 200 com `indisponivel` e o campo vira digitação livre. UF inválida é rejeitada no servidor. Mensagens de validação e o aviso "bairro já minerado em DD/MM" foram mantidos.
+- Limitação: a cobertura de bairros no OpenStreetMap varia muito (cidades pequenas costumam voltar vazias); o cache é por instância.
+
+**T4 — Abas "Com contato" / "Sem contato"**
+
+- `temContato` = telefone **ou** WhatsApp **ou** e-mail **ou** Instagram. Coluna persistida `Company.temContato`, mantida por um **trigger do Postgres** (`BEFORE INSERT OR UPDATE`) que espelha `computeTemContato` (`lib/leads/contact.ts`); assim nenhum ponto de escrita precisa lembrar de recalcular. A migração faz o backfill e cria o índice `(temContato, scoreFinal DESC)`.
+- Fontes de contato: `telefone` e tags OSM (`whatsappOsm`, `instagramOsm`, novo `emailOsm`), mais os snapshots `temWhatsapp`/`temInstagram` da análise. **E-mail só vem da tag OSM** `contact:email`/`email`; não há extração de e-mail do site nesta entrega. Empresas já gravadas só ganham `emailOsm` quando forem reencontradas.
+- O telefone do Cache_Google não é guardado na empresa (vale 30 dias); por isso a consulta (`contatoWhere`) também conta o telefone do Cache_Google **ainda válido**, e "Sem contato" é o complemento exato. Todo lead cai em exatamente uma aba.
+- Filtro `contato=com|sem` em `GET /companies`, `/companies/map` e `/companies/export` (sem o parâmetro, a API não restringe). A Tela_Ranking sempre o envia, com "Com contato" como padrão; CSV e mapa seguem a aba. `GET /companies` devolve `contatoCounts {com, sem}` calculados com os demais filtros ativos (a aba em si não entra na contagem).
+
+**T3 — Resultados progressivos**
+
+- As duas fases já existiam na pipeline: a descoberta grava cada empresa (com telefone e tags de contato) assim que a encontra, e a análise grava cada empresa ao terminar. O que mudou foi a tela.
+- Com `?runId=` de uma mineração `PENDENTE`/`EM_ANDAMENTO`, a Tela_Ranking consulta `GET /runs/[id]` a cada 3 s (pausa com a aba oculta), recarrega a lista sem piscar, ordena por **mais recentes** (`ordem=recentes`, por `updatedAt`) e mostra o selo "analisando…" no lugar do score. Ao terminar, volta à ordem por score. Painel com contadores ao vivo: encontradas, com contato, analisadas (`comContato` novo em `GET /runs/[id]`).
+- Nova coluna "Contato" na lista (telefone + WhatsApp/Instagram/E-mail conhecidos desde a descoberta). O card de progresso ganha o link "Ver resultados ao vivo".
+- Limitações: "mais recentes" é por atividade (`updatedAt`), não por data de descoberta; empresa que já tinha análise antiga mantém o score anterior até a nova ser gravada; cada aba aberta faz 2 consultas a cada 3 s.
+
+**T5 — Avaliação básica dos "Sem contato"**
+
+- Campos novos em `Company`: `avaliacaoResumo`, `sugestaoAcao`, `avaliadoEm`, `fonteAvaliacao` (`IA` | `REGRA`). Aparecem na aba "Sem contato" (coluna "Avaliação") e na Ficha ("Avaliação básica").
+- Gemini em **lote** (até 10 leads por chamada), uma reserva no `ApiUsage` (`gemini`) por chamada, respeitando `GEMINI_MONTHLY_LIMIT`; timeout de 25 s; prompt em português; resposta validada com zod (item inválido cai em regras só para ele). Ao Gemini vão apenas nome próprio, nicho, bairro/cidade, site, HTTPS e nota de desempenho; nenhum conteúdo do Google Places entra no prompt nem no texto guardado.
+- Sem chave, sem cota, timeout ou resposta inválida: texto de reserva por regras determinísticas, rotulado "Avaliação por regras (sem IA)". Nunca quebra a mineração.
+- Automático ao fim da mineração (`POST /runs/[id]/evaluate`, até 30 leads por mineração, idempotente), disparado pelo navegador que acompanha a mineração; o restante, e qualquer lead avaliado só por regras, pode ser avaliado pelo botão "Avaliar" (`POST /companies/evaluate`, até 30 por clique; o servidor só avalia quem está mesmo em "Sem contato").
+- Limitações: se ninguém estiver com a tela aberta quando a mineração concluir, a avaliação automática não roda (use o botão); o teto de 30 conta leads avaliados desde o início da mineração (`avaliadoEm >= createdAt`), inclusive os avaliados pelo botão.
 
 ---
 
