@@ -9,7 +9,7 @@
 import 'server-only';
 import type { Prisma, PrismaClient } from '@prisma/client';
 import { whatsappOpenLink } from './approach';
-import { formatCnpj, parseCandidates } from './cnpj';
+import { parseCandidates, safeFormatCnpj } from './cnpj';
 import {
   displayCompany,
   parsePageSpeedJson,
@@ -159,7 +159,7 @@ export async function buildCompanyDetail(
     const dados = company.cnpjDadosCnpj === company.cnpj ? cnpjDataFromCompany(company) : null;
     cnpj = {
       valor: company.cnpj,
-      formatado: safeFormat(company.cnpj),
+      formatado: safeFormatCnpj(company.cnpj),
       origem: company.cnpjOrigem as CnpjOrigin,
       dados,
       status: company.cnpjStatus,
@@ -181,7 +181,7 @@ export async function buildCompanyDetail(
   }
   const cnpjCandidatos = candidates.map((c: CnpjCandidate) => ({
     ...c,
-    formatado: safeFormat(c.cnpj),
+    formatado: safeFormatCnpj(c.cnpj),
     conflito: c.conflitoCompanyId
       ? { id: c.conflitoCompanyId, nome: conflitoNomes.get(c.conflitoCompanyId) ?? c.conflitoCompanyId }
       : null,
@@ -294,14 +294,6 @@ export async function loadCompanyDetail(
   const company = await db.company.findUnique({ where: { id }, include: companyDetailInclude });
   if (!company) return null;
   return buildCompanyDetail(db, company, now, googleNotice);
-}
-
-function safeFormat(cnpj: string): string {
-  try {
-    return formatCnpj(cnpj);
-  } catch {
-    return cnpj;
-  }
 }
 
 /** Reconstrói `CnpjData` a partir das colunas da Empresa (quando os dados são do CNPJ aplicado). */

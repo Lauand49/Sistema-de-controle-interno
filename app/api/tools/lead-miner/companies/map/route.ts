@@ -25,12 +25,26 @@ const VALID_COORDS: Prisma.CompanyWhereInput = {
   longitude: { not: null, gte: -180, lte: 180 },
 };
 
+/** Sem coordenadas próprias válidas (NaN/nulo/fora de faixa fica incluído aqui). */
+const NO_OWN_COORDS: Prisma.CompanyWhereInput = {
+  OR: [
+    { latitude: null },
+    { longitude: null },
+    { latitude: { lt: -90 } },
+    { latitude: { gt: 90 } },
+    { longitude: { lt: -180 } },
+    { longitude: { gt: 180 } },
+  ],
+};
+
 export const GET = withAuth(async (req, { actor }) => {
   requireNegocios(actor);
   const filters = parseQuery(companyFiltersSchema, req.url);
-  const where: Prisma.CompanyWhereInput = { AND: [buildCompanyWhere(filters), VALID_COORDS] };
+  const now = new Date();
+  const base = buildCompanyWhere(filters, now);
+  const where: Prisma.CompanyWhereInput = { AND: [base, VALID_COORDS] };
 
-  const [rows, total] = await prisma.$transaction([
+  const [rows, total, semCoordsProprias] = await prisma.$transaction([
     prisma.company.findMany({
       where,
       orderBy: RANKING_ORDER,
@@ -46,8 +60,25 @@ export const GET = withAuth(async (req, { actor }) => {
       },
     }),
     prisma.company.count({ where }),
+    // Empresas filtradas sem coordenadas próprias, mas com Cache_Google válido com coordenadas:
+    // o Mapa não as posiciona por não usar Conteudo_Google (aviso do Req. 6.5).
+    prisma.company.count({
+      where: {
+        AND: [
+          base,
+          NO_OWN_COORDS,
+          {
+            googleCache: {
+              expiraEm: { gt: now },
+              latitude: { not: null },
+              longitude: { not: null },
+            },
+          },
+        ],
+      },
+    }),
   ]);
 
   const { points, shown } = selectMapPoints(rows, MAP_MAX);
-  return NextResponse.json({ points, shown, total });
+  return NextResponse.json({ points, shown, total, semCoordsProprias });
 });

@@ -478,8 +478,12 @@ export const bulkIdsSchema: z.ZodType<string[], z.ZodTypeDef, unknown> = z
   .max(BULK_MAX, MSG.bulk)
   .refine((ids) => new Set(ids).size === ids.length, MSG.bulkRepetido);
 
-/** Converte filtros validados em `where` do Prisma. Todo texto usa `mode: 'insensitive'`. */
-export function buildCompanyWhere(f: CompanyFilters): Prisma.CompanyWhereInput {
+/**
+ * Converte filtros validados em `where` do Prisma. Todo texto usa `mode: 'insensitive'`.
+ * O nome do Cache_Google só casa a busca `q` quando o cache ainda é válido (`expiraEm > now`),
+ * para que Conteudo_Google expirado nunca apareça na listagem (Req. 6.5, 18.2).
+ */
+export function buildCompanyWhere(f: CompanyFilters, now: Date = new Date()): Prisma.CompanyWhereInput {
   const and: Prisma.CompanyWhereInput[] = [];
   const insensitive = 'insensitive' as const;
 
@@ -488,7 +492,7 @@ export function buildCompanyWhere(f: CompanyFilters): Prisma.CompanyWhereInput {
       OR: [
         { nome: { contains: f.q, mode: insensitive } },
         { cnpjNomeFantasia: { contains: f.q, mode: insensitive } },
-        { googleCache: { nome: { contains: f.q, mode: insensitive } } },
+        { googleCache: { nome: { contains: f.q, mode: insensitive }, expiraEm: { gt: now } } },
         { endereco: { contains: f.q, mode: insensitive } },
         { telefone: { contains: f.q, mode: insensitive } },
       ],

@@ -48,7 +48,7 @@ export const POST = withAuth(async (req, { actor }) => {
     where = { id: { in: ids } };
   } else {
     const filters = parseWith(companyFiltersSchema, body.filters ?? {});
-    where = buildCompanyWhere(filters);
+    where = buildCompanyWhere(filters, new Date());
   }
 
   // Busca EXPORT_MAX + 1 para detectar o corte; `count` dá o total real (Req. 17.7).

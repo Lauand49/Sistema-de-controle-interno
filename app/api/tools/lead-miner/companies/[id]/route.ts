@@ -1,119 +1,57 @@
 /**
- * GET /api/tools/lead-miner/companies/[id] — Ficha da empresa (`CompanyDetail`, Req. 14.1–14.3,
- * 14.5, 14.6, 14.11). Análises e minerações da mais recente para a mais antiga; 404 se a
- * empresa não existe. Coordenadas inválidas são devolvidas como `null`.
+ * GET /api/tools/lead-miner/companies/[id] — Ficha da empresa (`CompanyDetail` v2, Req. 6, 11, 15,
+ * 16, 17). Faz uma purga oportunista do Cache_Google e, quando a Empresa tem Place_ID e o cache
+ * está ausente/expirado, atualiza o Cache_Google antes de montar a resposta (Req. 6.2, 6.8–6.10).
+ * A resposta nunca inclui o objeto de cache cru; Conteudo_Google expirado não aparece.
  */
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { withAuth, notFound } from '@/lib/api';
 import { requireNegocios } from '@/lib/leads/route-helpers';
-import { isValidCoord } from '@/lib/leads/geo';
+import { getPipelineDeps } from '@/lib/leads/deps';
+import { isCacheValid } from '@/lib/leads/display';
+import { purgeExpiredGoogleCache, refreshGoogleCache, type RefreshOutcome } from '@/lib/leads/google-cache';
+import { loadCompanyDetail, type GoogleNotice } from '@/lib/leads/company-detail';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
 
 type Params = { id: string };
 
-const toStringArray = (v: unknown): string[] =>
-  Array.isArray(v) ? v.filter((x): x is string => typeof x === 'string') : [];
+/** Aviso exibido na ficha a partir do desfecho do refresh (Req. 6.9, 6.10). */
+function noticeFrom(refresh: RefreshOutcome | null): GoogleNotice {
+  if (refresh === 'UNAVAILABLE' || refresh === 'FAILED') return 'INDISPONIVEL';
+  if (refresh === 'NOT_FOUND') return 'NAO_ENCONTRADO';
+  return null;
+}
 
 export const GET = withAuth<Params>(async (_req, { params, actor }) => {
   requireNegocios(actor);
+  const now = new Date();
 
-  const company = await prisma.company.findUnique({
+  try {
+    await purgeExpiredGoogleCache(prisma, now);
+  } catch (e) {
+    console.error('[lead-miner] falha na purga do Cache_Google', e);
+  }
+
+  // Atualiza o Cache_Google se há Place_ID e o cache está ausente/expirado (Req. 6.8).
+  let refresh: RefreshOutcome | null = null;
+  const base = await prisma.company.findUnique({
     where: { id: params.id },
-    select: {
-      id: true,
-      nome: true,
-      nicho: true,
-      endereco: true,
-      bairro: true,
-      cidade: true,
-      uf: true,
-      telefone: true,
-      website: true,
-      latitude: true,
-      longitude: true,
-      marcaRede: true,
-      fonte: true,
-      categoria: true,
-      scoreFinal: true,
-      prioridade: true,
-      hasSite: true,
-      isHttps: true,
-      lastAnalyzedAt: true,
-      createdAt: true,
-      updatedAt: true,
-      assignedUser: { select: { id: true, name: true } },
-      prospectLead: { select: { id: true, status: true, assignedTo: true, createdAt: true } },
-      analyses: {
-        orderBy: [{ createdAt: 'desc' }, { id: 'desc' }],
-        select: {
-          id: true,
-          runId: true,
-          hasSite: true,
-          online: true,
-          statusCode: true,
-          isHttps: true,
-          sslValid: true,
-          sslProblem: true,
-          responseTime: true,
-          lento: true,
-          motivoFalha: true,
-          finalUrl: true,
-          categoria: true,
-          motivos: true,
-          scoreDigital: true,
-          scoreIcp: true,
-          scoreObjetivo: true,
-          scoreIa: true,
-          scoreFinal: true,
-          prioridade: true,
-          iaAplicada: true,
-          iaMotivo: true,
-          oportunidadeIa: true,
-          justificativaIa: true,
-          detalhamento: true,
-          createdAt: true,
-        },
-      },
-      runs: {
-        orderBy: [{ run: { createdAt: 'desc' } }, { id: 'desc' }],
-        select: {
-          isNew: true,
-          nicho: true,
-          run: {
-            select: {
-              id: true,
-              bairro: true,
-              cidade: true,
-              uf: true,
-              status: true,
-              processados: true,
-              total: true,
-              nichosFalhos: true,
-              createdAt: true,
-              createdBy: { select: { name: true } },
-            },
-          },
-        },
-      },
-    },
+    select: { id: true, googlePlaceId: true, googleCache: { select: { expiraEm: true } } },
   });
-  if (!company) throw notFound('Empresa não encontrada.');
+  if (!base) throw notFound('Empresa não encontrada.');
+  if (base.googlePlaceId && !isCacheValid(base.googleCache, now)) {
+    try {
+      refresh = await refreshGoogleCache(prisma, params.id, getPipelineDeps().google);
+    } catch (e) {
+      console.error('[lead-miner] falha ao atualizar o Cache_Google', params.id, e);
+      refresh = 'FAILED';
+    }
+  }
 
-  const { runs, analyses, latitude, longitude, ...rest } = company;
-  const coordsOk = isValidCoord(latitude, longitude);
-
-  return NextResponse.json({
-    ...rest,
-    latitude: coordsOk ? latitude : null,
-    longitude: coordsOk ? longitude : null,
-    analyses: analyses.map((a) => ({ ...a, motivos: toStringArray(a.motivos) })),
-    runs: runs.map(({ isNew, nicho, run }) => ({
-      isNew,
-      nicho,
-      run: { ...run, nichosFalhos: toStringArray(run.nichosFalhos) },
-    })),
-  });
+  const detail = await loadCompanyDetail(prisma, params.id, new Date(), noticeFrom(refresh));
+  if (!detail) throw notFound('Empresa não encontrada.');
+  return NextResponse.json(detail);
 });

@@ -58,6 +58,15 @@ export function formatCnpj(valid: string): string {
   return `${c.slice(0, 2)}.${c.slice(2, 5)}.${c.slice(5, 8)}/${c.slice(8, 12)}-${c.slice(12)}`;
 }
 
+/** Como `formatCnpj`, mas devolve o valor original (não lança) quando o CNPJ é inválido. */
+export function safeFormatCnpj(cnpj: string): string {
+  try {
+    return formatCnpj(cnpj);
+  } catch {
+    return cnpj;
+  }
+}
+
 // ---------------------------------------------------------------------------
 // Extração do HTML (Req. 11.3)
 // ---------------------------------------------------------------------------

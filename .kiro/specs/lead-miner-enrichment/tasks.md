@@ -324,7 +324,7 @@ Convenções:
   - [x] 13.5 Estender as rotas `config` e `runs`
     - `GET /config` → `{ iaAvailable, services }` via `getServicesStatus()`; `POST /runs` com os campos novos; `GET /runs`, `/runs/[id]`, `/runs/active` com `fonteSolicitada`, `fonte`, `googleMotivo`, `googleNichosAfetados`, `pagespeedEnabled`, `cnpjEnabled`; filtro `fonte` sobre a Fonte_Efetiva
     - _Requirements: 2.6, 2.7, 4.1, 4.2, 4.3, 4.9, 18.3, 20.1_
-  - [ ] 13.6 Estender as rotas de empresas existentes
+  - [x] 13.6 Estender as rotas de empresas existentes
     - `GET /companies`, `/companies/map`, `POST /export`, `POST /triage` e `GET /companies/[id]`: purga oportunista; respostas via `displayCompany` (Nome_Exibicao, `nomeOrigem`, `googleFields`, `google`), sem objeto de cache cru; mapa só com coordenadas próprias e `semCoordsProprias`; ficha com CNPJ, candidatos (com conflito), sinais, PageSpeed, Versao_Score, mensagens e `refreshGoogleCache` quando aplicável
     - _Requirements: 6.2, 6.3, 6.5, 6.6, 6.7, 6.8, 6.9, 6.10, 6.11, 15.8, 17.1, 17.2, 17.3, 17.4, 17.5, 18.1, 18.2, 18.4_
   - [x] 13.7 Criar as rotas novas de reanálise, CNPJ e mensagem
