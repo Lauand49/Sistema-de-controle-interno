@@ -356,7 +356,7 @@ Convenções:
   - [x] 14.4 Atualizar a Tela_Mineracoes
     - `RunsTable` com "Fonte: solicitada → efetiva" e `GoogleUnusedNote`; `runs-helpers` com os rótulos novos; filtro de fonte sobre a Fonte_Efetiva
     - _Requirements: 4.9, 18.3_
-  - [ ] 14.5 Atualizar a Tela_Ranking e o Mapa
+  - [x] 14.5 Atualizar a Tela_Ranking e o Mapa
     - `RankingFilters` com os 5 filtros novos (sincronizados na URL por `ranking-helpers`); `RankingTable` com Nome_Exibicao, alerta de situação e `GoogleAttribution` nas células com Conteudo_Google; `CompanyMap` com o aviso "N empresas do Google Places não aparecem no mapa (termos do Google)" e popup sem Conteudo_Google
     - _Requirements: 18.1, 18.2, 12.6, 6.4, 6.5_
   - [ ] 14.6 Atualizar a Ficha_Empresa

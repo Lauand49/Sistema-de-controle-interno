@@ -289,6 +289,35 @@ export const RankingFilters: React.FC<RankingFiltersProps> = ({
           ))}
         </SelectField>
 
+        <SelectField id={id('temInstagram')} label="Tem Instagram" value={v('temInstagram')} onChange={set('temInstagram')}>
+          <option value="">Indiferente</option>
+          <option value="true">Sim</option>
+          <option value="false">Não</option>
+        </SelectField>
+        <SelectField id={id('temWhatsapp')} label="Tem WhatsApp" value={v('temWhatsapp')} onChange={set('temWhatsapp')}>
+          <option value="">Indiferente</option>
+          <option value="true">Sim</option>
+          <option value="false">Não</option>
+        </SelectField>
+        <SelectField id={id('temCnpj')} label="Tem CNPJ" value={v('temCnpj')} onChange={set('temCnpj')}>
+          <option value="">Indiferente</option>
+          <option value="true">Sim</option>
+          <option value="false">Não</option>
+        </SelectField>
+        <SelectField id={id('situacao')} label="Situação cadastral" value={v('situacao')} onChange={set('situacao')}>
+          <option value="">Todas</option>
+          <option value="ATIVA">Ativa</option>
+          <option value="BAIXADA">Baixada</option>
+          <option value="INAPTA">Inapta</option>
+          <option value="SUSPENSA">Suspensa</option>
+          <option value="NULA">Nula</option>
+        </SelectField>
+        <SelectField id={id('desempenhoRuim')} label="Desempenho PageSpeed" value={v('desempenhoRuim')} onChange={set('desempenhoRuim')}>
+          <option value="">Indiferente</option>
+          <option value="true">Ruim (nota &lt; 50)</option>
+          <option value="false">Bom</option>
+        </SelectField>
+
         <fieldset className="sm:col-span-2">
           <legend className={LABEL}>Data da última análise</legend>
           <div className="flex items-center gap-2">

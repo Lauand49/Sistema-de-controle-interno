@@ -324,6 +324,7 @@ function RankingScreen() {
               points={map.data?.points ?? []}
               shown={map.data?.shown ?? 0}
               total={map.data?.total ?? 0}
+              semCoordsProprias={map.data?.semCoordsProprias ?? 0}
               loading={map.loading || !map.data}
             />
           )}

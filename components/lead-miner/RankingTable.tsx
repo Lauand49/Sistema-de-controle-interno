@@ -6,6 +6,8 @@ import { Globe, Lock, Unlock } from 'lucide-react';
 import { CATEGORY_LABEL, NICHES } from '@/lib/leads/config';
 import type { CompanyRow } from '@/lib/leads/client-api';
 import { PriorityBadge } from './PriorityBadge';
+import { GoogleAttribution } from './GoogleAttribution';
+import { situacaoAlert } from './enrichment-helpers';
 import { LEAD_STATUS_LABEL, formatDate, pageSelectionState } from './ranking-helpers';
 
 const NICHE_LABEL = new Map(NICHES.map((n) => [n.id, n.label]));
@@ -107,6 +109,14 @@ export const RankingTable: React.FC<RankingTableProps> = ({ rows, selected, onTo
                     {r.nome}
                   </Link>
                   <p className="text-xs text-slate-500">{NICHE_LABEL.get(r.nicho) ?? r.nicho}</p>
+                  {(() => {
+                    const sit = situacaoAlert(r.situacaoCadastral);
+                    return sit && sit.alerta ? (
+                      <span className={`mt-0.5 inline-block text-[11px] font-semibold ${sit.className}`}>{sit.label}</span>
+                    ) : null;
+                  })()}
+                  {/* Nome/campos vindos do Cache_Google exigem a Atribuicao_Google na mesma célula (Req. 6.4). */}
+                  {r.googleFields.length > 0 && <GoogleAttribution className="mt-0.5" />}
                 </td>
                 <td className="px-3 py-3 text-xs text-slate-300">{place(r)}</td>
                 <td className="px-3 py-3 text-xs text-slate-300">

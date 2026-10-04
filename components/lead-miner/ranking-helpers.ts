@@ -38,6 +38,11 @@ export const RANKING_UI_KEYS = [
   'analyzedFrom',
   'analyzedTo',
   'runId',
+  'temInstagram',
+  'temWhatsapp',
+  'temCnpj',
+  'situacao',
+  'desempenhoRuim',
 ] as const satisfies readonly (keyof CompanyFilters)[];
 
 export type RankingUiKey = (typeof RANKING_UI_KEYS)[number];
