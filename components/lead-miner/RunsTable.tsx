@@ -12,7 +12,9 @@ import { canOpenRanking } from '@/lib/leads/filters';
 import { rankingHref } from '@/hooks/lead-miner/runState';
 import { FailedNichesNote } from './FailedNichesNote';
 import { NoAiNote } from './NoAiNote';
-import { RUN_SOURCE_LABEL, RUN_STATUS_LABEL, formatRunDateTime, runLocation } from './runs-helpers';
+import { GoogleUnusedNote } from './GoogleUnusedNote';
+import { sourceSummary } from './enrichment-helpers';
+import { RUN_STATUS_LABEL, formatRunDateTime, runLocation } from './runs-helpers';
 
 const STATUS_BADGE: Record<MiningStatus, string> = {
   PENDENTE: 'border-slate-700 bg-slate-800 text-slate-300',
@@ -69,7 +71,7 @@ export const RunsTable: React.FC<RunsTableProps> = ({ items, busy }) => (
               </th>
               <td className={`${TD} whitespace-nowrap`}>{formatRunDateTime(r.createdAt)}</td>
               <td className={TD}>{r.createdBy.name || '—'}</td>
-              <td className={TD}>{RUN_SOURCE_LABEL[r.fonte] ?? r.fonte}</td>
+              <td className={TD}>{sourceSummary(r.fonteSolicitada, r.fonte)}</td>
               <td className={TD}>
                 <span className={`inline-block whitespace-nowrap rounded-full border px-2 py-0.5 text-xs font-semibold ${STATUS_BADGE[r.status]}`}>
                   {RUN_STATUS_LABEL[r.status] ?? r.status}
@@ -90,6 +92,7 @@ export const RunsTable: React.FC<RunsTableProps> = ({ items, busy }) => (
                   </p>
                 )}
                 <FailedNichesNote nichosFalhos={r.nichosFalhos} />
+                <GoogleUnusedNote motivo={r.googleMotivo} />
                 <NoAiNote iaDisabledReason={r.iaDisabledReason} />
               </td>
             </tr>
