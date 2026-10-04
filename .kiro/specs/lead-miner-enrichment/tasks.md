@@ -327,7 +327,7 @@ Convenções:
   - [ ] 13.6 Estender as rotas de empresas existentes
     - `GET /companies`, `/companies/map`, `POST /export`, `POST /triage` e `GET /companies/[id]`: purga oportunista; respostas via `displayCompany` (Nome_Exibicao, `nomeOrigem`, `googleFields`, `google`), sem objeto de cache cru; mapa só com coordenadas próprias e `semCoordsProprias`; ficha com CNPJ, candidatos (com conflito), sinais, PageSpeed, Versao_Score, mensagens e `refreshGoogleCache` quando aplicável
     - _Requirements: 6.2, 6.3, 6.5, 6.6, 6.7, 6.8, 6.9, 6.10, 6.11, 15.8, 17.1, 17.2, 17.3, 17.4, 17.5, 18.1, 18.2, 18.4_
-  - [ ] 13.7 Criar as rotas novas de reanálise, CNPJ e mensagem
+  - [x] 13.7 Criar as rotas novas de reanálise, CNPJ e mensagem
     - `companies/[id]/reanalyze/route.ts` (`POST`, `maxDuration = 60`, deadline 55 s, 409 com `reason`, 500 genérico)
     - `companies/[id]/cnpj/route.ts` (`PUT` com validação, `MANUAL`, auditoria `LEAD_COMPANY_CNPJ_SET`, 409 de conflito com `{ id, nome }`, consulta à BrasilAPI; `DELETE` com auditoria `LEAD_COMPANY_CNPJ_REMOVED`)
     - `companies/[id]/approach/route.ts` (`POST`, `canal`, primeiro nome da sessão, 409 sem Analise, grava `ApproachMessage`, devolve `ApproachMessageDto` com `whatsappLink`)
