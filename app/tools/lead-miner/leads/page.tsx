@@ -4,7 +4,7 @@
  * Tela_Ranking — `/tools/lead-miner/leads` (Req. 12, 13.9, 15.5, 15.7, 15.10, 16.6, 16.8, 16.9,
  * 17.1, 17.7, 17.8, 2.16). Filtros na query string; a lista vem paginada e ordenada do servidor.
  */
-import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
@@ -30,6 +30,8 @@ import { RankingTable } from '@/components/lead-miner/RankingTable';
 import { BulkActionsBar, type BulkAction } from '@/components/lead-miner/BulkActionsBar';
 import { AssignDialog } from '@/components/lead-miner/AssignDialog';
 import { RunFilterBanner } from '@/components/lead-miner/RunFilterBanner';
+import { LiveRunPanel } from '@/components/lead-miner/LiveRunPanel';
+import { useLiveRun } from '@/hooks/lead-miner/useLiveRun';
 import { CONTATO_PANEL_ID, ContatoTabs, contatoTabId } from '@/components/lead-miner/ContatoTabs';
 import {
   ASSIGN_ERROR_PREFIX,
@@ -96,7 +98,10 @@ function RankingScreen() {
 
   const urlState = useMemo(() => parseRankingUrl(new URLSearchParams(searchParams.toString())), [searchParams]);
   const { ui, page, view } = urlState;
-  const { query, invalid } = useMemo(() => buildTabbedRankingRequest(ui), [ui]);
+  // T3: acompanha a mineração filtrada; enquanto roda, ordena por mais recentes e atualiza a cada ~3 s.
+  const liveRun = useLiveRun(ui.runId);
+  const live = liveRun.live;
+  const { query, invalid } = useMemo(() => buildTabbedRankingRequest(ui, { live }), [ui, live]);
   const tab = contatoTab(ui);
   const queryKey = query.toString();
   const fKey = filtersKey(ui);
@@ -124,10 +129,17 @@ function RankingScreen() {
     error: null,
   });
   const [reloadToken, setReloadToken] = useState(0);
+  // Atualização silenciosa (T3): a cada resposta da mineração em andamento a lista é recarregada sem
+  // piscar, sem apagar o que já está na tela e sem trocar erro por lista vazia.
+  const silentRef = useRef(false);
+  const lastTickRef = useRef(liveRun.tick);
 
   useEffect(() => {
+    const silent = silentRef.current && lastTickRef.current !== liveRun.tick;
+    silentRef.current = false;
+    lastTickRef.current = liveRun.tick;
     const ctrl = new AbortController();
-    setList((s) => ({ ...s, loading: true, error: null }));
+    if (!silent) setList((s) => ({ ...s, loading: true, error: null }));
     leadMinerApi
       .listCompanies(listQuery(new URLSearchParams(queryKey), page), { signal: ctrl.signal })
       .then((res) =>
@@ -142,17 +154,20 @@ function RankingScreen() {
       )
       .catch((e: unknown) => {
         if (ctrl.signal.aborted || isAbort(e)) return;
-        setList((s) => ({
-          rows: [],
-          total: 0,
-          totalPages: 0,
-          counts: s.counts,
-          loading: false,
-          error: errorMessage(e, 'Não foi possível carregar as empresas.'),
-        }));
+        const message = errorMessage(e, 'Não foi possível carregar as empresas.');
+        setList((s) =>
+          // Falha isolada numa atualização em segundo plano: mantém a lista atual. Só mostra o erro
+          // se a tela ainda estava carregando (ex.: a carga inicial foi substituída por esta).
+          silent && !s.loading
+            ? s
+            : { rows: [], total: 0, totalPages: 0, counts: s.counts, loading: false, error: message },
+        );
       });
     return () => ctrl.abort();
-  }, [queryKey, page, reloadToken]);
+  }, [queryKey, page, reloadToken, liveRun.tick]);
+
+  // Marca a próxima atualização como silenciosa quando ela vem do acompanhamento (mesmo render do tick).
+  if (lastTickRef.current !== liveRun.tick) silentRef.current = true;
 
   // Página da URL além do fim (ex.: link antigo): volta para a última página existente.
   useEffect(() => {
@@ -305,7 +320,15 @@ function RankingScreen() {
         </div>
       </header>
 
-      {ui.runId && <RunFilterBanner runId={ui.runId} onClear={() => onFilterChange({ runId: '' })} />}
+      {ui.runId && (
+        <RunFilterBanner
+          runId={ui.runId}
+          onClear={() => onFilterChange({ runId: '' })}
+          run={liveRun.run}
+          error={liveRun.error}
+        />
+      )}
+      {ui.runId && liveRun.run && <LiveRunPanel run={liveRun.run} live={live} />}
 
       <RankingFilters
         value={ui}
@@ -400,6 +423,7 @@ function RankingScreen() {
               onToggle={(id) => setSelected((s) => toggleId(s, id))}
               onTogglePage={() => setSelected((s) => togglePageSelection(s, list.rows.map((r) => r.id)))}
               offset={(currentPage - 1) * RANKING_PAGE_SIZE}
+              live={live}
             />
           </div>
         )}

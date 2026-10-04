@@ -200,6 +200,8 @@ export interface RunListItem extends RunProgress {
   createdAt: string;
   finishedAt: string | null;
   createdBy: UserRef;
+  /** T3: empresas desta mineração com algum contato (contador ao vivo). */
+  comContato?: number;
 }
 
 export interface RunsListResponse {
@@ -255,6 +257,11 @@ export interface CompanyRow {
   /** Snapshots da Etapa 3 (filtros e badges do ranking). */
   temInstagram: boolean | null;
   temWhatsapp: boolean | null;
+  /** T3/T4: contatos conhecidos desde a descoberta (OSM) ou da análise. */
+  temContato: boolean;
+  contatoWhatsapp: boolean;
+  contatoInstagram: boolean;
+  contatoEmail: boolean;
   cnpjFormatado: string | null;
   situacaoCadastral: string | null;
   desempenhoRuim: boolean | null;

@@ -9,7 +9,7 @@
 - [x] **T1** Parar mineração (status `CANCELADA`, rota `POST /runs/[id]/cancel`, botão "Parar")
 - [x] **T2** Localização em cascata UF → Cidade → Bairro
 - [x] **T4** Abas "Com contato" / "Sem contato"
-- [ ] **T3** Resultados progressivos
+- [x] **T3** Resultados progressivos
 - [ ] **T5** Avaliação básica dos "sem contato"
 - [ ] **T6** Documentação (`PLANO-INTEGRACAO.md` 8.4.1 + este arquivo)
 

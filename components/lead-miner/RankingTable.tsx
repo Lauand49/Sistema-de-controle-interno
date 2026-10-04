@@ -2,13 +2,13 @@
 
 import React, { useEffect, useRef } from 'react';
 import Link from 'next/link';
-import { Globe, Lock, Unlock } from 'lucide-react';
+import { AtSign, Globe, Loader2, Lock, Mail, MessageCircle, Unlock } from 'lucide-react';
 import { CATEGORY_LABEL, NICHES } from '@/lib/leads/config';
 import type { CompanyRow } from '@/lib/leads/client-api';
 import { PriorityBadge } from './PriorityBadge';
 import { GoogleAttribution } from './GoogleAttribution';
 import { situacaoAlert } from './enrichment-helpers';
-import { LEAD_STATUS_LABEL, formatDate, pageSelectionState } from './ranking-helpers';
+import { LEAD_STATUS_LABEL, formatDate, isAnalyzing, pageSelectionState } from './ranking-helpers';
 
 const NICHE_LABEL = new Map(NICHES.map((n) => [n.id, n.label]));
 
@@ -22,6 +22,8 @@ interface RankingTableProps {
   onTogglePage: () => void;
   /** Posição do primeiro item da página (para a coluna "#"). */
   offset: number;
+  /** T3: mineração filtrada ainda em andamento; linhas sem análise mostram "analisando…". */
+  live?: boolean;
 }
 
 function place(r: CompanyRow): string {
@@ -29,8 +31,35 @@ function place(r: CompanyRow): string {
   return [r.bairro, cidadeUf].filter(Boolean).join(', ') || '—';
 }
 
+/** Telefone e canais conhecidos (OSM/Google/análise); "—" quando não há nenhum. */
+const ContactCell: React.FC<{ row: CompanyRow }> = ({ row }) => {
+  const badges: Array<{ key: string; label: string; Icon: typeof Mail }> = [];
+  if (row.contatoWhatsapp) badges.push({ key: 'wa', label: 'WhatsApp', Icon: MessageCircle });
+  if (row.contatoInstagram) badges.push({ key: 'ig', label: 'Instagram', Icon: AtSign });
+  if (row.contatoEmail) badges.push({ key: 'em', label: 'E-mail', Icon: Mail });
+  if (!row.telefone && badges.length === 0) return <span className="text-slate-500">—</span>;
+  return (
+    <div className="space-y-1">
+      {row.telefone && <p className="whitespace-nowrap text-slate-200">{row.telefone}</p>}
+      {badges.length > 0 && (
+        <ul className="flex flex-wrap gap-1" aria-label="Canais de contato">
+          {badges.map(({ key, label, Icon }) => (
+            <li
+              key={key}
+              className="inline-flex items-center gap-1 rounded-full border border-slate-700 px-1.5 py-0.5 text-[11px] text-slate-300"
+            >
+              <Icon className="h-3 w-3" aria-hidden="true" />
+              {label}
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
+
 /** Listagem do ranking com seleção por linha (Req. 12.1, 12.5, 19.7). */
-export const RankingTable: React.FC<RankingTableProps> = ({ rows, selected, onToggle, onTogglePage, offset }) => {
+export const RankingTable: React.FC<RankingTableProps> = ({ rows, selected, onToggle, onTogglePage, offset, live = false }) => {
   const headerRef = useRef<HTMLInputElement>(null);
   const pageState = pageSelectionState(
     selected,
@@ -65,6 +94,9 @@ export const RankingTable: React.FC<RankingTableProps> = ({ rows, selected, onTo
             </th>
             <th scope="col" className="px-3 py-3">
               Local
+            </th>
+            <th scope="col" className="px-3 py-3">
+              Contato
             </th>
             <th scope="col" className="px-3 py-3">
               Site
@@ -120,6 +152,9 @@ export const RankingTable: React.FC<RankingTableProps> = ({ rows, selected, onTo
                 </td>
                 <td className="px-3 py-3 text-xs text-slate-300">{place(r)}</td>
                 <td className="px-3 py-3 text-xs text-slate-300">
+                  <ContactCell row={r} />
+                </td>
+                <td className="px-3 py-3 text-xs text-slate-300">
                   {r.hasSite === false || (!r.website && r.hasSite !== true) ? (
                     <span className="text-slate-500">Sem site</span>
                   ) : (
@@ -140,7 +175,16 @@ export const RankingTable: React.FC<RankingTableProps> = ({ rows, selected, onTo
                   )}
                 </td>
                 <td className="px-3 py-3 text-xs text-slate-300">{r.categoria ? CATEGORY_LABEL[r.categoria] : '—'}</td>
-                <td className="px-3 py-3 text-right font-mono font-semibold text-white">{r.scoreFinal ?? '—'}</td>
+                <td className="px-3 py-3 text-right font-mono font-semibold text-white">
+                  {isAnalyzing(r, live) ? (
+                    <span className="inline-flex items-center gap-1 rounded-full border border-purple-800/60 bg-purple-950/40 px-2 py-0.5 font-sans text-[11px] font-semibold text-purple-200">
+                      <Loader2 className="h-3 w-3 animate-spin motion-reduce:animate-none" aria-hidden="true" />
+                      analisando…
+                    </span>
+                  ) : (
+                    (r.scoreFinal ?? '—')
+                  )}
+                </td>
                 <td className="px-3 py-3">
                   <PriorityBadge prioridade={r.prioridade} />
                 </td>

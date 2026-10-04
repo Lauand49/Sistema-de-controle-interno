@@ -10,17 +10,27 @@ import { formatDate } from './ranking-helpers';
 interface RunFilterBannerProps {
   runId: string;
   onClear: () => void;
+  /**
+   * T3: detalhe já carregado (e atualizado) pela tela. Quando informado, o banner não consulta a API
+   * por conta própria; `undefined` mantém o comportamento anterior.
+   */
+  run?: RunDetail | null;
+  error?: string | null;
 }
 
 /**
  * Cabeçalho da Tela_Ranking filtrada por uma mineração (`?runId=`): bairro/cidade/UF e os
  * nichos que falharam (Req. 2.16).
  */
-export const RunFilterBanner: React.FC<RunFilterBannerProps> = ({ runId, onClear }) => {
-  const [run, setRun] = useState<RunDetail | null>(null);
-  const [error, setError] = useState<string | null>(null);
+export const RunFilterBanner: React.FC<RunFilterBannerProps> = ({ runId, onClear, run: externalRun, error: externalError }) => {
+  const controlled = externalRun !== undefined;
+  const [ownRun, setRun] = useState<RunDetail | null>(null);
+  const [ownError, setError] = useState<string | null>(null);
+  const run = controlled ? externalRun : ownRun;
+  const error = controlled ? externalError ?? null : ownError;
 
   useEffect(() => {
+    if (controlled) return undefined;
     const ctrl = new AbortController();
     setRun(null);
     setError(null);
@@ -32,7 +42,7 @@ export const RunFilterBanner: React.FC<RunFilterBannerProps> = ({ runId, onClear
         setError(e instanceof Error ? e.message : 'Não foi possível carregar a mineração.');
       });
     return () => ctrl.abort();
-  }, [runId]);
+  }, [runId, controlled]);
 
   return (
     <section

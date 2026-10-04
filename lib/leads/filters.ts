@@ -82,6 +82,7 @@ export const MSG = {
   cnpj: 'CNPJ inválido',
   campoDesconhecido: 'Campo não permitido.',
   contato: 'Aba de contato inválida (use com ou sem).',
+  ordem: 'Ordenação inválida (use score ou recentes).',
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -390,6 +391,9 @@ export function matchesRunSearch(
 // Filtros do ranking (Req. 12.1–12.3, 12.9–12.11, 13.1, 13.2, 18.5, 18.6, 18.9)
 // ---------------------------------------------------------------------------
 
+export const RANKING_ORDER_MODES = ['score', 'recentes'] as const;
+export type RankingOrderMode = (typeof RANKING_ORDER_MODES)[number];
+
 export interface CompanyFilters {
   q?: string;
   cidade?: string;
@@ -419,6 +423,8 @@ export interface CompanyFilters {
   desempenhoRuim?: boolean;
   /** T4: aba `com`/`sem` contato; ausente = sem restrição (API/CSV sem aba). */
   contato?: ContatoTab;
+  /** T3: `recentes` durante uma mineração em andamento; ausente = `score`. Só afeta a listagem. */
+  ordem?: RankingOrderMode;
 }
 
 const companyFiltersShape = {
@@ -451,6 +457,7 @@ const companyFiltersShape = {
   situacao: optionalText,
   desempenhoRuim: optionalBool,
   contato: optionalEnum(CONTATO_TABS, MSG.contato),
+  ordem: optionalEnum(RANKING_ORDER_MODES, MSG.ordem),
 };
 
 type FiltersShapeOutput = z.infer<z.ZodObject<typeof companyFiltersShape>>;
@@ -561,6 +568,17 @@ export const RANKING_ORDER: Prisma.CompanyOrderByWithRelationInput[] = [
   { nomeExibicao: 'asc' },
   { id: 'asc' },
 ];
+
+/**
+ * T3: ordem "mais recentes" usada enquanto a mineração roda (linhas recém-descobertas ou recém-analisadas
+ * aparecem no topo, ainda sem score). `updatedAt` muda na descoberta e na gravação da análise.
+ */
+export const RANKING_ORDER_RECENT: Prisma.CompanyOrderByWithRelationInput[] = [{ updatedAt: 'desc' }, { id: 'asc' }];
+
+/** Ordenação da listagem conforme o modo pedido (padrão: score). */
+export function rankingOrderFor(mode: RankingOrderMode | undefined): Prisma.CompanyOrderByWithRelationInput[] {
+  return mode === 'recentes' ? RANKING_ORDER_RECENT : RANKING_ORDER;
+}
 
 export interface RankKey {
   id: string;

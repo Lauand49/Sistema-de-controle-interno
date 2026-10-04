@@ -167,10 +167,60 @@ export function buildRankingRequest(ui: RankingUiState): { query: URLSearchParam
  * Requisição da Tela_Ranking: como `buildRankingRequest`, mais a aba de contato (sempre explícita,
  * assim lista, mapa e CSV seguem a mesma aba).
  */
-export function buildTabbedRankingRequest(ui: RankingUiState): ReturnType<typeof buildRankingRequest> {
+export function buildTabbedRankingRequest(
+  ui: RankingUiState,
+  opts: { live?: boolean } = {},
+): ReturnType<typeof buildRankingRequest> {
   const r = buildRankingRequest(ui);
   r.query.set('contato', contatoTab(ui));
+  // T3: com a mineração em andamento, mais recentes primeiro (ainda não há score para ordenar).
+  if (opts.live) r.query.set('ordem', 'recentes');
   return r;
+}
+
+// ---------------------------------------------------------------------------
+// Resultados progressivos (T3)
+// ---------------------------------------------------------------------------
+
+/** Intervalo de atualização da Tela_Ranking enquanto a mineração filtrada roda. */
+export const LIVE_POLL_MS = 3_000;
+
+/** Mineração ainda produzindo resultados (descoberta ou análise). */
+export function isRunLive(status: string | null | undefined): boolean {
+  return status === 'PENDENTE' || status === 'EM_ANDAMENTO';
+}
+
+/**
+ * Linha ainda sem análise numa mineração ativa: mostra "analisando…" no lugar do score.
+ * Empresa que já tinha análise antiga mantém o score anterior até a nova ser gravada.
+ */
+export function isAnalyzing(row: { lastAnalyzedAt: string | null; scoreFinal: number | null }, live: boolean): boolean {
+  return live && row.lastAnalyzedAt === null && row.scoreFinal === null;
+}
+
+export interface LiveCounters {
+  encontradas: number;
+  comContato: number;
+  analisadas: number;
+  /** Total a analisar; `null` enquanto a descoberta ainda não terminou. */
+  total: number | null;
+}
+
+/** Contadores ao vivo a partir do detalhe da mineração (`novos + existentes` = empresas encontradas). */
+export function liveCounters(run: {
+  novos: number;
+  existentes: number;
+  processados: number;
+  total: number;
+  status: string;
+  comContato?: number;
+}): LiveCounters {
+  return {
+    encontradas: run.novos + run.existentes,
+    comContato: run.comContato ?? 0,
+    analisadas: run.processados,
+    total: run.status === 'PENDENTE' ? null : run.total,
+  };
 }
 
 /** Query da página de listagem (filtros + `page`). */

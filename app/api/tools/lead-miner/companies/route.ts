@@ -1,6 +1,6 @@
 /**
  * GET /api/tools/lead-miner/companies — ranking paginado de empresas (Req. 12, 13, 18).
- * Página de `RANKING_PAGE_SIZE`, ordem única `RANKING_ORDER`. Cada linha é exibida via
+ * Página de `RANKING_PAGE_SIZE`, ordem `RANKING_ORDER` (ou `recentes` em mineração ativa, T3). Cada linha é exibida via
  * `displayCompany` (Nome_Exibicao, campos do Google) sem o objeto de cache cru; Conteudo_Google
  * expirado nunca aparece (Req. 6.3–6.6). Purga oportunista do Cache_Google expirado (Req. 6.2).
  *
@@ -11,7 +11,7 @@ import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 import { withAuth } from '@/lib/api';
 import { requireNegocios, parseQuery } from '@/lib/leads/route-helpers';
-import { buildCompanyWhere, companyListSchema, RANKING_ORDER } from '@/lib/leads/filters';
+import { buildCompanyWhere, companyListSchema, rankingOrderFor } from '@/lib/leads/filters';
 import { RANKING_PAGE_SIZE } from '@/lib/leads/config';
 import { displayCompany } from '@/lib/leads/display';
 import { purgeExpiredGoogleCache } from '@/lib/leads/google-cache';
@@ -45,6 +45,10 @@ const LIST_SELECT = {
   cnpjNomeFantasia: true,
   temInstagram: true,
   temWhatsapp: true,
+  whatsappOsm: true,
+  instagramOsm: true,
+  emailOsm: true,
+  temContato: true,
   situacaoCadastral: true,
   desempenhoRuim: true,
   assignedUser: { select: { id: true, name: true } },
@@ -69,7 +73,7 @@ export const GET = withAuth(async (req, { actor }) => {
   const [rows, total, com, sem] = await prisma.$transaction([
     prisma.company.findMany({
       where,
-      orderBy: RANKING_ORDER,
+      orderBy: rankingOrderFor(filters.ordem),
       skip: (page - 1) * RANKING_PAGE_SIZE,
       take: RANKING_PAGE_SIZE,
       select: LIST_SELECT,
@@ -137,6 +141,11 @@ export const GET = withAuth(async (req, { actor }) => {
       longitude: d.longitude,
       temInstagram: c.temInstagram,
       temWhatsapp: c.temWhatsapp,
+      // T3/T4: contatos conhecidos desde a descoberta (tags do OSM), antes de qualquer análise.
+      temContato: c.temContato,
+      contatoWhatsapp: c.temWhatsapp === true || !!c.whatsappOsm,
+      contatoInstagram: c.temInstagram === true || !!c.instagramOsm,
+      contatoEmail: !!c.emailOsm,
       cnpjFormatado: c.cnpj ? safeFormatCnpj(c.cnpj) : null,
       situacaoCadastral: c.situacaoCadastral,
       desempenhoRuim: c.desempenhoRuim,
