@@ -362,7 +362,7 @@ Convenções:
   - [x] 14.6 Atualizar a Ficha_Empresa
     - `CompanyHeader` (Nome_Exibicao, alerta de situação, "Ver no Google Maps", `GoogleContent`, `OdblAttribution` com `osmId`, avisos do Google); novas seções `ficha/DigitalPresence.tsx`, `ficha/PageSpeedCard.tsx`, `ficha/CnpjSection.tsx`, `ficha/ApproachMessages.tsx`, `ficha/ReanalyzeButton.tsx`; `AnalysisHistory` com Versao_Score e "regras da Etapa 1"; `ficha-helpers` sem recalcular Analises antigas
     - _Requirements: 6.4, 6.9, 6.10, 11.5, 11.6, 11.7, 11.8, 12.4, 12.6, 13.7, 15.1, 15.4, 15.6, 15.7, 15.8, 15.9, 16.1, 16.3, 16.6, 16.7, 17.1, 17.2, 17.3, 17.4, 17.5, 17.6, 20.6_
-  - [ ]* 14.7 Escrever testes de componentes
+  - [x]* 14.7 Escrever testes de componentes
     - `service-status-panel.test.tsx`, `source-picker.test.tsx`, `cnpj-section.test.tsx`, `approach-messages.test.tsx` (cliques repetidos → uma requisição; "Copiar"; "Abrir no WhatsApp"; "Mensagem gerada pelo modelo padrão"), `reanalyze-button.test.tsx`, `google-attribution.test.tsx`, `pagespeed-card.test.tsx`
     - _Requirements: 2.6, 2.7, 4.1, 4.2, 6.4, 11.7, 11.8, 15.4, 15.7, 15.9, 16.7, 17.2_
 
