@@ -306,7 +306,7 @@ Convenções:
 - [x]* 12. Checkpoint — pipeline
   - Rodar `npm test` (zero falhas, sem rede) e `npm run build`; ensure all tests pass, ask the user if questions arise.
 
-- [ ] 13. Rotas, filtros, CSV e triagem
+- [x] 13. Rotas, filtros, CSV e triagem
   - [x] 13.1 Estender `filters.ts` (listagem), `csv.ts` e `triage.ts`
     - `CompanyFilters`/`buildCompanyWhere(f, now)` com `temInstagram`, `temWhatsapp`, `temCnpj`, `situacao`, `desempenhoRuim`; `q` em `nome`, `cnpjNomeFantasia` e `googleCache.nome` válido, sempre `mode: 'insensitive'`; `RANKING_ORDER`/`RankKey`/`compareRanking` com `nomeExibicao`
     - `csv.ts`: 7 colunas novas na ordem do Req. 18.4, `ExportRow` estendido, valores de `ownFields`
@@ -342,7 +342,7 @@ Convenções:
     - **Property 45: Rotas novas negam sem efeitos colaterais**
     - **Validates: Requirements 20.1, 20.2**
 
-- [ ] 14. Telas e componentes
+- [x] 14. Telas e componentes
   - [x] 14.1 Criar `components/lead-miner/enrichment-helpers.ts` e componentes compartilhados
     - `enrichment-helpers.ts`: `pageSpeedBand`, `formatWhatsapp`, `situacaoAlert`, `fallbackLabel`, `unavailableLabel`, `sourceSummary`, `cnpjOriginLabel`
     - `GoogleAttribution.tsx` ("Google Maps" com `translate="no"`), `GoogleContent.tsx` (contêiner com borda/fundo próprios e atribuição) e `GoogleUnusedNote.tsx` (três textos do Req. 4.9)
@@ -366,7 +366,7 @@ Convenções:
     - `service-status-panel.test.tsx`, `source-picker.test.tsx`, `cnpj-section.test.tsx`, `approach-messages.test.tsx` (cliques repetidos → uma requisição; "Copiar"; "Abrir no WhatsApp"; "Mensagem gerada pelo modelo padrão"), `reanalyze-button.test.tsx`, `google-attribution.test.tsx`, `pagespeed-card.test.tsx`
     - _Requirements: 2.6, 2.7, 4.1, 4.2, 6.4, 11.7, 11.8, 15.4, 15.7, 15.9, 16.7, 17.2_
 
-- [ ] 15. Checkpoint final
+- [x] 15. Checkpoint final
   - Rodar `npm test` (zero falhas, sem rede), `npm run build` (sem erros) e, num banco descartável, `RUN_DB_TESTS=1 npm test`; ensure all tests pass, ask the user if questions arise.
   - _Requirements: 21.9, 21.10_
 
