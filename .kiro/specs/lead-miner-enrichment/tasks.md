@@ -335,7 +335,7 @@ Convenções:
   - [x] 13.8 Estender `lib/leads/client-api.ts`
     - Tipos `ServicesStatus`, `RunProgress`/`RunListItem` estendidos, `CompanyRow`/`CompanyDetail` v2, `ApproachMessageDto`, `MapResponse.semCoordsProprias`; chamadas `reanalyze`, `setCnpj`, `removeCnpj`, `generateApproach`; `CreateRunInput` com `fonte`, `pagespeedEnabled`, `cnpjEnabled`
     - _Requirements: 2.6, 4.1, 11.6, 15.2, 16.2_
-  - [ ] 13.9 Escrever testes das rotas
+  - [x] 13.9 Escrever testes das rotas
     - `routes-enrichment.test.ts` (padrão de `tests/lead-miner/route-helpers.test.ts`, Prisma e serviços falsos): 401/403 sem efeitos; 400 por parâmetro; autor da sessão ignorando ids do corpo; contratos JSON de `/config`, `/reanalyze`, `/cnpj`, `/approach`; omissão do Conteudo_Google expirado em `/companies`, `/companies/[id]` e `/map`; CSV sem Conteudo_Google com "Link Google Maps"
     - _Requirements: 20.1, 20.2, 20.3, 20.5, 6.3, 6.5, 6.6, 2.8, 21.3_
   - [x]* 13.10 Escrever teste de propriedade das rotas negando sem efeitos
