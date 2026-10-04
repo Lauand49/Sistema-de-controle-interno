@@ -47,6 +47,14 @@ export function registerRunAbort(runId: string): { controller: AbortController; 
   };
 }
 
+/** Quantas execuções de `runId` (ou de qualquer mineração, sem argumento) estão registradas. Para testes/diagnóstico. */
+export function registeredAbortCount(runId?: string): number {
+  if (runId !== undefined) return registry.get(runId)?.size ?? 0;
+  let n = 0;
+  for (const set of Array.from(registry.values())) n += set.size;
+  return n;
+}
+
 /** Aborta as execuções de `runId` registradas neste processo; devolve quantas abortou. */
 export function abortRunLocally(runId: string): number {
   const set = registry.get(runId);

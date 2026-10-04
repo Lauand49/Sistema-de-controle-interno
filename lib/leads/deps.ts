@@ -16,6 +16,7 @@ import type { GeminiClient } from './ai';
 import type { ApproachDeps } from './approach';
 import type { EvaluationDeps } from './evaluation';
 import { BRASILAPI_HOST, brasilApiPath, type BrasilApiHttp } from './brasilapi';
+import { timeoutSignal } from './abort';
 import { geminiMonthlyLimit, pagespeedMonthlyLimit, placesMonthlyLimit } from './config';
 import { createNodeTransport } from './net/http-transport';
 import { isSingleSegmentUnder } from './net/path-segment';
@@ -56,7 +57,8 @@ export const fetchJsonClient: HttpJsonClient = {
       method: init.method ?? 'GET',
       headers: init.headers,
       body: init.body,
-      signal: AbortSignal.timeout(init.timeoutMs),
+      // Timeout limite + cancelamento da mineração (o que vier primeiro); sem listeners pendurados.
+      signal: timeoutSignal(init.timeoutMs, init.signal),
       cache: 'no-store',
     });
     if (!res.ok) {
@@ -222,7 +224,7 @@ export function createPlacesHttp(apiKey: string, fetchFn: FetchFn = (u, i) => fe
         headers['content-type'] = 'application/json';
         body = JSON.stringify(req.body ?? {});
       }
-      return requestJson(fetchFn, url, { method: req.method, headers, body }, req.timeoutMs);
+      return requestJson(fetchFn, url, { method: req.method, headers, body }, req.timeoutMs, req.signal);
     },
   };
 }

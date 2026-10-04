@@ -15,13 +15,21 @@ import {
 import { normalizeEmail } from '../contact';
 import { normalizeInstagram, normalizeWhatsapp } from '../signals';
 import type { FoundCompany } from '../types';
+import { RunAbortedError, sleepOrAbort, throwIfAborted } from '../abort';
 import type { RateLimiter } from './rate-limit';
 
 export interface HttpJsonClient {
   /** Deve rejeitar em erro HTTP, erro de rede ou quando `timeoutMs` se esgota. */
   getJson(
     url: string,
-    init: { headers: Record<string, string>; timeoutMs: number; body?: string; method?: 'GET' | 'POST' },
+    init: {
+      headers: Record<string, string>;
+      timeoutMs: number;
+      body?: string;
+      method?: 'GET' | 'POST';
+      /** Cancelamento da mineração: aborta a requisição em voo (além do timeout). */
+      signal?: AbortSignal;
+    },
   ): Promise<unknown>;
 }
 
@@ -29,6 +37,8 @@ export interface OsmDeps {
   http: HttpJsonClient;
   limiter: RateLimiter;
   sleep: (ms: number) => Promise<void>;
+  /** Sinal da mineração em curso (P2); ausente = sem cancelamento. */
+  signal?: AbortSignal;
 }
 
 /** Retângulo geográfico (graus decimais). */
@@ -48,7 +58,7 @@ export type SearchArea =
 
 export type GeocodeResult =
   | { ok: true; area: SearchArea }
-  | { ok: false; reason: 'NAO_ENCONTRADO' | 'INDISPONIVEL' };
+  | { ok: false; reason: 'NAO_ENCONTRADO' | 'INDISPONIVEL' | 'CANCELADA' };
 
 export type OsmElementType = 'node' | 'way' | 'relation';
 
@@ -77,13 +87,20 @@ class InvalidResponseError extends Error { }
  * Executa `attempt` até `MAX_ATTEMPTS` vezes, aguardando `RETRY_DELAYS_MS[i]` antes da
  * retentativa i+1. Retorna o primeiro sucesso ou rejeita com o último erro.
  */
-async function withRetries<T>(attempt: () => Promise<T>, sleep: (ms: number) => Promise<void>): Promise<T> {
+async function withRetries<T>(
+  attempt: () => Promise<T>,
+  sleep: (ms: number) => Promise<void>,
+  signal?: AbortSignal,
+): Promise<T> {
   let lastError: unknown;
   for (let i = 0; i < MAX_ATTEMPTS; i++) {
-    if (i > 0) await sleep(RETRY_DELAYS_MS[i - 1]);
+    // Cancelada: nem espera nem tenta de novo (RunAbortedError sai direto).
+    throwIfAborted(signal);
+    if (i > 0) await sleepOrAbort(sleep, RETRY_DELAYS_MS[i - 1], signal);
     try {
       return await attempt();
     } catch (err) {
+      if (err instanceof RunAbortedError || signal?.aborted) throw new RunAbortedError();
       lastError = err;
     }
   }
@@ -155,17 +172,22 @@ export async function geocodeText(query: string, deps: OsmDeps): Promise<Geocode
     results = await withRetries(
       () =>
         deps.limiter.schedule(async () => {
+          // A fila do limitador pode ter esperado: se cancelou nesse meio-tempo, nem envia.
+          throwIfAborted(deps.signal);
           const body = await deps.http.getJson(url, {
             method: 'GET',
             headers: { 'User-Agent': OSM_USER_AGENT, Accept: 'application/json' },
             timeoutMs: NOMINATIM_TIMEOUT_MS,
+            signal: deps.signal,
           });
           if (!Array.isArray(body)) throw new InvalidResponseError('Resposta do Nominatim não é uma lista');
           return body;
         }),
       deps.sleep,
+      deps.signal,
     );
-  } catch {
+  } catch (err) {
+    if (err instanceof RunAbortedError) return { ok: false, reason: 'CANCELADA' };
     return { ok: false, reason: 'INDISPONIVEL' };
   }
   if (results.length === 0) return { ok: false, reason: 'NAO_ENCONTRADO' };
@@ -252,11 +274,12 @@ export async function searchNiche(
   niche: Niche,
   area: SearchArea,
   deps: OsmDeps,
-): Promise<{ ok: true; companies: FoundCompany[] } | { ok: false }> {
+): Promise<{ ok: true; companies: FoundCompany[] } | { ok: false; aborted?: boolean }> {
   const body = new URLSearchParams({ data: buildOverpassQuery(niche, area) }).toString();
   let elements: unknown[];
   try {
     elements = await withRetries(async () => {
+      throwIfAborted(deps.signal);
       const res = await deps.http.getJson(OVERPASS_URL, {
         method: 'POST',
         headers: {
@@ -266,13 +289,14 @@ export async function searchNiche(
         },
         timeoutMs: OVERPASS_TIMEOUT_MS,
         body,
+        signal: deps.signal,
       });
       const list = typeof res === 'object' && res !== null ? (res as { elements?: unknown }).elements : undefined;
       if (!Array.isArray(list)) throw new InvalidResponseError('Resposta do Overpass sem "elements"');
       return list;
-    }, deps.sleep);
-  } catch {
-    return { ok: false };
+    }, deps.sleep, deps.signal);
+  } catch (err) {
+    return err instanceof RunAbortedError ? { ok: false, aborted: true } : { ok: false };
   }
   const companies: FoundCompany[] = [];
   for (const el of elements) {

@@ -292,7 +292,7 @@ Cinco ajustes feitos na branch `etapa-3-melhorias` depois da Etapa 3, sem spec p
 - Permissão no servidor, compondo helpers que já existem em `lib/permissions.ts` (`canUseNegociosTools` + `canAssignLeads`): quem iniciou, gerência de Negócios e Presidência/Vice. A matriz em `lib/permissions.ts` não foi alterada.
 - Botão "Parar" com confirmação nas telas Minerar e Minerações, visível em `PENDENTE` (descoberta) e `EM_ANDAMENTO`. O card mostra "Cancelada (N de M processados)".
 - O cancelamento vale no banco (fonte da verdade) e aborta as requisições da análise em curso (`AbortSignal` em site, PageSpeed, BrasilAPI e Gemini) na instância que recebeu o pedido; outras instâncias percebem por um vigia de 1,5 s. Análise abortada **não** é gravada (nem como falha). Empresas e análises já salvas ficam.
-- Limitação: a **descoberta** confere o cancelamento entre nichos e páginas, mas não interrompe uma requisição ao Nominatim/Overpass/Places que já esteja em voo (termina e o resultado é descartado).
+- A **descoberta** também é interrompida em voo (P2): o `AbortSignal` da mineração chega às requisições de Nominatim, Overpass e Google Places (além do timeout de cada uma), interrompe a espera entre retentativas e não reserva nova cota. Cancelar durante a descoberta deixa a mineração `CANCELADA` sem erro; o que já foi salvo permanece. O aborto imediato vale na instância que recebeu o pedido de cancelamento; em outra instância, o vigia do banco (1,5 s) e a checagem do status entre nichos/páginas fazem o papel de fallback.
 
 **T2 — Localização em cascata UF → Cidade → Bairro**
 

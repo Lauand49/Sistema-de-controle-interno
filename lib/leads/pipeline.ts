@@ -565,6 +565,16 @@ export async function discoverStep(runId: string, deps: PipelineDeps, deadline: 
     return getRunProgress(runId, db);
   }
 
+  // Cancelamento (P2): o sinal da mineração chega às requisições HTTP de Nominatim, Overpass e
+  // Google Places. Aborta na hora quando o pedido de cancelamento chega a ESTA instância
+  // (`abortRunLocally`) e, se chegar a outra, pelo vigia do status no banco. O `isRunCancelled`
+  // entre os passos continua sendo o fallback. Sempre desregistrado no `finally`.
+  const { controller, dispose } = registerRunAbort(runId);
+  const stopWatching = watchRunCancellation(db, runId, controller);
+  const signal = controller.signal;
+  const osm = { ...deps.osm, signal };
+  const google = { ...deps.google, signal };
+
   try {
     // 0) Purga oportunista do Conteudo_Google expirado (Req. 6.2); falha não interrompe o passo.
     try {
@@ -576,8 +586,10 @@ export async function discoverStep(runId: string, deps: PipelineDeps, deadline: 
     // 1) Geocodificação (uma vez por mineração).
     let area: SearchArea | null = isSearchArea(run.area) ? run.area : null;
     if (!area) {
-      const geo = await geocode(run.bairro, run.cidade, run.uf, deps.osm);
+      const geo = await geocode(run.bairro, run.cidade, run.uf, osm);
       if (!geo.ok) {
+        // Cancelada durante a geocodificação: não é erro (o status já é CANCELADA).
+        if (geo.reason === 'CANCELADA' || signal.aborted) return getRunProgress(runId, db);
         await markRunError(
           db,
           runId,
@@ -659,9 +671,9 @@ export async function discoverStep(runId: string, deps: PipelineDeps, deadline: 
             paused = true;
             break;
           }
-          const r = await searchGooglePage(niche as Niche, place, rect as Rect, c.pageToken, deps.google);
-          // Cancelada durante a requisição: descarta a página (não grava empresas novas).
-          if (await isRunCancelled(db, runId)) {
+          const r = await searchGooglePage(niche as Niche, place, rect as Rect, c.pageToken, google);
+          // Cancelada durante a requisição (abortada em voo ou vista no banco): descarta a página.
+          if ((!r.ok && r.kind === 'ABORTED') || signal.aborted || (await isRunCancelled(db, runId))) {
             cancelled = true;
             paused = true;
             break;
@@ -708,8 +720,8 @@ export async function discoverStep(runId: string, deps: PipelineDeps, deadline: 
             paused = true;
             break;
           }
-          const result = niche ? await searchNiche(niche, area, deps.osm) : ({ ok: false } as const);
-          if (await isRunCancelled(db, runId)) {
+          const result = niche ? await searchNiche(niche, area, osm) : ({ ok: false } as const);
+          if (signal.aborted || (await isRunCancelled(db, runId))) {
             cancelled = true;
             paused = true;
             break;
@@ -783,6 +795,9 @@ export async function discoverStep(runId: string, deps: PipelineDeps, deadline: 
     await markRunError(db, runId, MSG_PIPELINE.falhaBanco).catch(() => undefined);
     await releaseDiscoveryLease(db, runId).catch(() => undefined);
     return getRunProgress(runId, db);
+  } finally {
+    stopWatching();
+    dispose();
   }
 }
 

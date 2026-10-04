@@ -12,6 +12,7 @@ import {
   RETRY_DELAYS_MS,
   type Niche,
 } from '../config';
+import { sleepOrAbort } from '../abort';
 import { isSafePathSegment } from '../net/path-segment';
 import type { GooglePlace } from '../types';
 import { monthKey, type UsageGate } from '../usage';
@@ -27,6 +28,8 @@ export interface PlacesHttp {
     fieldMask: string;
     body?: unknown;
     timeoutMs: number;
+    /** Cancelamento da mineração (P2): aborta a requisição em voo. */
+    signal?: AbortSignal;
   }): Promise<{ status: number; json: unknown }>;
 }
 export type PlacesRequest = Parameters<PlacesHttp['request']>[0];
@@ -39,6 +42,8 @@ export interface GooglePlacesDeps {
   limit: number;
   now: () => Date;
   sleep: (ms: number) => Promise<void>;
+  /** Sinal da mineração em curso (P2); ausente = sem cancelamento. */
+  signal?: AbortSignal;
 }
 
 export const PLACES_HOST = 'https://places.googleapis.com';
@@ -164,7 +169,7 @@ export function mapPlace(raw: unknown, nicheId: string): GooglePlace | null {
 
 export type PageOutcome =
   | { ok: true; places: GooglePlace[]; nextPageToken: string | null }
-  | { ok: false; kind: 'RETRYABLE_EXHAUSTED' | 'FATAL' | 'QUOTA' | 'UNAVAILABLE' };
+  | { ok: false; kind: 'RETRYABLE_EXHAUSTED' | 'FATAL' | 'QUOTA' | 'UNAVAILABLE' | 'ABORTED' };
 
 type Attempt =
   | { kind: 'ok'; places: GooglePlace[]; nextPageToken: string | null }
@@ -200,8 +205,17 @@ export async function searchGooglePage(
   const http = deps.http;
   if (http === null) return { ok: false, kind: 'UNAVAILABLE' };
   const body = buildTextSearchBody(niche, run, rect, pageToken ?? undefined);
+  const signal = deps.signal;
   for (let i = 0; i <= RETRY_DELAYS_MS.length; i++) {
-    if (i > 0) await deps.sleep(RETRY_DELAYS_MS[i - 1]);
+    // Cancelada (P2): não espera, não reserva cota e não envia; o chamador trata como cancelamento.
+    if (signal?.aborted) return { ok: false, kind: 'ABORTED' };
+    if (i > 0) {
+      try {
+        await sleepOrAbort(deps.sleep, RETRY_DELAYS_MS[i - 1], signal);
+      } catch {
+        return { ok: false, kind: 'ABORTED' };
+      }
+    }
     if (!(await deps.usage.reserve('places', monthKey(deps.now()), deps.limit))) {
       return { ok: false, kind: 'QUOTA' };
     }
@@ -213,10 +227,12 @@ export async function searchGooglePage(
         fieldMask: SEARCH_FIELD_MASK,
         body,
         timeoutMs: PLACES_TIMEOUT_MS,
+        signal,
       });
     } catch {
       res = null;
     }
+    if (signal?.aborted) return { ok: false, kind: 'ABORTED' };
     const a = classifySearch(res, niche.id);
     if (a.kind === 'ok') return { ok: true, places: a.places, nextPageToken: a.nextPageToken };
     if (a.kind === 'fatal') return { ok: false, kind: 'FATAL' };
