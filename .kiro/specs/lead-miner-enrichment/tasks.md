@@ -371,7 +371,7 @@ Convenções:
   - _Requirements: 21.9, 21.10_
 
 - [ ] 16. Registro da entrega e push
-  - [ ] 16.1 Atualizar `docs/PLANO-INTEGRACAO.md`
+  - [x] 16.1 Atualizar `docs/PLANO-INTEGRACAO.md`
     - Seção 8: linha "3 — Melhorias" com Status "concluída em {data} na branch `etapa-3-melhorias` (PR pendente; ver 8.4)"
     - Nova subseção 8.4 "Registro da Etapa 3": decisões confirmadas (resumo da seção "Decisões (confirmadas)" do `requirements.md`), variáveis de ambiente e padrões, cotas (`places`, `pagespeed`, `gemini`), termos do Google (cache de 30 dias, purga oportunista, sem dados do Google no Leaflet/CSV), limitações conhecidas (limitador da BrasilAPI por processo, purga agendada só na Etapa 4, BrasilAPI e CNPJ alfanumérico, ~3 Empresas por Lote com PageSpeed)
     - _Requirements: 21.11_

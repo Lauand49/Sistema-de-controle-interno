@@ -188,7 +188,7 @@ Em Negócios → Ferramentas, o card **"Minerador de Leads"** substitui o placeh
 | 0 — Fundação | Postgres; Auth.js Google + login dev; middleware; hierarquia (seção 4/5) com permissões no servidor em **todas** as APIs; gestão de pessoas; correção dos problemas da seção 2 | concluída na branch `etapa-0-fundacao` (PR pendente; login Google real depende das credenciais OAuth — ver 8.1) |
 | 1 — Minerador | Porte TS, persistência cumulativa, telas Minerar/Minerações/Ranking/Ficha/Mapa, integração com triagem existente | concluída em 2026-09-29 na branch `etapa-1-minerador` (PR pendente; ver 8.2) |
 | 2 — Painéis | Departamento, setor e membro | concluída em 2026-10-01 na branch `etapa-2-paineis` (PR pendente; ver 8.3) |
-| 3 — Melhorias | Google Places + fallback OSM; PageSpeed Insights; enriquecimento CNPJ (BrasilAPI); detecção Instagram/WhatsApp/tecnologias; mensagem de abordagem por IA | a fazer |
+| 3 — Melhorias | Google Places + fallback OSM; PageSpeed Insights; enriquecimento CNPJ (BrasilAPI); detecção Instagram/WhatsApp/tecnologias; mensagem de abordagem por IA | concluída em 2026-10-04 na branch `etapa-3-melhorias` (PR pendente; ver 8.4) |
 | 4 — Deploy | Dockerfile standalone, Cloud Run, Neon, OAuth Internal, orçamento/quotas, guia passo a passo | a fazer |
 
 Cada etapa: branch própria a partir desta, PR para `main`, `npm run build` passando antes de entregar.
@@ -246,6 +246,41 @@ Pontos operacionais:
 - **Prazo pela data UTC.** O dia do prazo é a parte de data em UTC de `dueDate` (`dueDayKey`), tratada como data sem horário (a hora gravada não altera o dia). Ler no fuso de São Paulo jogaria prazos gravados à meia-noite UTC para o dia anterior. Já "hoje" e as janelas de período usam o fuso de São Paulo.
 - **Horário de verão histórico.** Em dias antigos de início do horário de verão a meia-noite local não existe; `startOfSaoPauloDay` devolve o primeiro instante do dia (01:00 local) em vez de cair no dia anterior.
 - **Testes.** `npm test` roda offline. Os testes de integração (`tests/dashboards/integration/`) só rodam com `RUN_DB_TESTS=1`; eles aplicam `prisma migrate deploy` e criam/apagam linhas, então use um banco descartável em `DATABASE_URL_TEST` (sem ela, caem no `DATABASE_URL` do `.env`). Exemplo: `RUN_DB_TESTS=1 DATABASE_URL_TEST=postgres://... npm test`.
+
+### 8.4 Registro da Etapa 3
+
+Spec completa em `.kiro/specs/lead-miner-enrichment/` (requisitos, design e tarefas). Migração `prisma/migrations/20261015000000_lead_miner_enrichment`.
+
+**Decisões confirmadas:**
+
+- **Google Places.** Cache_Google válido por 30 dias; só o Place_ID fica guardado em definitivo. A triagem recebe o Nome_Exibicao e o link do Google Maps, nunca o telefone/site vindos do Google. Rede = o mesmo Nome_Normalizado em 3 ou mais lugares do Google; a poda roda no fim da descoberta. `MISTA` é a fonte padrão; com o Google indisponível, cai para `OSM`.
+- **PageSpeed.** Só a nota de desempenho abaixo de 50 (Desempenho_Ruim) afeta o score: +7 pontos na presença digital, com `Versao_Score` 2. Análises `Versao_Score` 1 (Etapa 1) não são recalculadas. O PageSpeed roda em paralelo com a IA.
+- **CNPJ.** CNPJ alfanumérico (formato vigente a partir de julho/2026) é validado; a BrasilAPI pode ainda não responder para ele. Um CNPJ de outra UF não é aplicado automaticamente (vira CNPJ_Candidato `UF_DIVERGENTE`). A razão social é guardada mas **nunca** enviada ao Gemini; QSA, e-mail e telefone da Receita não são guardados.
+- **Reanálise** por empresa, sob demanda, com lease atômico (barra nova reanálise se a última análise tem menos de 10 minutos ou se outra está em curso).
+
+**Variáveis de ambiente** (documentadas no `.env.example`; chaves só no servidor, enviadas no cabeçalho `x-goog-api-key`, nunca em URL/erro/log):
+
+- `GOOGLE_PLACES_API_KEY` (vazia → Google Places indisponível, cai para OSM).
+- `PLACES_MONTHLY_LIMIT` (padrão 1.000) e `PAGESPEED_MONTHLY_LIMIT` (padrão 5.000).
+- `PAGESPEED_API_KEY` (vazia → PageSpeed usa a cota reduzida do Google, com aviso na Tela_Minerar).
+- Gemini: `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_MONTHLY_LIMIT` (já da Etapa 1).
+
+**Cotas** por provedor no `ApiUsage` (`places`, `pagespeed`, `gemini`), reservadas por requisição (inclusive nas retentativas); esgotou → o serviço fica indisponível no mês.
+
+**Termos do Google:** cache de 30 dias, purga oportunista (sem agendador nesta etapa); nenhum Conteudo_Google aparece no Leaflet nem no CSV (só coordenadas/campos próprios + "Link Google Maps"); Conteudo_Google expirado é omitido de toda resposta e tela mesmo antes da purga; a Atribuicao_Google ("Google Maps", `translate="no"`) acompanha o conteúdo exibido.
+
+**Limitações conhecidas:**
+
+- O limitador da BrasilAPI (1 req/s) é por processo; com várias instâncias no Cloud Run a taxa agregada pode passar disso.
+- A purga do Cache_Google é oportunista; o agendamento externo (Cloud Scheduler) fica para a Etapa 4.
+- A BrasilAPI pode não responder a CNPJ alfanumérico enquanto não suportar o novo formato; o CNPJ é mantido sem Dados_CNPJ.
+- Com PageSpeed habilitado, cada empresa reserva ~42 s de margem no Lote, então cabem cerca de 3 empresas por passo de 50 s.
+
+**Pontos operacionais:**
+
+- **Fuso no lease da reanálise.** `CompanyAnalysis.createdAt` e `Company.reanaliseAte` são `timestamp` sem fuso; comparar com `now()` (timestamptz) é sensível ao fuso da sessão do Postgres. O lease usa cortes UTC naïve calculados no processo (`naiveUtc`), não `now()`. Bug pego pelos testes de integração com `RUN_DB_TESTS=1`.
+- **PR encadeado** com base `etapa-2-paineis` (as PRs das Etapas 0–2 ainda não foram mergeadas); retargetar para `main` depois.
+- **Testes.** `npm test` roda offline (sem rede e sem chaves). Integração: `RUN_DB_TESTS=1 npx vitest run tests/lead-miner/integration tests/lead-miner-enrichment/integration` num banco descartável; cobre a migração, o Portao_Uso de `places`/`pagespeed`, a unicidade de CNPJ e a concorrência da reanálise.
 
 ---
 
