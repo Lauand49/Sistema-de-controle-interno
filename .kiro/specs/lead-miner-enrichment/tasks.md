@@ -312,7 +312,7 @@ Convenções:
     - `csv.ts`: 7 colunas novas na ordem do Req. 18.4, `ExportRow` estendido, valores de `ownFields`
     - `triage.ts`: `companyName = nomeExibicao`, `contactInfo` só com valores próprios + link do Google Maps
     - _Requirements: 18.1, 18.2, 18.4, 18.5, 6.6, 6.7_
-  - [ ] 13.2 Escrever teste de propriedade do Mapa, CSV e triagem sem Conteudo_Google
+  - [x] 13.2 Escrever teste de propriedade do Mapa, CSV e triagem sem Conteudo_Google
     - **Property 17: Mapa, CSV e triagem sem Conteudo_Google**
     - **Validates: Requirements 6.5, 6.6, 6.7**
   - [ ]* 13.3 Escrever teste de propriedade dos filtros e da ordenação
