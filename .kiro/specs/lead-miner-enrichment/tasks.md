@@ -338,7 +338,7 @@ Convenções:
   - [ ] 13.9 Escrever testes das rotas
     - `routes-enrichment.test.ts` (padrão de `tests/lead-miner/route-helpers.test.ts`, Prisma e serviços falsos): 401/403 sem efeitos; 400 por parâmetro; autor da sessão ignorando ids do corpo; contratos JSON de `/config`, `/reanalyze`, `/cnpj`, `/approach`; omissão do Conteudo_Google expirado em `/companies`, `/companies/[id]` e `/map`; CSV sem Conteudo_Google com "Link Google Maps"
     - _Requirements: 20.1, 20.2, 20.3, 20.5, 6.3, 6.5, 6.6, 2.8, 21.3_
-  - [ ]* 13.10 Escrever teste de propriedade das rotas negando sem efeitos
+  - [x]* 13.10 Escrever teste de propriedade das rotas negando sem efeitos
     - **Property 45: Rotas novas negam sem efeitos colaterais**
     - **Validates: Requirements 20.1, 20.2**
 
