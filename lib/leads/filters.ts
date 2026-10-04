@@ -15,6 +15,7 @@ import type {
 } from '@prisma/client';
 import { BULK_MAX, MAP_MAX, NICHES, PRESETS, UFS, type PresetId } from './config';
 import { isValidCnpj, normalizeCnpj } from './cnpj';
+import { CONTATO_TABS, contatoWhere, type ContatoTab } from './contact';
 import { isValidCoord } from './geo';
 import { normalizeText } from './text';
 
@@ -80,6 +81,7 @@ export const MSG = {
   canal: 'Canal inválido (use WhatsApp ou E-mail).',
   cnpj: 'CNPJ inválido',
   campoDesconhecido: 'Campo não permitido.',
+  contato: 'Aba de contato inválida (use com ou sem).',
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -415,6 +417,8 @@ export interface CompanyFilters {
   temCnpj?: boolean;
   situacao?: string;
   desempenhoRuim?: boolean;
+  /** T4: aba `com`/`sem` contato; ausente = sem restrição (API/CSV sem aba). */
+  contato?: ContatoTab;
 }
 
 const companyFiltersShape = {
@@ -446,6 +450,7 @@ const companyFiltersShape = {
   temCnpj: optionalBool,
   situacao: optionalText,
   desempenhoRuim: optionalBool,
+  contato: optionalEnum(CONTATO_TABS, MSG.contato),
 };
 
 type FiltersShapeOutput = z.infer<z.ZodObject<typeof companyFiltersShape>>;
@@ -541,6 +546,7 @@ export function buildCompanyWhere(f: CompanyFilters, now: Date = new Date()): Pr
   }
   if (f.situacao) and.push({ situacaoCadastral: { equals: f.situacao, mode: insensitive } });
   if (f.desempenhoRuim !== undefined) and.push({ desempenhoRuim: f.desempenhoRuim });
+  if (f.contato) and.push(contatoWhere(f.contato, now));
 
   return and.length > 0 ? { AND: and } : {};
 }
@@ -623,6 +629,7 @@ const RANKING_KEYS: readonly Exclude<keyof CompanyFilters, 'scoreMin' | 'scoreMa
   'temCnpj',
   'situacao',
   'desempenhoRuim',
+  'contato',
 ];
 
 /** Inteiro 0–100 a partir do texto do campo; `null` = vazio; `NaN` = inválido. */

@@ -12,6 +12,7 @@ import {
   RETRY_DELAYS_MS,
   type Niche,
 } from '../config';
+import { normalizeEmail } from '../contact';
 import { normalizeInstagram, normalizeWhatsapp } from '../signals';
 import type { FoundCompany } from '../types';
 import type { RateLimiter } from './rate-limit';
@@ -217,6 +218,7 @@ export function mapElement(el: OverpassElement, nicheId: string): FoundCompany |
   const number = tagValue(el.tags, 'addr:housenumber');
   const endereco = street === null ? null : number === null ? street : `${street}, ${number}`;
   const hasOwnCoords = finiteOrNull(el.lat) !== null && finiteOrNull(el.lon) !== null;
+  const emailOsm = normalizeEmail(tagValue(el.tags, 'contact:email', 'email'));
   return {
     osmId: `${el.type}/${el.id}`,
     nome,
@@ -232,6 +234,7 @@ export function mapElement(el: OverpassElement, nicheId: string): FoundCompany |
     marcaRede: tagValue(el.tags, 'brand'),
     instagramOsm: normalizeInstagram(tagValue(el.tags, 'contact:instagram', 'instagram')),
     whatsappOsm: normalizeWhatsapp(tagValue(el.tags, 'contact:whatsapp', 'whatsapp')),
+    ...(emailOsm !== null ? { emailOsm } : {}),
   };
 }
 

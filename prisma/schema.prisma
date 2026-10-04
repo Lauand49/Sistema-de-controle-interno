@@ -349,6 +349,9 @@ model Company {
   temWhatsapp         Boolean? // snapshot
   desempenhoRuim      Boolean? // snapshot (filtro do ranking)
   reanaliseAte        DateTime? // lease da Reanalise
+  // ── T4 (ajustes pós-etapa 3) ──
+  emailOsm            String? // tag OSM contact:email/email normalizada
+  temContato          Boolean     @default(false) // mantido por trigger (ver contact.ts): telefone/WhatsApp/e-mail/Instagram
 
   analyses         CompanyAnalysis[]
   runs             MiningRunCompany[]
@@ -365,6 +368,7 @@ model Company {
   @@index([nicho])
   @@index([assignedTo])
   @@index([lastAnalyzedAt])
+  @@index([temContato, scoreFinal(sort: Desc)])
 }
 
 /// Cache_Google: todo Conteudo_Google da Empresa, válido por 30 dias (Req. 6.1).

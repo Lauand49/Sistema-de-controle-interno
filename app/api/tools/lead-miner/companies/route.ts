@@ -3,6 +3,9 @@
  * Página de `RANKING_PAGE_SIZE`, ordem única `RANKING_ORDER`. Cada linha é exibida via
  * `displayCompany` (Nome_Exibicao, campos do Google) sem o objeto de cache cru; Conteudo_Google
  * expirado nunca aparece (Req. 6.3–6.6). Purga oportunista do Cache_Google expirado (Req. 6.2).
+ *
+ * T4: `contato=com|sem` escolhe a aba; `contatoCounts` traz os totais das duas abas respeitando os
+ * demais filtros ativos (a aba em si não entra na contagem, senão a outra sempre seria zero).
  */
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
@@ -13,6 +16,7 @@ import { RANKING_PAGE_SIZE } from '@/lib/leads/config';
 import { displayCompany } from '@/lib/leads/display';
 import { purgeExpiredGoogleCache } from '@/lib/leads/google-cache';
 import { safeFormatCnpj } from '@/lib/leads/cnpj';
+import { contatoWhere } from '@/lib/leads/contact';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -61,7 +65,8 @@ export const GET = withAuth(async (req, { actor }) => {
   }
 
   const where = buildCompanyWhere(filters, now);
-  const [rows, total] = await prisma.$transaction([
+  const base = buildCompanyWhere({ ...filters, contato: undefined }, now);
+  const [rows, total, com, sem] = await prisma.$transaction([
     prisma.company.findMany({
       where,
       orderBy: RANKING_ORDER,
@@ -70,6 +75,8 @@ export const GET = withAuth(async (req, { actor }) => {
       select: LIST_SELECT,
     }),
     prisma.company.count({ where }),
+    prisma.company.count({ where: { AND: [base, contatoWhere('com', now)] } }),
+    prisma.company.count({ where: { AND: [base, contatoWhere('sem', now)] } }),
   ]);
 
   const items = rows.map((c) => {
@@ -144,5 +151,6 @@ export const GET = withAuth(async (req, { actor }) => {
     page,
     pageSize: RANKING_PAGE_SIZE,
     totalPages: Math.ceil(total / RANKING_PAGE_SIZE),
+    contatoCounts: { com, sem },
   });
 });

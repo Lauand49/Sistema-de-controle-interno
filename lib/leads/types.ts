@@ -48,6 +48,8 @@ export interface FoundCompany {
   instagramOsm?: string | null;
   /** Tag OSM `contact:whatsapp` (bruta). Opcional; ausente equivale a `null`. */
   whatsappOsm?: string | null;
+  /** Tag OSM `contact:email`/`email` (bruta). Opcional; ausente equivale a `null`. */
+  emailOsm?: string | null;
 }
 
 // ---------------------------------------------------------------------------

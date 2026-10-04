@@ -13,6 +13,7 @@ import {
   type RankingUiState,
 } from '@/lib/leads/filters';
 import { BULK_MAX, EXPORT_MAX } from '@/lib/leads/config';
+import { CONTATO_TABS, DEFAULT_CONTATO_TAB, type ContatoTab } from '@/lib/leads/contact';
 import type { CompanyRow, ExportRequest, ExportResult, TriageResult, UserRef } from '@/lib/leads/client-api';
 
 // ---------------------------------------------------------------------------
@@ -43,6 +44,7 @@ export const RANKING_UI_KEYS = [
   'temCnpj',
   'situacao',
   'desempenhoRuim',
+  'contato',
 ] as const satisfies readonly (keyof CompanyFilters)[];
 
 export type RankingUiKey = (typeof RANKING_UI_KEYS)[number];
@@ -90,10 +92,42 @@ export function applyFilterPatch(state: RankingUrlState, patch: RankingUiState):
   return { ...state, ui, page: 1 };
 }
 
-/** Limpa todos os filtros, preservando só a mineração (`runId`) e a visão. */
+/** Limpa todos os filtros, preservando só a mineração (`runId`), a aba de contato e a visão. */
 export function clearFilters(state: RankingUrlState): RankingUrlState {
-  const ui: RankingUiState = state.ui.runId ? { runId: state.ui.runId } : {};
+  const ui: RankingUiState = {};
+  if (state.ui.runId) ui.runId = state.ui.runId;
+  if (state.ui.contato) ui.contato = state.ui.contato;
   return { ...state, ui, page: 1 };
+}
+
+// ---------------------------------------------------------------------------
+// Abas Com contato / Sem contato (T4)
+// ---------------------------------------------------------------------------
+
+/** Aba ativa: `com` é o padrão (URL sem `contato`); valor inválido também cai em `com`. */
+export function contatoTab(ui: RankingUiState): ContatoTab {
+  return (CONTATO_TABS as readonly string[]).includes(ui.contato ?? '') ? (ui.contato as ContatoTab) : DEFAULT_CONTATO_TAB;
+}
+
+/** Patch de filtro que troca de aba; a aba padrão sai da URL. */
+export function contatoTabPatch(tab: ContatoTab): RankingUiState {
+  return { contato: tab === DEFAULT_CONTATO_TAB ? '' : tab };
+}
+
+export const CONTATO_TAB_LABEL: Record<ContatoTab, string> = { com: 'Com contato', sem: 'Sem contato' };
+
+const nfTab = new Intl.NumberFormat('pt-BR');
+
+/** "Com contato (12)"; sem contagem (ainda carregando) mostra só o nome. */
+export function contatoTabText(tab: ContatoTab, count: number | null | undefined): string {
+  return typeof count === 'number' ? `${CONTATO_TAB_LABEL[tab]} (${nfTab.format(count)})` : CONTATO_TAB_LABEL[tab];
+}
+
+/** Mensagem da lista vazia por aba. */
+export function emptyMessageFor(tab: ContatoTab): string {
+  return tab === 'sem'
+    ? 'Nenhuma empresa sem contato atende aos filtros e à busca atuais.'
+    : 'Nenhuma empresa com contato atende aos filtros e à busca atuais.';
 }
 
 /** Chave estável dos filtros (sem página nem visão), para detectar mudança de filtro. */
@@ -127,6 +161,16 @@ export function buildRankingRequest(ui: RankingUiState): { query: URLSearchParam
     out.push('datas');
   }
   return { query, invalid: out };
+}
+
+/**
+ * Requisição da Tela_Ranking: como `buildRankingRequest`, mais a aba de contato (sempre explícita,
+ * assim lista, mapa e CSV seguem a mesma aba).
+ */
+export function buildTabbedRankingRequest(ui: RankingUiState): ReturnType<typeof buildRankingRequest> {
+  const r = buildRankingRequest(ui);
+  r.query.set('contato', contatoTab(ui));
+  return r;
 }
 
 /** Query da página de listagem (filtros + `page`). */

@@ -33,6 +33,7 @@ import {
 } from './dedup';
 import { sortName } from './display';
 import { recomputeNomeExibicao, writeGoogleCache } from './google-cache';
+import { normalizeEmail } from './contact';
 import { normalizeInstagram, normalizeWhatsapp, serializeSinais } from './signals';
 import { detectGoogleChains } from './sources/google-places';
 import { normalizeCompanyName } from './text';
@@ -210,10 +211,16 @@ async function refreshFonte(tx: Prisma.TransactionClient, companyId: string): Pr
 }
 
 /** Tags OSM de contato normalizadas (Req. 8.5). */
-function osmContacts(f: FoundCompany): { instagramOsm: string | null; whatsappOsm: string | null } {
+function osmContacts(f: FoundCompany): {
+  instagramOsm: string | null;
+  whatsappOsm: string | null;
+  emailOsm?: string;
+} {
+  const emailOsm = normalizeEmail(f.emailOsm ?? null);
   return {
     instagramOsm: normalizeInstagram(f.instagramOsm ?? null),
     whatsappOsm: normalizeWhatsapp(f.whatsappOsm ?? null),
+    ...(emailOsm !== null ? { emailOsm } : {}),
   };
 }
 
@@ -240,6 +247,9 @@ async function applyOsmToExisting(
   }
   if (contacts.whatsappOsm !== null && contacts.whatsappOsm !== current.whatsappOsm) {
     patch.whatsappOsm = contacts.whatsappOsm;
+  }
+  if (contacts.emailOsm !== undefined && contacts.emailOsm !== current.emailOsm) {
+    patch.emailOsm = contacts.emailOsm;
   }
 
   const fillOsmId = key.osmId !== null && current.osmId === null;

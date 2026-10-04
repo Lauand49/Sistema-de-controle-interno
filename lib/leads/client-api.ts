@@ -271,6 +271,8 @@ export interface CompaniesResponse {
   page: number;
   pageSize?: number;
   totalPages: number;
+  /** T4: totais das abas "Com contato"/"Sem contato" respeitando os demais filtros. */
+  contatoCounts?: { com: number; sem: number };
 }
 
 export interface MapPoint {

@@ -30,6 +30,7 @@ import { RankingTable } from '@/components/lead-miner/RankingTable';
 import { BulkActionsBar, type BulkAction } from '@/components/lead-miner/BulkActionsBar';
 import { AssignDialog } from '@/components/lead-miner/AssignDialog';
 import { RunFilterBanner } from '@/components/lead-miner/RunFilterBanner';
+import { CONTATO_PANEL_ID, ContatoTabs, contatoTabId } from '@/components/lead-miner/ContatoTabs';
 import {
   ASSIGN_ERROR_PREFIX,
   EXPORT_EMPTY_MESSAGE,
@@ -37,8 +38,11 @@ import {
   applyAssignee,
   applyFilterPatch,
   assignSuccessMessage,
-  buildRankingRequest,
+  buildTabbedRankingRequest,
   clearFilters,
+  contatoTab,
+  contatoTabPatch,
+  emptyMessageFor,
   exportRequestFor,
   exportSuccessMessage,
   exportTruncationNotice,
@@ -77,6 +81,8 @@ interface ListState {
   rows: CompanyRow[];
   total: number;
   totalPages: number;
+  /** Totais das abas (respeitam os filtros ativos); `null` até a primeira resposta. */
+  counts: { com: number; sem: number } | null;
   loading: boolean;
   error: string | null;
 }
@@ -90,7 +96,8 @@ function RankingScreen() {
 
   const urlState = useMemo(() => parseRankingUrl(new URLSearchParams(searchParams.toString())), [searchParams]);
   const { ui, page, view } = urlState;
-  const { query, invalid } = useMemo(() => buildRankingRequest(ui), [ui]);
+  const { query, invalid } = useMemo(() => buildTabbedRankingRequest(ui), [ui]);
+  const tab = contatoTab(ui);
   const queryKey = query.toString();
   const fKey = filtersKey(ui);
 
@@ -108,7 +115,14 @@ function RankingScreen() {
   );
 
   // ---- Lista ---------------------------------------------------------------
-  const [list, setList] = useState<ListState>({ rows: [], total: 0, totalPages: 0, loading: true, error: null });
+  const [list, setList] = useState<ListState>({
+    rows: [],
+    total: 0,
+    totalPages: 0,
+    counts: null,
+    loading: true,
+    error: null,
+  });
   const [reloadToken, setReloadToken] = useState(0);
 
   useEffect(() => {
@@ -117,11 +131,25 @@ function RankingScreen() {
     leadMinerApi
       .listCompanies(listQuery(new URLSearchParams(queryKey), page), { signal: ctrl.signal })
       .then((res) =>
-        setList({ rows: res.items, total: res.total, totalPages: res.totalPages, loading: false, error: null }),
+        setList({
+          rows: res.items,
+          total: res.total,
+          totalPages: res.totalPages,
+          counts: res.contatoCounts ?? null,
+          loading: false,
+          error: null,
+        }),
       )
       .catch((e: unknown) => {
         if (ctrl.signal.aborted || isAbort(e)) return;
-        setList({ rows: [], total: 0, totalPages: 0, loading: false, error: errorMessage(e, 'Não foi possível carregar as empresas.') });
+        setList((s) => ({
+          rows: [],
+          total: 0,
+          totalPages: 0,
+          counts: s.counts,
+          loading: false,
+          error: errorMessage(e, 'Não foi possível carregar as empresas.'),
+        }));
       });
     return () => ctrl.abort();
   }, [queryKey, page, reloadToken]);
@@ -288,6 +316,8 @@ function RankingScreen() {
         currentUserId={currentProfile?.id ?? null}
       />
 
+      <ContatoTabs active={tab} counts={list.counts} onChange={(t) => onFilterChange(contatoTabPatch(t))} />
+
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-slate-300" aria-live="polite">
           {list.loading ? (
@@ -341,37 +371,39 @@ function RankingScreen() {
         onClearSelection={() => setSelected(new Set())}
       />
 
-      {list.error ? (
-        <div role="alert" className="rounded-2xl border border-red-900/60 bg-red-950/40 p-6 text-sm text-red-300">
-          <p>{list.error}</p>
-          <button
-            type="button"
-            onClick={() => setReloadToken((n) => n + 1)}
-            className="mt-3 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-bold text-slate-200 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
-          >
-            Tentar novamente
-          </button>
-        </div>
-      ) : list.loading && list.rows.length === 0 ? (
-        <div role="status" className="flex items-center justify-center gap-2 rounded-2xl border border-slate-800 bg-slate-900/60 p-10 text-sm text-slate-400">
-          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-          Carregando empresas…
-        </div>
-      ) : list.rows.length === 0 ? (
-        <p className="rounded-2xl border border-slate-800 bg-slate-900/60 p-10 text-center text-sm text-slate-400">
-          Nenhuma empresa atende aos filtros e à busca atuais.
-        </p>
-      ) : (
-        <div className={list.loading ? 'opacity-60 transition-opacity' : undefined} aria-busy={list.loading}>
-          <RankingTable
-            rows={list.rows}
-            selected={selected}
-            onToggle={(id) => setSelected((s) => toggleId(s, id))}
-            onTogglePage={() => setSelected((s) => togglePageSelection(s, list.rows.map((r) => r.id)))}
-            offset={(currentPage - 1) * RANKING_PAGE_SIZE}
-          />
-        </div>
-      )}
+      <div role="tabpanel" id={CONTATO_PANEL_ID} aria-labelledby={contatoTabId(tab)}>
+        {list.error ? (
+          <div role="alert" className="rounded-2xl border border-red-900/60 bg-red-950/40 p-6 text-sm text-red-300">
+            <p>{list.error}</p>
+            <button
+              type="button"
+              onClick={() => setReloadToken((n) => n + 1)}
+              className="mt-3 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-bold text-slate-200 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+            >
+              Tentar novamente
+            </button>
+          </div>
+        ) : list.loading && list.rows.length === 0 ? (
+          <div role="status" className="flex items-center justify-center gap-2 rounded-2xl border border-slate-800 bg-slate-900/60 p-10 text-sm text-slate-400">
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            Carregando empresas…
+          </div>
+        ) : list.rows.length === 0 ? (
+          <p className="rounded-2xl border border-slate-800 bg-slate-900/60 p-10 text-center text-sm text-slate-400">
+            {emptyMessageFor(tab)}
+          </p>
+        ) : (
+          <div className={list.loading ? 'opacity-60 transition-opacity' : undefined} aria-busy={list.loading}>
+            <RankingTable
+              rows={list.rows}
+              selected={selected}
+              onToggle={(id) => setSelected((s) => toggleId(s, id))}
+              onTogglePage={() => setSelected((s) => togglePageSelection(s, list.rows.map((r) => r.id)))}
+              offset={(currentPage - 1) * RANKING_PAGE_SIZE}
+            />
+          </div>
+        )}
+      </div>
 
       {!list.error && list.total > 0 && (
         <Pagination
