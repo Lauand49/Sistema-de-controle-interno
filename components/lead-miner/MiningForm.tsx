@@ -17,16 +17,21 @@ import {
   NETWORK_ERROR_MESSAGE,
   type RunProgress,
 } from '@/lib/leads/client-api';
+import type { ServicesStatus } from '@/lib/leads/client-api';
 import { NicheChecklist } from './NicheChecklist';
 import { PresetPicker } from './PresetPicker';
 import { PreviousRunNotice } from './PreviousRunNotice';
+import { ServiceStatusPanel } from './ServiceStatusPanel';
+import { SourcePicker } from './SourcePicker';
 import {
   buildCreateRunInput,
   canSubmit,
+  defaultSource,
   IA_UNAVAILABLE_TEXT,
   INITIAL_FORM_VALUES,
   lookupParams,
   matchingPreset,
+  pagespeedUnavailableReason,
   pendingFields,
   presetNiches,
   RUN_NOT_STARTED_TEXT,
@@ -54,13 +59,23 @@ export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
   const [submitting, setSubmitting] = useState(false);
   const submittingRef = useRef(false);
   const [ia, setIa] = useState<IaState>('loading');
+  const [services, setServices] = useState<ServicesStatus | null>(null);
+  /** Garante que a fonte padrão (OSM/MISTA) só é aplicada uma vez, sem sobrescrever a escolha do usuário. */
+  const sourceDefaulted = useRef(false);
 
   useEffect(() => {
     const ac = new AbortController();
     leadMinerApi
       .getConfig({ signal: ac.signal })
       .then((cfg) => {
-        if (!ac.signal.aborted) setIa(cfg.iaAvailable ? 'available' : 'unavailable');
+        if (ac.signal.aborted) return;
+        setIa(cfg.iaAvailable ? 'available' : 'unavailable');
+        setServices(cfg.services);
+        if (!sourceDefaulted.current) {
+          sourceDefaulted.current = true;
+          const fonte = defaultSource(cfg.services);
+          if (fonte !== INITIAL_FORM_VALUES.fonte) setValues((v) => ({ ...v, fonte }));
+        }
       })
       .catch(() => {
         if (!ac.signal.aborted) setIa('error');
@@ -69,6 +84,7 @@ export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
   }, []);
 
   const iaAvailable = ia === 'available';
+  const pagespeedBlocked = pagespeedUnavailableReason(services);
   const pending = pendingFields(values);
   const enabled = canSubmit(values, submitting);
 
@@ -147,6 +163,8 @@ export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
       aria-busy={submitting}
       className="space-y-6 rounded-2xl border border-slate-800 bg-slate-900/60 p-6"
     >
+      <ServiceStatusPanel services={services} loading={ia === 'loading'} />
+
       <div className="grid gap-4 md:grid-cols-[1fr_1fr_8rem]">
         <div>
           <label htmlFor="mining-bairro" className="mb-1 block text-sm font-semibold text-slate-200">
@@ -217,6 +235,13 @@ export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
         remineHint={submitting ? 'Iniciando…' : pending.nichos ? 'Selecione ao menos um nicho.' : undefined}
       />
 
+      <SourcePicker
+        value={values.fonte}
+        onChange={(fonte) => update('fonte', fonte)}
+        services={services}
+        disabled={submitting}
+      />
+
       <PresetPicker active={matchingPreset(values.nichos)} onPick={pickPreset} />
 
       <div>
@@ -270,6 +295,37 @@ export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
                   : IA_UNAVAILABLE_TEXT}
             </p>
           )}
+        </div>
+        <div className="flex flex-col gap-0.5">
+          <div className="flex items-center gap-2">
+            <input
+              id="mining-pagespeed"
+              type="checkbox"
+              checked={values.pagespeedEnabled && !pagespeedBlocked}
+              disabled={!!pagespeedBlocked}
+              onChange={(e) => update('pagespeedEnabled', e.target.checked)}
+              aria-describedby="mining-pagespeed-hint"
+              className="h-4 w-4 rounded border-slate-600 bg-slate-900 accent-purple-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
+            />
+            <label htmlFor="mining-pagespeed" className={`text-sm ${pagespeedBlocked ? 'text-slate-500' : 'text-slate-300'}`}>
+              Analisar desempenho (PageSpeed)
+            </label>
+          </div>
+          <p id="mining-pagespeed-hint" className="text-xs text-slate-400">
+            {pagespeedBlocked ?? (services?.pagespeed.semChave ? 'Sem chave: usa a cota reduzida do Google' : '')}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            id="mining-cnpj"
+            type="checkbox"
+            checked={values.cnpjEnabled}
+            onChange={(e) => update('cnpjEnabled', e.target.checked)}
+            className="h-4 w-4 rounded border-slate-600 bg-slate-900 accent-purple-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+          />
+          <label htmlFor="mining-cnpj" className="text-sm text-slate-300">
+            Consultar CNPJ (BrasilAPI)
+          </label>
         </div>
       </div>
 

@@ -350,7 +350,7 @@ Convenções:
   - [x]* 14.2 Escrever teste de propriedade das faixas do PageSpeed
     - **Property 42: Faixas das notas do PageSpeed**
     - **Validates: Requirements 17.2**
-  - [ ] 14.3 Atualizar a Tela_Minerar
+  - [x] 14.3 Atualizar a Tela_Minerar
     - `ServiceStatusPanel.tsx` (estado e "N de M chamadas" de Google Places, PageSpeed e IA), `SourcePicker.tsx` (pré-seleção e desabilitação com motivo), checkboxes de PageSpeed (aviso sem chave; desabilitada com cota esgotada) e CNPJ; `mining-form-helpers.buildCreateRunInput` com os campos novos; `GoogleUnusedNote` nos cards de progresso
     - _Requirements: 2.6, 2.7, 4.1, 4.2, 4.9, 10.1, 12.7_
   - [ ] 14.4 Atualizar a Tela_Mineracoes
