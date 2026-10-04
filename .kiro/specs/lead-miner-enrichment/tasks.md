@@ -315,10 +315,10 @@ Convenções:
   - [x] 13.2 Escrever teste de propriedade do Mapa, CSV e triagem sem Conteudo_Google
     - **Property 17: Mapa, CSV e triagem sem Conteudo_Google**
     - **Validates: Requirements 6.5, 6.6, 6.7**
-  - [ ]* 13.3 Escrever teste de propriedade dos filtros e da ordenação
+  - [x]* 13.3 Escrever teste de propriedade dos filtros e da ordenação
     - **Property 43: Filtros novos e ordenação pelo Nome_Exibicao**
     - **Validates: Requirements 18.1, 18.2**
-  - [ ]* 13.4 Escrever teste de propriedade do CSV com as colunas novas
+  - [x]* 13.4 Escrever teste de propriedade do CSV com as colunas novas
     - **Property 44: CSV com as colunas novas**
     - **Validates: Requirements 18.4, 18.5**
   - [x] 13.5 Estender as rotas `config` e `runs`
