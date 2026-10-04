@@ -321,7 +321,7 @@ Convenções:
   - [ ]* 13.4 Escrever teste de propriedade do CSV com as colunas novas
     - **Property 44: CSV com as colunas novas**
     - **Validates: Requirements 18.4, 18.5**
-  - [ ] 13.5 Estender as rotas `config` e `runs`
+  - [x] 13.5 Estender as rotas `config` e `runs`
     - `GET /config` → `{ iaAvailable, services }` via `getServicesStatus()`; `POST /runs` com os campos novos; `GET /runs`, `/runs/[id]`, `/runs/active` com `fonteSolicitada`, `fonte`, `googleMotivo`, `googleNichosAfetados`, `pagespeedEnabled`, `cnpjEnabled`; filtro `fonte` sobre a Fonte_Efetiva
     - _Requirements: 2.6, 2.7, 4.1, 4.2, 4.3, 4.9, 18.3, 20.1_
   - [ ] 13.6 Estender as rotas de empresas existentes
