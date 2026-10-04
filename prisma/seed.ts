@@ -1,4 +1,9 @@
 import { PrismaClient } from '@prisma/client';
+import { assertSeedTarget } from './seed-guard';
+
+// Trava: o seed APAGA usuários, funis, tarefas e leads. Só roda em banco `*_test` ou com confirmação
+// explícita do nome do banco (SEED_CONFIRM_DB=<nome>). Ver prisma/seed-guard.ts.
+assertSeedTarget();
 
 const prisma = new PrismaClient();
 

@@ -1,6 +1,6 @@
 /**
  * Testes de integração do repositório da Etapa 3 contra Postgres real (Tarefa 10.9).
- * Pulados sem `RUN_DB_TESTS=1`. Banco: `DATABASE_URL_TEST` (ou `DATABASE_URL`); as migrações
+ * Pulados sem `RUN_DB_TESTS=1` + `TEST_DATABASE_URL` (banco `*_test`; `npm run test:int`); as migrações
  * pendentes são aplicadas com `prisma migrate deploy` antes dos testes.
  *
  * - `prismaUsageGate`: 50 reservas concorrentes por provedor com limite 10 (Req. 19.3).
@@ -11,6 +11,7 @@
  * Todas as linhas usam um prefixo/mês únicos e são removidas no `afterAll`.
  */
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { assertTestDatabase } from '../../support/assert-test-db';
 import type { PrismaClient } from '@prisma/client';
 import { cnpjCheckDigits, parseCandidates } from '@/lib/leads/cnpj';
 import { applyCnpjInTx, upsertFoundCompany, upsertGooglePlace } from '@/lib/leads/repository';
@@ -39,7 +40,7 @@ describe.skipIf(!RUN_DB_TESTS)('lead-miner-enrichment — repositório (Postgres
   let seq = 0;
 
   beforeAll(async () => {
-    const url = testDatabaseUrl();
+    const url = assertTestDatabase(testDatabaseUrl(), 'teste de integração'); // trava: só *_test
     migrateDeploy(url);
     db = newPrisma(url);
     userId = await createTestUser(db, prefix);

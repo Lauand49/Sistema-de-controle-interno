@@ -1,6 +1,6 @@
 /**
  * Testes de integração das rotas `/api/tools/lead-miner/**` contra Postgres real (Tarefa 12.8).
- * Pulados sem `RUN_DB_TESTS=1`. Banco: `DATABASE_URL_TEST` (ou `DATABASE_URL` do `.env`).
+ * Pulados sem `RUN_DB_TESTS=1` + `TEST_DATABASE_URL` (banco `*_test`; `npm run test:int`). Nunca usa `DATABASE_URL`.
  *
  * Os handlers são importados diretamente. Só a sessão (`@/auth`) é simulada; o ator é lido do
  * banco pelo `withAuth` real. `getPipelineDeps` devolve dependências sem rede e `audit` aceita
@@ -11,10 +11,11 @@
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { RUN_INTEGRATION, assertTestDatabase, rawTestDatabaseUrl } from '../../support/assert-test-db';
 import type { PrismaClient } from '@prisma/client';
 import { auditFault, call, SIMULATED_FAILURE } from './routes-helpers';
 
-const RUN_DB_TESTS = process.env.RUN_DB_TESTS === '1';
+const RUN_DB_TESTS = RUN_INTEGRATION;
 
 vi.mock('server-only', () => ({}));
 
@@ -123,15 +124,8 @@ describe.skipIf(!RUN_DB_TESTS)('lead-miner — rotas (Postgres)', () => {
   const runBody = (bairro: string) => ({ bairro, cidade: 'Santos', uf: 'SP', nichos: [NICHO] });
 
   beforeAll(async () => {
-    if (!process.env.DATABASE_URL_TEST && !process.env.DATABASE_URL) {
-      try {
-        process.loadEnvFile(path.join(ROOT, '.env'));
-      } catch {
-        /* sem .env */
-      }
-    }
-    if (process.env.DATABASE_URL_TEST) process.env.DATABASE_URL = process.env.DATABASE_URL_TEST;
-    if (!process.env.DATABASE_URL) throw new Error('Defina DATABASE_URL_TEST ou DATABASE_URL');
+    // Trava: só o banco de teste (`TEST_DATABASE_URL`, nome `*_test`); nunca `DATABASE_URL`.
+    process.env.DATABASE_URL = assertTestDatabase(rawTestDatabaseUrl(), 'teste de integração');
 
     ({ prisma } = await import('@/lib/prisma'));
     r = {

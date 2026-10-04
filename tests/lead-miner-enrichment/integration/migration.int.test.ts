@@ -1,9 +1,8 @@
 /**
  * Teste de integração da migração `20261015000000_lead_miner_enrichment` (Tarefa 3.3).
- * Pulado sem `RUN_DB_TESTS=1`.
+ * Pulado sem `RUN_DB_TESTS=1` + `TEST_DATABASE_URL` (banco `*_test`; `npm run test:int`).
  *
- * Fluxo: cria um banco descartável (`lmint_mig_*`) no mesmo servidor de `DATABASE_URL_TEST`
- * (ou `DATABASE_URL`), aplica as migrações até a Etapa 2 (cópia de `prisma/migrations` sem a
+ * Fluxo: cria um banco descartável (`lmint_mig_*_test`) no mesmo servidor de `TEST_DATABASE_URL`, aplica as migrações até a Etapa 2 (cópia de `prisma/migrations` sem a
  * migração nova, num diretório temporário), insere dados no formato da Etapa 2 por SQL, aplica a
  * migração nova com `prisma migrate deploy` e verifica a preservação dos dados. O banco é removido
  * no fim; nenhum dado do banco de desenvolvimento é lido ou alterado.
@@ -17,6 +16,7 @@ import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { PrismaClient } from '@prisma/client';
 import { RUN_DB_TESTS, testDatabaseUrl } from '../../lead-miner/integration/db-helpers-repo';
+import { assertTestDatabase } from '../../support/assert-test-db';
 
 const ROOT = path.resolve(__dirname, '../../..');
 const NEW_MIGRATION = '20261015000000_lead_miner_enrichment';
@@ -55,7 +55,7 @@ function pickOld(before: Row[], after: Row[]): Row[] {
 }
 
 describe.skipIf(!RUN_DB_TESTS)('lead-miner-enrichment — migração da Etapa 2 para a Etapa 3 (Postgres)', () => {
-  const dbName = `lmint_mig_${Date.now().toString(36)}_${randomBytes(3).toString('hex')}`;
+  const dbName = `lmint_mig_${Date.now().toString(36)}_${randomBytes(3).toString('hex')}_test`;
   let admin: PrismaClient | null = null;
   let db: PrismaClient | null = null;
   let tmpDir: string | null = null;
@@ -72,10 +72,11 @@ describe.skipIf(!RUN_DB_TESTS)('lead-miner-enrichment — migração da Etapa 2 
   }
 
   beforeAll(async () => {
-    const baseUrl = testDatabaseUrl();
+    const baseUrl = assertTestDatabase(testDatabaseUrl(), 'migração de teste (servidor)');
     const url = new URL(baseUrl);
     url.pathname = `/${dbName}`;
-    const testUrl = url.toString();
+    // O banco descartável também precisa ser `*_test` antes de qualquer CREATE/DROP DATABASE.
+    const testUrl = assertTestDatabase(url.toString(), 'migração de teste (banco descartável)');
 
     // Conexão administrativa: só executa CREATE/DROP DATABASE do banco descartável.
     admin = new PrismaClient({ datasources: { db: { url: baseUrl } } });
@@ -88,7 +89,8 @@ describe.skipIf(!RUN_DB_TESTS)('lead-miner-enrichment — migração da Etapa 2 
     fs.copyFileSync(path.join(ROOT, 'prisma/schema.prisma'), schemaPath);
     fs.cpSync(path.join(ROOT, 'prisma/migrations'), path.join(tmpDir, 'migrations'), {
       recursive: true,
-      filter: (src) => !src.includes(NEW_MIGRATION),
+      // Fora a migração testada E as posteriores (16+ dependem das colunas criadas por ela).
+      filter: (src) => !/^\d{14}_/.test(path.basename(src)) || path.basename(src) < NEW_MIGRATION,
     });
     deploy(schemaPath, testUrl);
 

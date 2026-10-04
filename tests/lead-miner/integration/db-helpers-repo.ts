@@ -1,7 +1,7 @@
 /**
  * Helpers dos testes de integração do repositório/pipeline (Postgres real, sem rede externa).
  *
- * - Só são usados com `RUN_DB_TESTS=1`; o banco vem de `DATABASE_URL_TEST` (ou `DATABASE_URL`).
+ * - Só são usados com `RUN_DB_TESTS=1` + `TEST_DATABASE_URL` (banco `*_test`); nunca `DATABASE_URL`.
  * - Toda linha criada usa um prefixo único (`prefix`) para permitir a limpeza sem afetar dados reais.
  * - OSM, site e IA são falsos: nenhuma chamada sai da máquina. O Prisma usa o engine nativo
  *   (biblioteca Rust), que não passa pelo `net.Socket` bloqueado em `tests/setup/no-network.ts`.
@@ -11,28 +11,22 @@ import { randomUUID } from 'node:crypto';
 import path from 'node:path';
 import { PrismaClient } from '@prisma/client';
 import { NICHES } from '@/lib/leads/config';
+import { RUN_INTEGRATION, assertTestDatabase, rawTestDatabaseUrl } from '../../support/assert-test-db';
 import type { PipelineDeps } from '@/lib/leads/pipeline';
 import { OVERPASS_URL, type OverpassElement } from '@/lib/leads/sources/osm';
 
-export const RUN_DB_TESTS = process.env.RUN_DB_TESTS === '1';
+/** Integração habilitada: `RUN_DB_TESTS=1` + `TEST_DATABASE_URL` (banco `*_test`). Ver `tests/support/assert-test-db.ts`. */
+export const RUN_DB_TESTS = RUN_INTEGRATION;
 const ROOT = path.resolve(__dirname, '../../..');
 
-/** URL do banco de teste; carrega `.env` se nada estiver no ambiente. */
+/** URL do banco de TESTE (`TEST_DATABASE_URL`, nome terminando em `_test`); nunca usa `DATABASE_URL`. */
 export function testDatabaseUrl(): string {
-  if (!process.env.DATABASE_URL_TEST && !process.env.DATABASE_URL) {
-    try {
-      process.loadEnvFile(path.join(ROOT, '.env'));
-    } catch {
-      /* sem .env */
-    }
-  }
-  const url = process.env.DATABASE_URL_TEST ?? process.env.DATABASE_URL;
-  if (!url) throw new Error('Defina DATABASE_URL_TEST (ou DATABASE_URL) para os testes de integração');
-  return url;
+  return assertTestDatabase(rawTestDatabaseUrl(), 'teste de integração (TEST_DATABASE_URL)');
 }
 
 /** Aplica as migrações pendentes (idempotente) no banco de teste. */
 export function migrateDeploy(url: string): void {
+  assertTestDatabase(url, 'migrate deploy de teste');
   execFileSync('npx', ['prisma', 'migrate', 'deploy'], {
     cwd: ROOT,
     env: { ...process.env, DATABASE_URL: url },
@@ -41,6 +35,7 @@ export function migrateDeploy(url: string): void {
 }
 
 export function newPrisma(url: string): PrismaClient {
+  assertTestDatabase(url, 'PrismaClient de teste');
   return new PrismaClient({ datasources: { db: { url } } });
 }
 
@@ -127,6 +122,7 @@ export async function createTestUser(db: PrismaClient, prefix: string): Promise<
 
 /** Remove Empresas (cascata em aliases, análises e vínculos), minerações e o usuário do teste. */
 export async function cleanup(db: PrismaClient, prefix: string, userId: string | null): Promise<void> {
+  assertTestDatabase(process.env.DATABASE_URL, 'limpeza dos testes de integração');
   await db.company.deleteMany({ where: { nome: { startsWith: prefix } } });
   if (userId) {
     await db.miningRun.deleteMany({ where: { createdById: userId } });

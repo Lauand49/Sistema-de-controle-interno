@@ -56,6 +56,34 @@ As mesmas do `.env.example`; nenhuma nova. Sem `GEMINI_API_KEY` a avaliação do
 
 _Nenhum._
 
-## Atenção com testes de integração
+## Testes de integração e operações destrutivas
 
-Os testes com `RUN_DB_TESTS=1` (`tests/**/integration/`) apagam linhas (`deleteMany` em `Company`, `CompanyAnalysis` etc.) no banco apontado por `DATABASE_URL_TEST` ou, na falta dele, por `DATABASE_URL`. Durante os ajustes pós-etapa 3 (na T1), execuções com `RUN_DB_TESTS=1` e um script de verificação rodaram `deleteMany` no banco de desenvolvimento local (`scitec_dev`), apagando linhas de `Company`, `CompanyAnalysis` e tabelas relacionadas. O que havia nelas não foi conferido antes nem recuperado depois; se aquele banco tinha dados que importavam, restaure a partir de backup ou refaça as minerações. **Use sempre um banco descartável em `DATABASE_URL_TEST`.** Nenhum teste desta entrega usa `RUN_DB_TESTS`.
+**Regra:** integração só contra `scitec_test`. Comando exato:
+
+```bash
+createdb scitec_test                   # uma vez; o nome do banco DEVE terminar em "_test"
+cp .env.test.example .env.test         # ajuste TEST_DATABASE_URL (arquivo ignorado pelo git)
+npm run test:int                       # = RUN_DB_TESTS=1 vitest run integration/
+```
+
+- Os testes usam só `TEST_DATABASE_URL`; sem ela são pulados com mensagem. `tests/setup/integration-env.ts` fixa `DATABASE_URL` nessa URL (ou num destino inalcançável) antes de qualquer módulo carregar o Prisma, então nem `new PrismaClient()` sem argumentos alcança o banco de desenvolvimento.
+- `assertTestDatabase(url)` (`tests/support/assert-test-db.ts`) lança erro se o nome do banco não terminar em `_test` ou se a URL não tiver banco. Está no `beforeAll` de todos os testes de integração, em `tests/lead-tools-test.ts` e, via `prisma/seed-guard.ts`, no seed (que aceita `_test` ou `SEED_CONFIRM_DB=<nome>`).
+- Histórico: na T1, execuções com `RUN_DB_TESTS=1` e um script de verificação rodaram `deleteMany` no banco de desenvolvimento local (`scitec_dev`), apagando linhas de `Company`, `CompanyAnalysis` e relacionadas. O que havia nelas não foi conferido nem recuperado. A causa era `reanalysis.int.test.ts` (`new PrismaClient()` com o `.env` + `deleteMany()` sem filtro) e o fallback para `DATABASE_URL` nos demais; ambos foram removidos.
+- Os testes de integração **não foram executados** nesta rodada de correções (nem contra `scitec_test`). As alterações neles (trava, `migration.int` sem as migrações 16+ no banco intermediário, `reanalysis.int` com `beforeAll`) estão validadas só por `tsc`; rode `npm run test:int` num `scitec_test` antes de confiar nelas.
+
+### Inventário de operações destrutivas (grep de `deleteMany`/`TRUNCATE`/`DROP`/`DELETE FROM`/SQL cru; nada foi executado)
+
+| Local | Operação | Modelos afetados | Proteção |
+|---|---|---|---|
+| `prisma/seed.ts:9-21` | `deleteMany()` sem filtro | AuditLog, SectorMember, CardActivity, CardFieldValue, Card, Field, Phase, Pipe, CrossDeptRequest, FinancialTransaction, ProspectLead, Task, User | `seed-guard.ts` (`*_test` ou `SEED_CONFIRM_DB`) |
+| `tests/lead-miner-enrichment/integration/reanalysis.int.test.ts` (`beforeEach`) | `deleteMany()` sem filtro | CompanyAnalysis, MiningRunCompany, CompanyAlias, GooglePlaceCache, ProspectLead, MiningRun, Company | `assertTestDatabase` + cliente só com `TEST_DATABASE_URL` |
+| `tests/lead-miner/integration/db-helpers-repo.ts` (`cleanup`) | `deleteMany` por prefixo/autor | Company, MiningRun, User | idem |
+| `tests/lead-miner/integration/routes.int.test.ts` (`afterAll`) | `deleteMany` por ids criados | AuditLog, Card, ProspectLead, MiningRun, Company | idem |
+| `tests/lead-miner-enrichment/integration/repository-enrichment.int.test.ts` (`afterAll`) | `deleteMany` por mês/prefixo/autor | ApiUsage, Company, MiningRun, User | idem |
+| `tests/dashboards/integration/dashboards.int.test.ts` (`afterAll`) | `deleteMany` por ids criados; `UPDATE "Task"` por ids (SQL cru) | Task, CrossDeptRequest, ProspectLead, Card, Pipe, AuditLog, User | idem |
+| `tests/lead-miner-enrichment/integration/migration.int.test.ts` | `CREATE DATABASE`/`DROP DATABASE … WITH (FORCE)` do banco descartável `lmint_mig_*_test`; `INSERT`/`DELETE FROM "CompanyAnalysis"` nele | banco descartável inteiro | nome do servidor e do descartável passam por `assertTestDatabase` |
+| `tests/lead-tools-test.ts` | `deleteMany`/`delete` do que o script criou | CardActivity, Card, ProspectLead | `assertTestDatabase` (só `TEST_DATABASE_URL`) |
+| `lib/leads/repository.ts:512,517`, `lib/leads/google-cache.ts:143` | código da aplicação (poda de redes do Google; purga do cache) | MiningRunCompany, Company (órfãs), GooglePlaceCache | escopo por mineração/expiração; não é teste |
+| `tests/lead-miner-ajustes/cancel*.test.ts`, `tests/lead-miner-enrichment/pipeline-sources.test.ts`, `support/fake-prisma-cache.ts` | `deleteMany` em **fakes** em memória | — | não tocam banco |
+
+Sem `TRUNCATE`, `DROP TABLE`, `prisma migrate reset` ou `db push` em `scripts/` (`generate-test-sheet.js`, `remove-bg.js` não usam banco), `package.json` ou `tests/`.

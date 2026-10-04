@@ -1,6 +1,6 @@
 /**
  * Testes de integração da Reanalise (Tarefa 11.13) contra Postgres real.
- * Pulados sem `RUN_DB_TESTS=1`. Fakes para toda a I/O externa (site, PageSpeed, BrasilAPI, IA,
+ * Pulados sem `RUN_DB_TESTS=1` + `TEST_DATABASE_URL` (banco `*_test`; `npm run test:int`). Fakes para toda a I/O externa (site, PageSpeed, BrasilAPI, IA,
  * Google Places), banco real para exercitar o lease atômico (`UPDATE … RETURNING`).
  *
  * Cenários (Req. 16.4, 16.5, 16.6, 21.9):
@@ -10,7 +10,9 @@
  * - falha na gravação (`persistReanalysis` rejeita) → mantém a Analise e o snapshot anteriores
  *   e libera o lease (`reanaliseAte` nulo).
  */
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { RUN_INTEGRATION, assertTestDatabase } from '../../support/assert-test-db';
+import { migrateDeploy, newPrisma, testDatabaseUrl } from '../../lead-miner/integration/db-helpers-repo';
 import { PrismaClient } from '@prisma/client';
 import { reanalyzeCompany } from '@/lib/leads/reanalysis';
 import * as repository from '@/lib/leads/repository';
@@ -24,8 +26,9 @@ import { memoryUsageGate } from '../support/fake-usage';
 import { intervalLimiter } from '@/lib/leads/sources/rate-limit';
 import { realSleep } from '../support/scripted';
 
-const db = new PrismaClient();
-const skipDb = !process.env.RUN_DB_TESTS;
+// Banco de TESTE apenas (`TEST_DATABASE_URL`, `*_test`); criado em `beforeAll`, nunca com o `.env`.
+let db: PrismaClient;
+const skipDb = !RUN_INTEGRATION;
 const NICHE = 'clinica_odontologica';
 
 /** Dependências do pipeline com toda a I/O externa simulada e o banco real. */
@@ -100,7 +103,16 @@ async function createRecentAnalysis(companyId: string): Promise<string> {
 }
 
 describe.skipIf(skipDb)('Integration 11.13: Reanálise de Empresa', () => {
+  beforeAll(() => {
+    const url = assertTestDatabase(testDatabaseUrl(), 'teste de integração (reanálise)');
+    migrateDeploy(url);
+    db = newPrisma(url);
+  }, 120_000);
+  afterAll(async () => {
+    await db?.$disconnect();
+  });
   beforeEach(async () => {
+    assertTestDatabase(process.env.DATABASE_URL, 'limpeza total da reanálise');
     await db.companyAnalysis.deleteMany();
     await db.miningRunCompany.deleteMany();
     await db.companyAlias.deleteMany();
