@@ -61,6 +61,12 @@ function analysisFrom(b: ReturnType<typeof score>, over: Partial<CompanyAnalysis
     oportunidadeIa: null,
     justificativaIa: null,
     detalhamento: JSON.parse(JSON.stringify(b)),
+    // Campos da Etapa 3: fixture de análise da Etapa 1 (score v1, sem sinais nem PageSpeed).
+    versaoScore: 1,
+    sinais: null,
+    pagespeed: null,
+    pagespeedMotivo: null,
+    tecnologias: [],
     createdAt: '2024-05-10T13:05:00.000Z',
     ...over,
   };

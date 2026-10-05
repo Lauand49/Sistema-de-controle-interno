@@ -167,7 +167,7 @@ describe('site-analyzer — Property 18', () => {
         for (const q of t3.requests) {
           expect(q.method).toBe('GET');
           expect(q.maxBodyBytes).toBe(MAX_BODY_BYTES);
-          const answers = dns[q.url.hostname];
+          const answers = (dns as Record<string, DnsAnswer | undefined>)[q.url.hostname];
           expect(Array.isArray(answers) && answers.includes(q.address.replace(/^\[|\]$/g, ''))).toBe(true);
         }
 

@@ -161,7 +161,7 @@ describe('enforceProductionEnv (instrumentation)', () => {
   it('ok: não encerra; avisos vão para console.warn', () => {
     const exit = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
-    enforceProductionEnv({ ...GOOD, ADMIN_EMAILS: '' } as NodeJS.ProcessEnv);
+    enforceProductionEnv({ ...GOOD, NODE_ENV: 'production', ADMIN_EMAILS: '' });
     expect(exit).not.toHaveBeenCalled();
     expect(warn).toHaveBeenCalledTimes(1);
     exit.mockRestore();

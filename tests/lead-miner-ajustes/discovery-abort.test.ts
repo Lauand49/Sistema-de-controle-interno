@@ -371,6 +371,8 @@ describe('fetchJsonClient (HTTP real com fetch simulado)', () => {
     const { fetchJsonClient } = await import('@/lib/leads/deps');
     const ac = new AbortController();
     let seen: AbortSignal | undefined;
+    // Leitura via função: o TypeScript não acompanha atribuições feitas dentro do mock do fetch.
+    const current = (): AbortSignal | undefined => seen;
     vi.stubGlobal(
       'fetch',
       vi.fn((_u: string, init: { signal: AbortSignal }) => {
@@ -381,18 +383,18 @@ describe('fetchJsonClient (HTTP real com fetch simulado)', () => {
     try {
       const p = fetchJsonClient.getJson('https://exemplo.test/x', { headers: {}, timeoutMs: 60_000, signal: ac.signal });
       p.catch(() => undefined);
-      await waitFor(() => seen !== undefined);
-      expect(seen?.aborted).toBe(false);
+      await waitFor(() => current() !== undefined);
+      expect(current()?.aborted).toBe(false);
       ac.abort();
       await expect(p).rejects.toThrow();
-      expect(seen?.aborted).toBe(true);
+      expect(current()?.aborted).toBe(true);
 
       // Sem sinal externo: só o timeout (que aborta sozinho).
       seen = undefined;
       const q = fetchJsonClient.getJson('https://exemplo.test/y', { headers: {}, timeoutMs: 10 });
       q.catch(() => undefined);
       await expect(q).rejects.toThrow();
-      expect(seen?.aborted).toBe(true);
+      expect(current()?.aborted).toBe(true);
     } finally {
       vi.unstubAllGlobals();
     }

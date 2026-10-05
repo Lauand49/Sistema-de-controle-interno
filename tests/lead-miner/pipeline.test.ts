@@ -6,7 +6,7 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { PrismaClient } from '@prisma/client';
 import { ApiError } from '@/lib/api-error';
-import type { ClaimedItem } from '@/lib/leads/repository';
+import type { ClaimedItemV2 } from '@/lib/leads/repository';
 
 vi.mock('@/lib/leads/repository', () => ({
   claimBatch: vi.fn(),
@@ -91,8 +91,30 @@ function makeDeps(db: ReturnType<typeof fakeDb>, nowMs = 0): PipelineDeps {
   };
 }
 
-function item(id: string, nicho = 'clinica_odontologica'): ClaimedItem {
-  return { id, runId: RUN_ID, companyId: `c-${id}`, nicho, nome: `Empresa ${id}`, bairro: 'Centro', cidade: 'Santos', website: null };
+function item(id: string, nicho = 'clinica_odontologica'): ClaimedItemV2 {
+  return {
+    id,
+    runId: RUN_ID,
+    companyId: `c-${id}`,
+    nicho,
+    nome: `Empresa ${id}`,
+    bairro: 'Centro',
+    cidade: 'Santos',
+    website: null,
+    // Campos da Etapa 3 (devolvidos por `claimBatch`): empresa só do OSM, sem CNPJ nem cache do Google.
+    googlePlaceId: null,
+    uf: 'SP',
+    instagramOsm: null,
+    whatsappOsm: null,
+    cnpj: null,
+    cnpjOrigem: null,
+    cnpjCandidatos: [],
+    cnpjDadosCnpj: null,
+    cnpjConsultadoEm: null,
+    cnpjAi: null,
+    cacheNome: null,
+    cacheWebsite: null,
+  };
 }
 
 const validInput = {

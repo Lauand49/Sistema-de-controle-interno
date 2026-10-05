@@ -82,7 +82,8 @@ describe('Property 12: Resumos_Membro somam no máximo o total', () => {
         const ctx = buildMetricContext(now, periodo);
         const { built, reference } = checkProperty(tasks, memberIds, ctx, reverseRows);
 
-        const covered = tasks.every((t) => t.assigneeId !== null && memberIds.includes(t.assigneeId));
+        const memberIdSet: ReadonlySet<string> = new Set(memberIds);
+        const covered = tasks.every((t) => t.assigneeId !== null && memberIdSet.has(t.assigneeId));
         if (covered) {
           for (const key of COUNT_KEYS) expect(sumMembers(built, key)).toBe(reference.total[key]);
         }
