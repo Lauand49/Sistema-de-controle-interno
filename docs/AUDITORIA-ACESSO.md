@@ -146,7 +146,7 @@ As demais rotas seguem o padrão "carrega o objeto, checa a unidade dele, nega c
 
 ### Verificação da matriz (F3)
 
-`tests/access/matrix.test.ts`: 12 personas (anônimo, Pendente, Inativo, Presidente, Vice, Gerente de Negócios, Gerente de Setor, Assessor de Negócios e de AdmJurFin/Gente/Mídias, Gerentes de AdmJurFin/Gente) × 47 rotas/métodos, incluindo acesso por objeto (card, funil, campo, tarefa, solicitação, lead, usuário) e listas filtradas no servidor. A coluna "permitidos" é escrita à mão a partir do plano, não derivada de `lib/permissions.ts`. Em toda linha: sem sessão = 401; Pendente/Inativo = 403; fora da lista = 403, sem escrita no banco e sem dados do objeto no corpo. Resultado: única divergência era A-01.
+`tests/access/matrix.test.ts`: 12 personas (anônimo, Pendente, Inativo, Presidente, Vice, Gerente de Negócios, Gerente de Setor, Assessor de Negócios e de AdmJurFin/Gente/Mídias, Gerentes de AdmJurFin/Gente) × 43 rotas/métodos, incluindo acesso por objeto (card, funil, campo, tarefa, solicitação, lead, usuário) e listas filtradas no servidor. A coluna "permitidos" é escrita à mão a partir do plano, não derivada de `lib/permissions.ts`. Em toda linha: sem sessão = 401; Pendente/Inativo = 403; fora da lista = 403, sem escrita no banco e sem dados do objeto no corpo. Resultado: única divergência era A-01.
 
 ## Decisões pendentes do dono (não decididas pelo agente)
 
