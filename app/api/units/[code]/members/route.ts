@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 import { withAuth, ApiError, assert, badRequest } from '@/lib/api';
 import { audit } from '@/lib/audit';
 import { canManageSectorMembers, canViewUnit } from '@/lib/permissions';
-import { toUserDTO, userHierarchyInclude } from '@/lib/users';
+import { forViewer, toUserDTO, userHierarchyInclude } from '@/lib/users';
 import { getUnitByCode } from '@/lib/units';
 
 type Params = { code: string };
@@ -22,7 +22,7 @@ export const GET = withAuth<Params>(async (_req, { params, actor }) => {
     include: userHierarchyInclude,
     orderBy: { name: 'asc' },
   });
-  return NextResponse.json(users.map(toUserDTO));
+  return NextResponse.json(users.map((u) => forViewer(actor, toUserDTO(u))));
 });
 
 /** Adiciona um membro ativo a um setor. */

@@ -143,6 +143,7 @@ As demais rotas seguem o padrão "carrega o objeto, checa a unidade dele, nega c
 | L-01 | **alta** (disponibilidade) | `contexts/ProfileContext.tsx`, `app/login/page.tsx` | Corrigido (F2) | Laço de recarga ao deslogar. Cliente decide "logado" pelo `/api/me` (banco) e o servidor pelo cookie. `logout()` limpava o perfil antes do cookie sumir; o efeito-guarda mandava para `/login` e o servidor devolvia para `/`. Também ocorria com `/api/me` 500 e com usuário sem registro. Correção: `endSession()` único (marca `signingOut` antes, não limpa o perfil, libera nova tentativa se falhar) e `/login` só redireciona se o usuário da sessão existe no banco. `middleware.ts`, `auth.ts` e `auth.config.ts` **não** foram alterados. |
 | A-01 | média | `GET /api/tools/pricing` | Corrigido (F3) | Qualquer ativo lia as tabelas de taxas por hora e modificadores. Agora exige `canUseNegociosTools` (igual ao `POST`). A página não usa o `GET`. |
 | A-04 | baixa | `POST /api/requests` (`linkedCardId`) | Corrigido (F3) | O solicitante podia vincular o id de um card de qualquer unidade; ao concluir a solicitação, o atendente gravava um comentário nesse card. Agora o card precisa estar numa unidade que o solicitante enxerga; inexistente e sem acesso respondem igual (400). |
+| A-05 | baixa | `GET /api/users`, `/api/users/[id]`, `/api/units/[code]/members` | Corrigido (F4) | Qualquer ativo recebia o **último acesso** (`lastLoginAt`) de todas as pessoas; nenhuma tela usa o campo. Agora só vai para o próprio, a Presidência e o Gerente do departamento da pessoa (`canSeeLastLogin` em `lib/permissions.ts`, mesmo alcance do progresso completo); os demais recebem `null`. |
 
 ### Verificação da matriz (F3)
 
@@ -158,3 +159,12 @@ As demais rotas seguem o padrão "carrega o objeto, checa a unidade dele, nega c
 | D-04 | Ordem das validações em `POST /api/users/[id]/hierarchy` | `404`/`400 (não está pendente)` vêm antes do `403`, então um Assessor descobre se um id existe/está pendente. Baixa. | mover o `assert` da ação para antes das checagens de estado. |
 | D-05 | `/tools/pricing` (página) | A página abre para qualquer ativo; o servidor nega o `POST` e o `GET`. | esconder a página fora de Negócios (só UI). |
 | D-06 | `/api/health` | Continua atrás do middleware (sem sessão = 401), o que impede o healthcheck do Cloud Run. Fora do escopo desta etapa. | tornar pública (altera `middleware.ts`). |
+
+### Verificação dos dados da pessoa (F4)
+
+`tests/access/person-data.test.ts` (offline):
+
+- **Campos por papel.** `/api/me` devolve o próprio usuário completo. `/api/users`, `/api/users/[id]` e `/api/units/[code]/members` devolvem nome, e-mail, departamento, setores, cargo e `createdAt` a qualquer ativo (diretório; decisão D-02) e omitem `lastLoginAt` de quem não pode acompanhar a pessoa (A-05). O progresso individual segue `progressScope` (o Gerente de Setor só vê o do setor dele). A auditoria devolve só `id/nome/avatar` de ator e alvo e respeita o escopo por departamento/setor.
+- **Mudanças valem na requisição seguinte.** `withAuth` recarrega o usuário do banco a cada chamada (o token só carrega o id). Testado: transferir de departamento, rebaixar/nomear Gerente, desativar/reativar e aprovar pendente mudam o resultado da chamada seguinte, com a mesma sessão. Cargos e status que viajem na sessão são ignorados. Usuário removido com sessão válida → 401 (o cliente encerra a sessão, ver L-01).
+- **Identidade vem da sessão.** `POST /api/requests` grava `requesterId` e `fromDept` do ator mesmo quando o corpo manda outros valores (a interface envia `requesterId`; é ignorado). `PATCH /api/users/[id]`: só o próprio ou a Presidência; `cargo` só a Presidência.
+- **Interface × servidor.** As telas usam os mesmos helpers de `lib/permissions.ts` apenas para esconder ações; a decisão é sempre do servidor (coberta pela matriz da F3).

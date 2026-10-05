@@ -3,7 +3,7 @@ import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { withAuth, assert } from '@/lib/api';
 import { canViewPendingUsers, isDepartmentManager, isGlobal } from '@/lib/permissions';
-import { toUserDTO, userHierarchyInclude } from '@/lib/users';
+import { forViewer, toUserDTO, userHierarchyInclude } from '@/lib/users';
 
 export const dynamic = 'force-dynamic';
 
@@ -41,5 +41,5 @@ export const GET = withAuth(async (request, { actor }) => {
     orderBy: { name: 'asc' },
   });
 
-  return NextResponse.json(users.map(toUserDTO));
+  return NextResponse.json(users.map((u) => forViewer(actor, toUserDTO(u))));
 });

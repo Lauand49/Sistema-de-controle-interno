@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { prisma } from '@/lib/prisma';
 import { withAuth, assert, notFound } from '@/lib/api';
 import { canEditProfile, canViewPendingUsers, isGlobal, progressScope } from '@/lib/permissions';
-import { findUserDTO } from '@/lib/users';
+import { findUserDTO, forViewer } from '@/lib/users';
 
 type Params = { id: string };
 
@@ -20,13 +20,15 @@ const profileSchema = z.object({
  * Presidência/próprio/Gerente do depto → tudo; Gerente de Setor → só itens do(s) setor(es).
  */
 export const GET = withAuth<Params>(async (_req, { params, actor }) => {
-  const target = await findUserDTO(params.id);
-  if (!target) throw notFound('Membro não encontrado.');
-  if (target.status === 'PENDENTE') {
-    assert(canViewPendingUsers(actor) || actor.id === target.id);
+  const found = await findUserDTO(params.id);
+  if (!found) throw notFound('Membro não encontrado.');
+  if (found.status === 'PENDENTE') {
+    assert(canViewPendingUsers(actor) || actor.id === found.id);
   }
+  // As regras usam o alvo completo; o que sai na resposta omite o último acesso de quem não pode acompanhá-lo.
+  const target = forViewer(actor, found);
 
-  const scope = progressScope(actor, target);
+  const scope = progressScope(actor, found);
   if (!scope) return NextResponse.json({ ...target, progressScope: null });
 
   const unitFilter = scope === 'ALL' ? undefined : { code: { in: scope } };
