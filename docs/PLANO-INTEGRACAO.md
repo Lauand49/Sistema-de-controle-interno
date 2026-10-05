@@ -189,7 +189,7 @@ Em Negócios → Ferramentas, o card **"Minerador de Leads"** substitui o placeh
 | 1 — Minerador | Porte TS, persistência cumulativa, telas Minerar/Minerações/Ranking/Ficha/Mapa, integração com triagem existente | concluída em 2026-09-29 na branch `etapa-1-minerador` (PR pendente; ver 8.2) |
 | 2 — Painéis | Departamento, setor e membro | concluída em 2026-10-01 na branch `etapa-2-paineis` (PR pendente; ver 8.3) |
 | 3 — Melhorias | Google Places + fallback OSM; PageSpeed Insights; enriquecimento CNPJ (BrasilAPI); detecção Instagram/WhatsApp/tecnologias; mensagem de abordagem por IA | concluída em 2026-10-04 na branch `etapa-3-melhorias` (PR pendente; ver 8.4); ajustes pós-etapa 3 (parar mineração, localização em cascata, abas com/sem contato, resultados progressivos, avaliação dos sem contato) na mesma branch (ver 8.4.1) |
-| 4 — Deploy | Dockerfile standalone, Cloud Run, Neon, OAuth Internal, orçamento/quotas, guia passo a passo | a fazer |
+| 4 — Deploy | Dockerfile standalone, Cloud Run, Neon, OAuth Internal, orçamento/quotas, guia passo a passo | arquivos e guias prontos na branch `etapa-4-deploy` (PR pendente; **nada foi implantado**; depende de pessoas; ver 8.5) |
 
 Cada etapa: branch própria a partir desta, PR para `main`, `npm run build` passando antes de entregar.
 
@@ -342,6 +342,49 @@ Depois da revisão desses cinco ajustes vieram correções (P1–P4, commits `[k
 - **E-mail do site (LGPD) pendente de decisão do dono.** Hoje o e-mail de contato vem só da tag OSM `contact:email`/`email`. Extrair e-mail do HTML do site e guardá-lo exige decidir sobre dado pessoal (base legal, retenção, exposição na UI/CSV). Nada foi implementado.
 - **Testes de integração não foram executados** nesta rodada (nem em `scitec_test`): as mudanças neles e o teste do trigger foram validados só por `tsc`. Rode `npm run test:int` num `scitec_test` antes de confiar.
 - **Migrações 20261019 e 20261020 não foram aplicadas** a nenhum banco pelo agente; aplique com `npx prisma migrate deploy`. Enquanto a 20261019 não for aplicada, consultas a `MiningRun` falham (coluna ausente) e a avaliação automática é ignorada com log.
+
+### 8.5 Registro da Etapa 4
+
+Branch `etapa-4-deploy`, criada a partir de `etapa-3-melhorias` (ainda não mergeada; o PR tem essa branch como base). Sem spec. **Entrega só arquivos e guias**: nada foi implantado, nenhum recurso de nuvem foi criado, nenhum comando `gcloud`/`terraform` foi executado e nenhum segredo real foi usado. Texto do PR: `docs/PR-ETAPA-4.md`.
+
+**O que foi entregue**
+
+| Tarefa | Entrega |
+|---|---|
+| D1 Build de produção | `output: 'standalone'`; `Dockerfile` multi-stage (`deps` → `build` → `runner`, mais o alvo `migrator`), usuário não-root (`node`), `NODE_ENV=production`, porta por `PORT`, `HOSTNAME=0.0.0.0`; `.dockerignore` (barra `.env*`, `node_modules`, `.next`, `.git`, `tests`); `GET /api/health`; `binaryTargets = ["native", "debian-openssl-3.0.x"]` no Prisma. |
+| D2 Variáveis e segurança | `docs/DEPLOY-VARIAVEIS.md`; `lib/env.ts` + `instrumentation.ts`: na subida em produção o servidor valida o ambiente e, se faltar algo obrigatório ou houver `DEV_LOGIN=true`, imprime a lista (só nomes, nunca valores) e sai com código 1; `.env.example` com notas de produção. |
+| D3 Banco e migrações | `docs/DEPLOY-BANCO.md`: Neon `aws-sa-east-1`, URL com pooler para o app e URL direta para migrações, job de migração fora do startup, checklist de renomear as migrações de data futura. |
+| D4 Cloud Run | `docs/DEPLOY-CLOUD-RUN.md`, `cloudrun.service.yaml` (só placeholders e referências a segredos) e `cloudbuild.yaml`. |
+| D5 Guia do Presidente | `docs/DEPLOY-GUIA-PRESIDENTE.md`, em português simples, com o que só ele pode fazer. |
+| D6 CI | `.github/workflows/ci.yml`: `npm ci`, `prisma generate`, `tsc --noEmit`, `npm test` (offline) e `npm run build`; sem segredos e sem banco. |
+
+**Decisões**
+
+- **Imagem:** `node:24-bookworm-slim` (Node 24 é o LTS ativo; o Node 20 está em fim de vida). Debian 12 traz OpenSSL 3, por isso o alvo do Prisma é `debian-openssl-3.0.x`. A imagem instala `openssl` e `ca-certificates` (não vêm na variante slim).
+- **Standalone:** verificado numa cópia do projeto **sem `.env`**: o build passa, o servidor sobe, e o engine do Prisma para Debian entra no `.next/standalone` (rastreado pelo Next sem configuração extra).
+- **Validação de ambiente:** feita por `instrumentation.ts`, que no Next 14 exige `experimental.instrumentationHook`. Não roda no `next build` (`NEXT_PHASE`) nem em desenvolvimento. Verificado numa cópia sem `.env`: sem variáveis o processo sai com código 1; com `DEV_LOGIN=true` também. `AUTH_TRUST_HOST` não é necessário porque `auth.config.ts` já tem `trustHost: true`.
+- **DEV_LOGIN em produção:** sem brecha encontrada (`auth.config.ts` exige `NODE_ENV === 'development'`; o `signIn` nega o provedor; `/api/dev/users` responde 404). Camada extra: `lib/env.ts` recusa `DEV_LOGIN=true` e recusa `NODE_ENV` diferente de `production` quando `K_SERVICE` (Cloud Run) existe.
+- **Chaves só no servidor:** o código não usa `NEXT_PUBLIC_*`; o bundle do cliente não contém os nomes das chaves (só os nomes `AUTH_GOOGLE_ID/SECRET` numa mensagem de ajuda da tela de login).
+- **Migrações:** job separado (`prisma migrate deploy`) com a URL **direta**; o schema não ganhou `directUrl` (o job recebe a URL direta na própria `DATABASE_URL`). As migrações existentes não foram renomeadas nem editadas.
+- **Cloud Run:** `max-instances = 1` no nível do serviço (limitador do Nominatim por processo, PLANO 8.2; cancelamento em memória sempre acha a instância); **cobrança por requisição** e `min-instances = 0`, porque a avaliação automática roda **dentro** da requisição do lote final (`await`), não em segundo plano; timeout de requisição de 300 s (um passo de descoberta pode passar de 3 min se o Overpass estiver lento); sonda de inicialização TCP.
+- **Custo (ordem de grandeza, preços Tier 1; São Paulo é Tier 2 e custa mais):** ~US$ 0–5/mês com `min-instances = 0`, ~US$ 13 + uso com `min-instances = 1`, ~US$ 52 com instância sempre ativa.
+- **Domínio:** o mapeamento de domínio do Cloud Run está em preview e indisponível em `southamerica-east1`; para domínio próprio use balanceador de carga HTTP(S) global. Firebase Hosting à frente é desaconselhado (relatos de que só repassa o cookie `__session`, o que quebraria o Auth.js; não verificado na documentação atual). Sem domínio próprio, o endereço `run.app` funciona.
+
+**O que depende de pessoas**
+
+| Quem | O que |
+|---|---|
+| **Presidente** (`DEPLOY-GUIA-PRESIDENTE.md`) | Projeto GCP na organização `scitecjr.com`; faturamento; orçamento e alertas; tela OAuth **Interna**; cliente OAuth com o URI de produção; chaves de API restritas por API e com cota diária; conta e projeto no Neon; segredos direto no Secret Manager; decidir o endereço; dar e retirar o acesso temporário da pessoa técnica. |
+| **Pessoa técnica** (`DEPLOY-CLOUD-RUN.md`, `DEPLOY-BANCO.md`) | Construir as imagens (Cloud Build), criar contas de serviço, permissões por segredo, job de migração, serviço, verificação pós-deploy. |
+| **Dono do repositório** | Autorizar a mudança de **uma linha** no `middleware.ts` que torna `/api/health` pública (sem ela o endpoint responde 401 a quem não tem sessão, e sondas HTTP/monitores externos não funcionam); decidir sobre **renomear** as migrações `20261015`–`20261020` (só se nenhum banco compartilhado as aplicou); decidir o **e-mail do site (LGPD)**; revisar os caminhos do CODEOWNERS tocados (`.github/`, `prisma/`). |
+
+**Não verificado**
+
+- `docker build` **não foi executado** (Docker não está instalado nesta máquina): o Dockerfile foi validado por simulação do build (cópia sem `.env`, `npm run build`, servidor standalone, engine do Prisma), não pela imagem.
+- O workflow do GitHub Actions não rodou no GitHub (os mesmos passos foram executados localmente: `tsc`, 191 arquivos / 1234 testes offline).
+- Nenhum teste de integração foi executado (só com `npm run test:int` em `scitec_test`).
+- As migrações `20261019` e `20261020` não foram aplicadas a nenhum banco.
+- Preços e limites citados nos guias vêm de documentação consultada em outubro de 2026; confirme na calculadora e nos consoles antes de decidir.
 
 ---
 

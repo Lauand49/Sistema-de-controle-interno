@@ -152,7 +152,7 @@ describe('mergeCompanyFields (Req. 9.4)', () => {
       nome: 'A',
       telefone: '11 9999',
       website: null as string | null,
-      assignedTo: 'u1',
+      assignedTo: 'u1' as string | null,
       osmId: 'node/1',
     };
     const patch = mergeCompanyFields(current, {

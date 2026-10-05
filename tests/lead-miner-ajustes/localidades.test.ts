@@ -58,7 +58,7 @@ describe('createCitiesService', () => {
 
   it('busca uma vez e serve o resto do cache (TTL de 24 h)', async () => {
     let t = 0;
-    const fetchFn = vi.fn(async () => ok(CITIES));
+    const fetchFn = vi.fn(async (_url: string, _init: RequestInit) => ok(CITIES));
     const svc = createCitiesService({ fetchFn, now: () => t });
 
     const a = await svc.list('SP');
@@ -100,7 +100,7 @@ describe('createCitiesService', () => {
   });
 
   it('não repassa chaves nem cabeçalhos sensíveis ao IBGE', async () => {
-    const fetchFn = vi.fn(async () => ok(CITIES));
+    const fetchFn = vi.fn(async (_url: string, _init: RequestInit) => ok(CITIES));
     await createCitiesService({ fetchFn }).list('RJ');
     const init = fetchFn.mock.calls[0][1] as RequestInit;
     expect(Object.keys(init.headers as Record<string, string>)).toEqual(['accept']);

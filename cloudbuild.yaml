@@ -1,0 +1,20 @@
+# Constrói qualquer estágio do Dockerfile no Cloud Build (sem segredos; nada é publicado por si só).
+#
+#   App:        gcloud builds submit --region=southamerica-east1 --config=cloudbuild.yaml \
+#                 --substitutions=_TARGET=runner,_IMAGE=southamerica-east1-docker.pkg.dev/PROJECT_ID/scitec/sistema:TAG .
+#   Migrações:  gcloud builds submit --region=southamerica-east1 --config=cloudbuild.yaml \
+#                 --substitutions=_TARGET=migrator,_IMAGE=southamerica-east1-docker.pkg.dev/PROJECT_ID/scitec/sistema-migrate:TAG .
+#
+# Antes de enviar, confira que nenhum .env sobe: gcloud meta list-files-for-upload | grep -i '\.env'
+# (o .gitignore evita; o .dockerignore também barra .env* dentro da imagem).
+# Passo a passo completo: docs/DEPLOY-CLOUD-RUN.md
+substitutions:
+  _TARGET: runner
+  _IMAGE: ''
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ['build', '--target', '${_TARGET}', '-t', '${_IMAGE}', '.']
+images:
+  - '${_IMAGE}'
+options:
+  logging: CLOUD_LOGGING_ONLY

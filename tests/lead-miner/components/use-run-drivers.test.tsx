@@ -31,6 +31,13 @@ function prog(id: string, over: Partial<RunProgress> = {}): RunProgress {
     errorMessage: null,
     nichosFalhos: [],
     iaDisabledReason: null,
+    fonteSolicitada: 'OSM',
+    fonte: 'OSM',
+    googleMotivo: null,
+    googleNichosAfetados: [],
+    pagespeedEnabled: false,
+    pagespeedMotivo: null,
+    cnpjEnabled: false,
     ...over,
   };
 }

@@ -1,0 +1,95 @@
+# EXEMPLO de serviço do Cloud Run (Knative). NÃO contém valores secretos: só placeholders e
+# referências ao Secret Manager. Substitua PROJECT_ID, TAG e os valores entre <...>.
+# Aplicar (por uma pessoa, depois de criar os segredos e as contas de serviço):
+#   gcloud run services replace cloudrun.service.yaml --region=southamerica-east1
+#   gcloud run services add-iam-policy-binding scitec-sistema --region=southamerica-east1 \
+#     --member=allUsers --role=roles/run.invoker     # login é feito pelo próprio app (Google Workspace)
+# Explicação de cada escolha: docs/DEPLOY-CLOUD-RUN.md. Variáveis: docs/DEPLOY-VARIAVEIS.md.
+apiVersion: serving.knative.dev/v1
+kind: Service
+metadata:
+  name: scitec-sistema
+  annotations:
+    # all = acessível pela URL run.app (e por domínio via balanceador). Com balanceador de carga use
+    # internal-and-cloud-load-balancing para bloquear o acesso direto à URL run.app.
+    run.googleapis.com/ingress: all
+    # Teto no nível do SERVIÇO (vale imediatamente e entre revisões). 1 = limitador do Nominatim por
+    # processo continua valendo (PLANO 8.2) e o cancelamento em memória sempre acha a instância.
+    run.googleapis.com/maxScale: '1'
+spec:
+  template:
+    metadata:
+      annotations:
+        # true = cobrança por requisição (CPU só durante requisições). Correto aqui: a avaliação
+        # automática roda DENTRO da requisição do lote final, não depois da resposta.
+        run.googleapis.com/cpu-throttling: 'true'
+        # CPU extra só durante a subida (reduz a partida a frio).
+        run.googleapis.com/startup-cpu-boost: 'true'
+    spec:
+      serviceAccountName: scitec-app@PROJECT_ID.iam.gserviceaccount.com
+      containerConcurrency: 80
+      # Padrão do Cloud Run (300 s), explícito de propósito: um passo de descoberta pode passar dos
+      # 50 s de "orçamento" se o Overpass estiver lento (3 tentativas de até 60 s). Não reduza.
+      timeoutSeconds: 300
+      containers:
+        - image: southamerica-east1-docker.pkg.dev/PROJECT_ID/scitec/sistema:TAG
+          ports:
+            - containerPort: 8080
+          resources:
+            limits:
+              cpu: '1'
+              memory: 1Gi
+          # TCP: /api/health responde 401 sem sessão (middleware) e o Cloud Run só aceita 2xx/3xx em
+          # sondas HTTP. Trocar por httpGet /api/health depois que ela for pública (ver HANDOFF).
+          startupProbe:
+            tcpSocket:
+              port: 8080
+            periodSeconds: 5
+            timeoutSeconds: 3
+            failureThreshold: 12
+          env:
+            # ── variáveis comuns (não secretas) ──
+            - name: AUTH_GOOGLE_ID
+              value: <id-do-cliente>.apps.googleusercontent.com
+            - name: ALLOWED_EMAIL_DOMAIN
+              value: scitecjr.com
+            - name: ADMIN_EMAILS
+              value: <email-do-presidente>@scitecjr.com
+            - name: PLACES_MONTHLY_LIMIT
+              value: '1000'
+            - name: GEMINI_MONTHLY_LIMIT
+              value: '1000'
+            - name: PAGESPEED_MONTHLY_LIMIT
+              value: '5000'
+            # ── segredos (Secret Manager, mesmo projeto) ──
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: scitec-database-url
+                  key: latest
+            - name: AUTH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: scitec-auth-secret
+                  key: latest
+            - name: AUTH_GOOGLE_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: scitec-auth-google-secret
+                  key: latest
+            # Opcionais: remova o bloco inteiro das chaves que NÃO for usar (o segredo precisa existir).
+            - name: GOOGLE_PLACES_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: scitec-places-api-key
+                  key: latest
+            - name: GEMINI_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: scitec-gemini-api-key
+                  key: latest
+            - name: PAGESPEED_API_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: scitec-pagespeed-api-key
+                  key: latest

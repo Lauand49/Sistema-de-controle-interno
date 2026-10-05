@@ -15,7 +15,7 @@ function scoreOf(v: unknown): { ok: boolean; n?: number } {
 }
 
 const arbDateParam = fc.oneof(
-  { weight: 1, arbitrary: fc.constant<string | undefined>(undefined) },
+  { weight: 1, arbitrary: fc.constant<{ d: string; valid: boolean } | undefined>(undefined) },
   { weight: 3, arbitrary: arbDateString.map((d) => ({ d, valid: true })) },
   { weight: 1, arbitrary: arbInvalidDateString.map((d) => ({ d, valid: false })) },
 );

@@ -26,6 +26,9 @@ const filled: MiningFormValues = {
   nichos: ['advocacia'],
   excluirRedes: false,
   iaEnabled: true,
+  fonte: 'MISTA',
+  pagespeedEnabled: true,
+  cnpjEnabled: true,
 };
 
 describe('Tela_Minerar: helpers do formulário', () => {
@@ -75,6 +78,10 @@ describe('Tela_Minerar: helpers do formulário', () => {
       nichos: ['advocacia'],
       excluirRedes: false,
       iaEnabled: true,
+      // Campos da Etapa 3, repassados como estão no formulário.
+      fonte: 'MISTA',
+      pagespeedEnabled: true,
+      cnpjEnabled: true,
     });
     expect(buildCreateRunInput(filled, false).iaEnabled).toBe(false);
   });

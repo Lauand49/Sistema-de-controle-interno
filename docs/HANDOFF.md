@@ -1,8 +1,21 @@
-# Handoff — SciTec jr. (Minerador de Leads, pós-Etapa 3)
+# Handoff — SciTec jr. (Minerador de Leads, pós-Etapa 3 + Etapa 4 em arquivos)
+
+> **Etapa 4 (deploy):** branch `etapa-4-deploy` (a partir de `etapa-3-melhorias`), só arquivos e guias; **nada foi implantado**. Resumo e pendências logo abaixo; registro completo em `docs/PLANO-INTEGRACAO.md` 8.5 e texto do PR em `docs/PR-ETAPA-4.md`.
 
 Atualizado ao fim dos ajustes pós-etapa 3 (T1–T6) e das correções da revisão (P1–P5). Leia junto com `docs/PLANO-INTEGRACAO.md` (seção 8.4 e 8.4.1) e `AGENTS.md`.
 
-## Onde estamos
+## Etapa 4 — deploy (arquivos prontos, nada implantado)
+
+- **Guias:** `docs/DEPLOY-VARIAVEIS.md`, `docs/DEPLOY-BANCO.md`, `docs/DEPLOY-CLOUD-RUN.md`, `docs/DEPLOY-GUIA-PRESIDENTE.md`. Arquivos: `Dockerfile`, `.dockerignore`, `cloudbuild.yaml`, `cloudrun.service.yaml`, `.github/workflows/ci.yml`, `app/api/health/route.ts`, `lib/env.ts`, `instrumentation*.ts`.
+- **Decisões:** imagem `node:24-bookworm-slim`; Prisma `binaryTargets = ["native","debian-openssl-3.0.x"]`; Cloud Run `southamerica-east1`, `max-instances=1`, cobrança por requisição, timeout 300 s; Neon `aws-sa-east-1`; migrações por job separado com URL direta.
+- **Pendências que exigem decisão/pessoa:**
+  1. **`/api/health` pública** (uma linha em `isPublicPath` do `middleware.ts`): não feita, exige autorização do dono. Hoje responde 401 sem sessão; o Cloud Run usa sonda TCP por isso.
+  2. Presidente: projeto GCP na organização, faturamento, alertas, OAuth **Interno**, chaves restritas, segredos (`DEPLOY-GUIA-PRESIDENTE.md`).
+  3. Renomear ou não as migrações `20261015`–`20261020` (checklist em `DEPLOY-BANCO.md`); e-mail do site (LGPD).
+  4. Rodar `docker build` (Docker não estava instalado), `npm run test:int` em `scitec_test`, e aplicar as migrações `20261019` e `20261020` nos bancos usados.
+  5. CODEOWNERS: `.github/` e `prisma/` (binaryTargets) pedem revisão de `@Lauand49` ou `@brinelso`.
+
+## Onde estamos (Etapa 3 e correções)
 
 - Branch de trabalho: `etapa-3-melhorias` (a partir de `etapa-2-paineis`). **Nada foi enviado ao remoto** (sem `git push`) e **o PR ainda não foi aberto**. As PRs das Etapas 0–2 também estão pendentes; o PR desta branch deve ter base `etapa-2-paineis` (retargetar para `main` depois).
 - Etapa 3 (spec `.kiro/specs/lead-miner-enrichment/`) concluída. Depois dela, cinco ajustes sem spec, um commit `[kiro] T<n>: ...` cada:

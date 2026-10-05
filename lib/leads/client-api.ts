@@ -223,6 +223,8 @@ export interface RunDetail extends RunProgress {
   createdAt: string;
   finishedAt: string | null;
   createdBy: UserRef;
+  /** Empresas desta mineração com algum contato (contador ao vivo); devolvido por `GET /runs/[id]`. */
+  comContato?: number;
 }
 
 export interface RunLookup {

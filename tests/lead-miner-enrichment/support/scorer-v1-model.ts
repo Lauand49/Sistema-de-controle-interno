@@ -15,7 +15,6 @@
  * Os limites de status HTTP e de latência vêm de `config.ts` (Req. 5.5).
  */
 
-import { HTTP_ERROR_MIN_STATUS, SLOW_THRESHOLD_MS } from '@/lib/leads/config';
 import type { ClassificationResult } from '@/lib/leads/types';
 
 export const MOTIVO_SEM_SITE = 'Empresa não possui site';

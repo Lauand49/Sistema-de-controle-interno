@@ -1,0 +1,54 @@
+# CI mínimo (Etapa 4, D6): instala, gera o Prisma Client, confere tipos, roda os testes OFFLINE e o build.
+#
+# Sem segredos e sem banco de dados: nenhuma variável de ambiente do projeto é definida aqui e os
+# testes de integração (que precisam de TEST_DATABASE_URL e RUN_DB_TESTS=1) NÃO rodam em CI.
+# Usa `pull_request` (nunca `pull_request_target`), permissão somente leitura e não guarda credenciais.
+#
+# ATENÇÃO: .github/ está no CODEOWNERS; este arquivo precisa de revisão do dono do repositório.
+# As ações estão fixadas pela versão principal (conforme a documentação delas). Para endurecer, fixe
+# cada uma pelo SHA do commit.
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verificar:
+    name: tsc, testes offline e build
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          package-manager-cache: false
+
+      - name: Instalar dependências
+        run: npm ci
+
+      - name: Gerar o Prisma Client
+        run: npx prisma generate
+
+      - name: Conferir tipos
+        run: npx tsc --noEmit
+
+      - name: Testes (offline)
+        run: npm test
+
+      - name: Build de produção
+        run: npm run build
