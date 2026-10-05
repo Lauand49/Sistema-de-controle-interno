@@ -1,0 +1,36 @@
+# Segredos e configuração local: NUNCA entram na imagem
+.env
+.env.*
+!.env.example
+!.env.test.example
+
+# Dependências e artefatos de build (a imagem instala e compila por conta própria)
+node_modules
+.next
+out
+build
+coverage
+*.tsbuildinfo
+
+# Controle de versão e ferramentas de agentes
+.git
+.gitignore
+.github
+.kiro
+.vscode
+.idea
+.DS_Store
+
+# Testes e documentação não são necessários no build nem no runtime
+tests
+docs
+*.md
+!README.md
+
+# Arquivos soltos do projeto que não fazem parte do app
+planilha_teste_leads_scitec.*
+rodar.sh
+iniciar.command
+scripts
+Dockerfile
+.dockerignore

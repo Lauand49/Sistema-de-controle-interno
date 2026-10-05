@@ -10,7 +10,11 @@
 //     PENDENTE/EM_ANDAMENTO por autor e conjunto de parâmetros)
 
 generator client {
-  provider = "prisma-client-js"
+  provider      = "prisma-client-js"
+  // "native" = a máquina de desenvolvimento (macOS/Linux); "debian-openssl-3.0.x" = a imagem de
+  // produção (node:*-bookworm-slim, Debian 12 + OpenSSL 3; ver Dockerfile). Sem este segundo alvo
+  // o Prisma Client não acha o query engine na imagem.
+  binaryTargets = ["native", "debian-openssl-3.0.x"]
 }
 
 datasource db {
