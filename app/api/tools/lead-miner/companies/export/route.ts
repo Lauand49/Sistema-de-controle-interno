@@ -14,7 +14,8 @@ import { EXPORT_MAX } from '@/lib/leads/config';
 import { CSV_HEADER, buildCsv, limitExport, toCsvRow, type ExportRow } from '@/lib/leads/csv';
 import { RANKING_ORDER, buildCompanyWhere, bulkIdsSchema, companyFiltersSchema } from '@/lib/leads/filters';
 import { parseBody, parseWith, requireNegocios } from '@/lib/leads/route-helpers';
-import type { CategoryCode, PriorityCode } from '@/lib/leads/types';
+import { formatCnpj } from '@/lib/leads/cnpj';
+import type { CategoryCode, PriorityCode, SourceMode } from '@/lib/leads/types';
 
 export const runtime = 'nodejs';
 export const dynamic = 'force-dynamic';
@@ -47,7 +48,7 @@ export const POST = withAuth(async (req, { actor }) => {
     where = { id: { in: ids } };
   } else {
     const filters = parseWith(companyFiltersSchema, body.filters ?? {});
-    where = buildCompanyWhere(filters);
+    where = buildCompanyWhere(filters, new Date());
   }
 
   // Busca EXPORT_MAX + 1 para detectar o corte; `count` dá o total real (Req. 17.7).
@@ -70,6 +71,18 @@ export const POST = withAuth(async (req, { actor }) => {
         prioridade: true,
         lastAnalyzedAt: true,
         assignedUser: { select: { name: true } },
+        // ── Etapa 3 (Req. 18.4) ──
+        cnpjDadosCnpj: true,
+        situacaoCadastral: true,
+        instagramOsm: true,
+        whatsappOsm: true,
+        desempenhoRuim: true,
+        googleCache: { select: { placeId: true } },
+        runs: {
+          orderBy: { run: { createdAt: 'desc' } },
+          take: 1,
+          select: { run: { select: { fonte: true } } },
+        },
       },
     }),
     prisma.company.count({ where }),
@@ -93,6 +106,14 @@ export const POST = withAuth(async (req, { actor }) => {
       prioridade: (c.prioridade ?? null) as PriorityCode | null,
       responsavelNome: c.assignedUser?.name ?? null,
       ultimaAnaliseEm: c.lastAnalyzedAt,
+      // ── Etapa 3 (Req. 18.4) ──
+      cnpj: c.cnpjDadosCnpj ? formatCnpj(c.cnpjDadosCnpj) : null,
+      situacaoCadastral: c.situacaoCadastral ?? null,
+      instagram: c.instagramOsm ?? null,
+      whatsapp: c.whatsappOsm ?? null,
+      desempenhoRuim: c.desempenhoRuim ?? null,
+      fonte: (c.runs[0]?.run?.fonte ?? null) as SourceMode | null,
+      googlePlaceId: c.googleCache?.placeId ?? null,
     };
     return toCsvRow(row);
   });

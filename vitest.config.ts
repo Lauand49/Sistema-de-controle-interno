@@ -17,6 +17,6 @@ export default defineConfig({
     // Apenas arquivos *.test.ts(x): os scripts antigos (tests/lead-tools-test.ts,
     // tests/phase-gate-test.ts) ficam de fora.
     include: ['tests/**/*.test.ts', 'tests/**/*.test.tsx'],
-    setupFiles: ['tests/setup/no-network.ts'],
+    setupFiles: ['tests/setup/no-network.ts', 'tests/setup/integration-env.ts'],
   },
 });

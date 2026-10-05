@@ -14,7 +14,9 @@ import { promises as dnsPromises } from 'node:dns';
 import { prisma } from '@/lib/prisma';
 import type { GeminiClient } from './ai';
 import type { ApproachDeps } from './approach';
+import type { EvaluationDeps } from './evaluation';
 import { BRASILAPI_HOST, brasilApiPath, type BrasilApiHttp } from './brasilapi';
+import { timeoutSignal } from './abort';
 import { geminiMonthlyLimit, pagespeedMonthlyLimit, placesMonthlyLimit } from './config';
 import { createNodeTransport } from './net/http-transport';
 import { isSingleSegmentUnder } from './net/path-segment';
@@ -23,7 +25,9 @@ import { PAGESPEED_ENDPOINT, type PageSpeedHttp } from './pagespeed';
 import type { PipelineDeps } from './pipeline';
 import { serviceStatus, type ServicesStatus } from './services';
 import { buildPlacesUrl, PLACES_HOST, SEARCH_TEXT_PATH, type PlacesHttp } from './sources/google-places';
-import type { HttpJsonClient } from './sources/osm';
+import { createCitiesService, type CitiesService } from './localidades';
+import type { HttpJsonClient, OsmDeps } from './sources/osm';
+import { createNeighborhoodsService, type NeighborhoodsService } from './sources/osm-bairros';
 import { brasilApiLimiter, nominatimLimiter } from './sources/rate-limit';
 import { prismaUsageGate, type UsageGate } from './usage';
 
@@ -53,7 +57,8 @@ export const fetchJsonClient: HttpJsonClient = {
       method: init.method ?? 'GET',
       headers: init.headers,
       body: init.body,
-      signal: AbortSignal.timeout(init.timeoutMs),
+      // Timeout limite + cancelamento da mineração (o que vier primeiro); sem listeners pendurados.
+      signal: timeoutSignal(init.timeoutMs, init.signal),
       cache: 'no-store',
     });
     if (!res.ok) {
@@ -166,6 +171,7 @@ async function requestJson(
   url: string,
   init: RequestInit,
   timeoutMs: number,
+  external?: AbortSignal,
 ): Promise<{ status: number; json: unknown }> {
   const controller = new AbortController();
   let timedOut = false;
@@ -174,6 +180,10 @@ async function requestJson(
     timedOut = true;
     controller.abort();
   }, ms);
+  // Cancelamento da mineração (T1): encerra o fetch em curso (não conta como timeout).
+  const onExternalAbort = () => controller.abort();
+  if (external?.aborted) controller.abort();
+  else external?.addEventListener('abort', onExternalAbort, { once: true });
   try {
     const res = await fetchFn(url, { ...init, signal: controller.signal, cache: 'no-store', redirect: 'error' });
     const text = await res.text();
@@ -188,6 +198,7 @@ async function requestJson(
     throw genericError(timedOut);
   } finally {
     clearTimeout(timer);
+    external?.removeEventListener('abort', onExternalAbort);
   }
 }
 
@@ -213,7 +224,7 @@ export function createPlacesHttp(apiKey: string, fetchFn: FetchFn = (u, i) => fe
         headers['content-type'] = 'application/json';
         body = JSON.stringify(req.body ?? {});
       }
-      return requestJson(fetchFn, url, { method: req.method, headers, body }, req.timeoutMs);
+      return requestJson(fetchFn, url, { method: req.method, headers, body }, req.timeoutMs, req.signal);
     },
   };
 }
@@ -224,13 +235,13 @@ export function createPageSpeedHttp(
   fetchFn: FetchFn = (u, i) => fetch(u, i),
 ): PageSpeedHttp {
   return {
-    async run(query, timeoutMs) {
+    async run(query, timeoutMs, signal) {
       const params = new URLSearchParams(query);
       params.delete('key'); // a chave nunca vai na URL
       const url = `${PAGESPEED_ENDPOINT}?${params.toString()}`;
       const headers: Record<string, string> = { accept: 'application/json' };
       if (apiKey) headers['x-goog-api-key'] = apiKey;
-      return requestJson(fetchFn, url, { method: 'GET', headers }, timeoutMs);
+      return requestJson(fetchFn, url, { method: 'GET', headers }, timeoutMs, signal);
     },
   };
 }
@@ -239,13 +250,19 @@ export function createPageSpeedHttp(
 export function createBrasilApiHttp(fetchFn: FetchFn = (u, i) => fetch(u, i)): BrasilApiHttp {
   const origin = new URL(BRASILAPI_HOST).origin;
   return {
-    async getCnpj(cnpj, timeoutMs) {
+    async getCnpj(cnpj, timeoutMs, signal) {
       const path = brasilApiPath(cnpj);
       const url = new URL(path, BRASILAPI_HOST);
       if (url.origin !== origin) throw new Error('host não permitido');
       // Recusa CNPJ que vire segmento de ponto/vazio (o parser subiria no path).
       if (url.pathname !== path || !isSingleSegmentUnder(url.pathname, BRASILAPI_CNPJ_PREFIX)) throw genericError(false);
-      return requestJson(fetchFn, url.toString(), { method: 'GET', headers: { accept: 'application/json' } }, timeoutMs);
+      return requestJson(
+        fetchFn,
+        url.toString(),
+        { method: 'GET', headers: { accept: 'application/json' } },
+        timeoutMs,
+        signal,
+      );
     },
   };
 }
@@ -285,6 +302,32 @@ export function getApproachDeps(): ApproachDeps {
     limit: geminiMonthlyLimit(process.env.GEMINI_MONTHLY_LIMIT),
     now: nowDate,
   };
+}
+
+/** Dependências da avaliação dos leads sem contato (T5): mesmo cliente e mesma cota do Gemini. */
+export function getEvaluationDeps(): EvaluationDeps {
+  return getApproachDeps();
+}
+
+/** Dependências da Fonte_OSM (Nominatim com limitador global + Overpass). */
+export function getOsmDeps(): OsmDeps {
+  return { http: fetchJsonClient, limiter: nominatimLimiter, sleep };
+}
+
+const globalForLocalidades = globalThis as unknown as {
+  __leadMinerLocalidades?: { cities: CitiesService; bairros: NeighborhoodsService };
+};
+
+/**
+ * Serviços de localidades do formulário (T2): cidades (IBGE) e bairros (OpenStreetMap), com cache
+ * em memória compartilhado pelo processo (sobrevive ao hot reload). Nenhuma chave é necessária.
+ */
+export function getLocalidadesServices(): { cities: CitiesService; bairros: NeighborhoodsService } {
+  globalForLocalidades.__leadMinerLocalidades ??= {
+    cities: createCitiesService(),
+    bairros: createNeighborhoodsService(getOsmDeps()),
+  };
+  return globalForLocalidades.__leadMinerLocalidades;
 }
 
 export function getPipelineDeps(): PipelineDeps {

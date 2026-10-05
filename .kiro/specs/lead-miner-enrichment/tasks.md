@@ -262,7 +262,7 @@ Convenções:
     - `integration/repository-enrichment.int.test.ts` (`RUN_DB_TESTS=1`): `prismaUsageGate` com `places` e `pagespeed` sob 50 reservas concorrentes e limite 10 (exatamente 10 por provedor, independentes); aplicações concorrentes do mesmo CNPJ em Empresas diferentes (uma aplica, a outra vira `CONFLITO`); Google + OSM no mesmo Nicho `MISTA` resultando numa Empresa `MISTA`; reingestão idempotente
     - _Requirements: 19.3, 11.8, 5.4, 5.6, 21.9_
 
-- [ ] 11. Análise da empresa, pipeline e reanálise
+- [x] 11. Análise da empresa, pipeline e reanálise
   - [x] 11.1 Implementar `lib/leads/analysis.ts`
     - `analyzeCompany` (site + corpo → sinais e CNPJs → `planCnpj` → PageSpeed, BrasilAPI e IA em paralelo com timeouts limitados pelo deadline → `resolveSiteCnpj` → `classify`/`score` v2; descarta o HTML) e `approachInputFrom`
     - _Requirements: 7.1, 7.5, 8.8, 9.5, 10.2, 10.3, 10.7, 10.8, 11.3, 11.4, 11.5, 11.9, 12.1, 12.3, 12.4, 12.5, 12.7, 12.8, 13.1, 13.8, 14.1, 16.2_
@@ -287,91 +287,91 @@ Convenções:
   - [x] 11.8 Escrever testes de exemplo do pipeline com as duas fontes
     - `pipeline-sources.test.ts` (fakes + Prisma falso): fallback por Nicho sem chave, com cota esgotada, com 429/5xx esgotados e com 401/403; Fonte_Efetiva `GOOGLE`, `OSM` e `MISTA`; paginação parada e retomada entre passos; descarte de `CLOSED_PERMANENTLY`; Rede por 3 nomes iguais; reserva de cota por requisição inclusive nas retentativas; Nicho falho nas duas fontes
     - _Requirements: 4.3, 4.5, 4.6, 4.7, 4.8, 4.10, 3.5, 3.9, 2.4, 21.2_
-  - [ ]* 11.9 Escrever teste de propriedade da decisão de fontes
+  - [x]* 11.9 Escrever teste de propriedade da decisão de fontes
     - **Property 10: Decisão de fontes por Mineracao e por Nicho**
     - **Validates: Requirements 4.3, 4.4, 4.5, 4.8**
-  - [ ]* 11.10 Escrever teste de propriedade da descoberta retomável
+  - [x]* 11.10 Escrever teste de propriedade da descoberta retomável
     - **Property 11: Descoberta retomável com fallback**
     - **Validates: Requirements 4.6, 4.10**
   - [x]* 11.11 Escrever teste de propriedade da validação dos parâmetros novos
     - **Property 46: Validação dos parâmetros novos**
     - **Validates: Requirements 11.7, 20.5**
-  - [ ] 11.12 Implementar `lib/leads/reanalysis.ts`
+  - [x]* 11.12 Implementar `lib/leads/reanalysis.ts`
     - Lease atômico com `NOT EXISTS` de Analise < 10 min (`RECENTE`/`EM_CURSO`), `refreshGoogleCache` quando necessário (sem website → `semWebsite`), `analyzeCompany` com o deadline da rota, `persistReanalysis`, liberação do lease em `finally`
     - _Requirements: 16.2, 16.3, 16.4, 16.5, 16.6_
-  - [ ] 11.13 Escrever testes de integração da reanálise
+  - [x]* 11.13 Escrever testes de integração da reanálise
     - `integration/reanalysis.int.test.ts` (`RUN_DB_TESTS=1`, fakes externos): duas Reanalises simultâneas (uma conclui, a outra 409 `EM_CURSO`); Analise com menos de 10 minutos (409 `RECENTE`); falha na gravação mantém Analise e snapshot anteriores
     - _Requirements: 16.4, 16.5, 16.6, 21.9_
 
-- [ ] 12. Checkpoint — pipeline
+- [x]* 12. Checkpoint — pipeline
   - Rodar `npm test` (zero falhas, sem rede) e `npm run build`; ensure all tests pass, ask the user if questions arise.
 
-- [ ] 13. Rotas, filtros, CSV e triagem
-  - [ ] 13.1 Estender `filters.ts` (listagem), `csv.ts` e `triage.ts`
+- [x] 13. Rotas, filtros, CSV e triagem
+  - [x] 13.1 Estender `filters.ts` (listagem), `csv.ts` e `triage.ts`
     - `CompanyFilters`/`buildCompanyWhere(f, now)` com `temInstagram`, `temWhatsapp`, `temCnpj`, `situacao`, `desempenhoRuim`; `q` em `nome`, `cnpjNomeFantasia` e `googleCache.nome` válido, sempre `mode: 'insensitive'`; `RANKING_ORDER`/`RankKey`/`compareRanking` com `nomeExibicao`
     - `csv.ts`: 7 colunas novas na ordem do Req. 18.4, `ExportRow` estendido, valores de `ownFields`
     - `triage.ts`: `companyName = nomeExibicao`, `contactInfo` só com valores próprios + link do Google Maps
     - _Requirements: 18.1, 18.2, 18.4, 18.5, 6.6, 6.7_
-  - [ ] 13.2 Escrever teste de propriedade do Mapa, CSV e triagem sem Conteudo_Google
+  - [x] 13.2 Escrever teste de propriedade do Mapa, CSV e triagem sem Conteudo_Google
     - **Property 17: Mapa, CSV e triagem sem Conteudo_Google**
     - **Validates: Requirements 6.5, 6.6, 6.7**
-  - [ ]* 13.3 Escrever teste de propriedade dos filtros e da ordenação
+  - [x]* 13.3 Escrever teste de propriedade dos filtros e da ordenação
     - **Property 43: Filtros novos e ordenação pelo Nome_Exibicao**
     - **Validates: Requirements 18.1, 18.2**
-  - [ ]* 13.4 Escrever teste de propriedade do CSV com as colunas novas
+  - [x]* 13.4 Escrever teste de propriedade do CSV com as colunas novas
     - **Property 44: CSV com as colunas novas**
     - **Validates: Requirements 18.4, 18.5**
-  - [ ] 13.5 Estender as rotas `config` e `runs`
+  - [x] 13.5 Estender as rotas `config` e `runs`
     - `GET /config` → `{ iaAvailable, services }` via `getServicesStatus()`; `POST /runs` com os campos novos; `GET /runs`, `/runs/[id]`, `/runs/active` com `fonteSolicitada`, `fonte`, `googleMotivo`, `googleNichosAfetados`, `pagespeedEnabled`, `cnpjEnabled`; filtro `fonte` sobre a Fonte_Efetiva
     - _Requirements: 2.6, 2.7, 4.1, 4.2, 4.3, 4.9, 18.3, 20.1_
-  - [ ] 13.6 Estender as rotas de empresas existentes
+  - [x] 13.6 Estender as rotas de empresas existentes
     - `GET /companies`, `/companies/map`, `POST /export`, `POST /triage` e `GET /companies/[id]`: purga oportunista; respostas via `displayCompany` (Nome_Exibicao, `nomeOrigem`, `googleFields`, `google`), sem objeto de cache cru; mapa só com coordenadas próprias e `semCoordsProprias`; ficha com CNPJ, candidatos (com conflito), sinais, PageSpeed, Versao_Score, mensagens e `refreshGoogleCache` quando aplicável
     - _Requirements: 6.2, 6.3, 6.5, 6.6, 6.7, 6.8, 6.9, 6.10, 6.11, 15.8, 17.1, 17.2, 17.3, 17.4, 17.5, 18.1, 18.2, 18.4_
-  - [ ] 13.7 Criar as rotas novas de reanálise, CNPJ e mensagem
+  - [x] 13.7 Criar as rotas novas de reanálise, CNPJ e mensagem
     - `companies/[id]/reanalyze/route.ts` (`POST`, `maxDuration = 60`, deadline 55 s, 409 com `reason`, 500 genérico)
     - `companies/[id]/cnpj/route.ts` (`PUT` com validação, `MANUAL`, auditoria `LEAD_COMPANY_CNPJ_SET`, 409 de conflito com `{ id, nome }`, consulta à BrasilAPI; `DELETE` com auditoria `LEAD_COMPANY_CNPJ_REMOVED`)
     - `companies/[id]/approach/route.ts` (`POST`, `canal`, primeiro nome da sessão, 409 sem Analise, grava `ApproachMessage`, devolve `ApproachMessageDto` com `whatsappLink`)
     - _Requirements: 11.6, 11.7, 11.8, 11.10, 12.1, 15.2, 15.6, 15.7, 16.2, 16.4, 16.5, 16.6, 20.1, 20.2, 20.3, 20.5_
-  - [ ] 13.8 Estender `lib/leads/client-api.ts`
+  - [x] 13.8 Estender `lib/leads/client-api.ts`
     - Tipos `ServicesStatus`, `RunProgress`/`RunListItem` estendidos, `CompanyRow`/`CompanyDetail` v2, `ApproachMessageDto`, `MapResponse.semCoordsProprias`; chamadas `reanalyze`, `setCnpj`, `removeCnpj`, `generateApproach`; `CreateRunInput` com `fonte`, `pagespeedEnabled`, `cnpjEnabled`
     - _Requirements: 2.6, 4.1, 11.6, 15.2, 16.2_
-  - [ ] 13.9 Escrever testes das rotas
+  - [x] 13.9 Escrever testes das rotas
     - `routes-enrichment.test.ts` (padrão de `tests/lead-miner/route-helpers.test.ts`, Prisma e serviços falsos): 401/403 sem efeitos; 400 por parâmetro; autor da sessão ignorando ids do corpo; contratos JSON de `/config`, `/reanalyze`, `/cnpj`, `/approach`; omissão do Conteudo_Google expirado em `/companies`, `/companies/[id]` e `/map`; CSV sem Conteudo_Google com "Link Google Maps"
     - _Requirements: 20.1, 20.2, 20.3, 20.5, 6.3, 6.5, 6.6, 2.8, 21.3_
-  - [ ]* 13.10 Escrever teste de propriedade das rotas negando sem efeitos
+  - [x]* 13.10 Escrever teste de propriedade das rotas negando sem efeitos
     - **Property 45: Rotas novas negam sem efeitos colaterais**
     - **Validates: Requirements 20.1, 20.2**
 
-- [ ] 14. Telas e componentes
-  - [ ] 14.1 Criar `components/lead-miner/enrichment-helpers.ts` e componentes compartilhados
+- [x] 14. Telas e componentes
+  - [x] 14.1 Criar `components/lead-miner/enrichment-helpers.ts` e componentes compartilhados
     - `enrichment-helpers.ts`: `pageSpeedBand`, `formatWhatsapp`, `situacaoAlert`, `fallbackLabel`, `unavailableLabel`, `sourceSummary`, `cnpjOriginLabel`
     - `GoogleAttribution.tsx` ("Google Maps" com `translate="no"`), `GoogleContent.tsx` (contêiner com borda/fundo próprios e atribuição) e `GoogleUnusedNote.tsx` (três textos do Req. 4.9)
     - _Requirements: 4.9, 6.4, 12.6, 15.4, 17.2, 17.6, 20.6_
-  - [ ]* 14.2 Escrever teste de propriedade das faixas do PageSpeed
+  - [x]* 14.2 Escrever teste de propriedade das faixas do PageSpeed
     - **Property 42: Faixas das notas do PageSpeed**
     - **Validates: Requirements 17.2**
-  - [ ] 14.3 Atualizar a Tela_Minerar
+  - [x] 14.3 Atualizar a Tela_Minerar
     - `ServiceStatusPanel.tsx` (estado e "N de M chamadas" de Google Places, PageSpeed e IA), `SourcePicker.tsx` (pré-seleção e desabilitação com motivo), checkboxes de PageSpeed (aviso sem chave; desabilitada com cota esgotada) e CNPJ; `mining-form-helpers.buildCreateRunInput` com os campos novos; `GoogleUnusedNote` nos cards de progresso
     - _Requirements: 2.6, 2.7, 4.1, 4.2, 4.9, 10.1, 12.7_
-  - [ ] 14.4 Atualizar a Tela_Mineracoes
+  - [x] 14.4 Atualizar a Tela_Mineracoes
     - `RunsTable` com "Fonte: solicitada → efetiva" e `GoogleUnusedNote`; `runs-helpers` com os rótulos novos; filtro de fonte sobre a Fonte_Efetiva
     - _Requirements: 4.9, 18.3_
-  - [ ] 14.5 Atualizar a Tela_Ranking e o Mapa
+  - [x] 14.5 Atualizar a Tela_Ranking e o Mapa
     - `RankingFilters` com os 5 filtros novos (sincronizados na URL por `ranking-helpers`); `RankingTable` com Nome_Exibicao, alerta de situação e `GoogleAttribution` nas células com Conteudo_Google; `CompanyMap` com o aviso "N empresas do Google Places não aparecem no mapa (termos do Google)" e popup sem Conteudo_Google
     - _Requirements: 18.1, 18.2, 12.6, 6.4, 6.5_
-  - [ ] 14.6 Atualizar a Ficha_Empresa
+  - [x] 14.6 Atualizar a Ficha_Empresa
     - `CompanyHeader` (Nome_Exibicao, alerta de situação, "Ver no Google Maps", `GoogleContent`, `OdblAttribution` com `osmId`, avisos do Google); novas seções `ficha/DigitalPresence.tsx`, `ficha/PageSpeedCard.tsx`, `ficha/CnpjSection.tsx`, `ficha/ApproachMessages.tsx`, `ficha/ReanalyzeButton.tsx`; `AnalysisHistory` com Versao_Score e "regras da Etapa 1"; `ficha-helpers` sem recalcular Analises antigas
     - _Requirements: 6.4, 6.9, 6.10, 11.5, 11.6, 11.7, 11.8, 12.4, 12.6, 13.7, 15.1, 15.4, 15.6, 15.7, 15.8, 15.9, 16.1, 16.3, 16.6, 16.7, 17.1, 17.2, 17.3, 17.4, 17.5, 17.6, 20.6_
-  - [ ]* 14.7 Escrever testes de componentes
+  - [x]* 14.7 Escrever testes de componentes
     - `service-status-panel.test.tsx`, `source-picker.test.tsx`, `cnpj-section.test.tsx`, `approach-messages.test.tsx` (cliques repetidos → uma requisição; "Copiar"; "Abrir no WhatsApp"; "Mensagem gerada pelo modelo padrão"), `reanalyze-button.test.tsx`, `google-attribution.test.tsx`, `pagespeed-card.test.tsx`
     - _Requirements: 2.6, 2.7, 4.1, 4.2, 6.4, 11.7, 11.8, 15.4, 15.7, 15.9, 16.7, 17.2_
 
-- [ ] 15. Checkpoint final
+- [x] 15. Checkpoint final
   - Rodar `npm test` (zero falhas, sem rede), `npm run build` (sem erros) e, num banco descartável, `RUN_DB_TESTS=1 npm test`; ensure all tests pass, ask the user if questions arise.
   - _Requirements: 21.9, 21.10_
 
 - [ ] 16. Registro da entrega e push
-  - [ ] 16.1 Atualizar `docs/PLANO-INTEGRACAO.md`
+  - [x] 16.1 Atualizar `docs/PLANO-INTEGRACAO.md`
     - Seção 8: linha "3 — Melhorias" com Status "concluída em {data} na branch `etapa-3-melhorias` (PR pendente; ver 8.4)"
     - Nova subseção 8.4 "Registro da Etapa 3": decisões confirmadas (resumo da seção "Decisões (confirmadas)" do `requirements.md`), variáveis de ambiente e padrões, cotas (`places`, `pagespeed`, `gemini`), termos do Google (cache de 30 dias, purga oportunista, sem dados do Google no Leaflet/CSV), limitações conhecidas (limitador da BrasilAPI por processo, purga agendada só na Etapa 4, BrasilAPI e CNPJ alfanumérico, ~3 Empresas por Lote com PageSpeed)
     - _Requirements: 21.11_

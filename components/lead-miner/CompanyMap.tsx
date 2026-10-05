@@ -16,8 +16,16 @@ export interface CompanyMapProps {
   points: MapPoint[];
   shown: number;
   total: number;
+  /** Empresas filtradas que só têm coordenadas no Cache_Google (aviso dos termos do Google, Req. 6.5). */
+  semCoordsProprias?: number;
   loading?: boolean;
   className?: string;
+}
+
+/** Aviso literal do Req. 6.5 quando há empresas que o mapa não posiciona (só coordenadas do Google). */
+export function googleOnlyMapNotice(semCoordsProprias: number | undefined): string | null {
+  if (!semCoordsProprias || semCoordsProprias < 1) return null;
+  return `${semCoordsProprias} empresas do Google Places não aparecem no mapa (termos do Google)`;
 }
 
 /** Centro inicial (Brasil) antes do primeiro `fitBounds`. */
@@ -71,7 +79,7 @@ function buildPopup(point: MapPoint): HTMLElement {
   return root;
 }
 
-const CompanyMap: React.FC<CompanyMapProps> = ({ points, shown, total, loading = false, className = '' }) => {
+const CompanyMap: React.FC<CompanyMapProps> = ({ points, shown, total, semCoordsProprias, loading = false, className = '' }) => {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const mapRef = useRef<Leaflet.Map | null>(null);
   const layerRef = useRef<Leaflet.LayerGroup | null>(null);
@@ -133,6 +141,7 @@ const CompanyMap: React.FC<CompanyMapProps> = ({ points, shown, total, loading =
   }, [points, ready]);
 
   const notice = truncationNotice(shown, total);
+  const googleNotice = googleOnlyMapNotice(semCoordsProprias);
   const empty = !loading && points.length === 0;
 
   return (
@@ -148,6 +157,11 @@ const CompanyMap: React.FC<CompanyMapProps> = ({ points, shown, total, loading =
       {notice && (
         <p role="status" className="mb-3 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
           {notice}
+        </p>
+      )}
+      {googleNotice && (
+        <p role="status" className="mb-3 rounded-xl border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-200">
+          {googleNotice}
         </p>
       )}
       {empty && (

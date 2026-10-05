@@ -2,7 +2,7 @@
  * Lógica pura da Tela_Minerar (Req. 7.5, 10.1–10.6, 10.10). Sem React e sem rede: testável em node.
  */
 import { NICHES, PRESETS, UFS, type Niche, type NicheTier, type PresetId } from '@/lib/leads/config';
-import type { CreateRunInput, RunLookup } from '@/lib/leads/client-api';
+import type { CreateRunInput, MiningSource, RunLookup, ServicesStatus } from '@/lib/leads/client-api';
 
 export const TEXT_MAX = 100;
 
@@ -13,6 +13,12 @@ export interface MiningFormValues {
   nichos: string[];
   excluirRedes: boolean;
   iaEnabled: boolean;
+  /** Modo_Fonte escolhido; padrão `MISTA` (Req. 4.1, 4.3). */
+  fonte: MiningSource;
+  /** Analisar desempenho com o PageSpeed; padrão `true` (Req. 10.1). */
+  pagespeedEnabled: boolean;
+  /** Consultar CNPJ na BrasilAPI; padrão `true` (Req. 12.7). */
+  cnpjEnabled: boolean;
 }
 
 export type MiningFormField = 'bairro' | 'cidade' | 'uf' | 'nichos';
@@ -25,6 +31,9 @@ export const INITIAL_FORM_VALUES: MiningFormValues = {
   nichos: [],
   excluirRedes: false,
   iaEnabled: false,
+  fonte: 'MISTA',
+  pagespeedEnabled: true,
+  cnpjEnabled: true,
 };
 
 export const PENDING_MESSAGES: Record<MiningFormField, string> = {
@@ -33,6 +42,44 @@ export const PENDING_MESSAGES: Record<MiningFormField, string> = {
   uf: 'Selecione a UF.',
   nichos: 'Selecione ao menos um nicho.',
 };
+
+// ---------------------------------------------------------------------------
+// Localização em cascata UF → Cidade → Bairro (T2)
+// ---------------------------------------------------------------------------
+
+/** Trocar a UF limpa cidade e bairro (a lista de cidades e a de bairros dependem dela). */
+export function applyUfChange(v: MiningFormValues, uf: string): MiningFormValues {
+  if (uf === v.uf) return v;
+  return { ...v, uf, cidade: '', bairro: '' };
+}
+
+/** Trocar a cidade limpa o bairro (a lista de bairros depende da cidade). */
+export function applyCidadeChange(v: MiningFormValues, cidade: string): MiningFormValues {
+  if (cidade === v.cidade) return v;
+  return { ...v, cidade, bairro: '' };
+}
+
+const UF_LIST_SET: ReadonlySet<string> = new Set(UFS);
+
+/** A cidade só habilita depois de escolhida a UF. */
+export function cidadeEnabled(v: Pick<MiningFormValues, 'uf'>): boolean {
+  return UF_LIST_SET.has(v.uf);
+}
+
+/** O bairro só habilita depois de informada a cidade (e, portanto, a UF). */
+export function bairroEnabled(v: Pick<MiningFormValues, 'uf' | 'cidade'>): boolean {
+  return cidadeEnabled(v) && v.cidade.trim() !== '';
+}
+
+export const LOCALIDADE_HINTS = {
+  escolhaUf: 'Selecione a UF para habilitar a cidade.',
+  escolhaCidade: 'Informe a cidade para habilitar o bairro.',
+  carregandoCidades: 'Carregando cidades…',
+  cidadesIndisponiveis: 'Lista de cidades indisponível no momento. Digite o nome da cidade.',
+  cidadeForaDaLista: 'Cidade não encontrada na lista do IBGE; será usada como digitada.',
+  carregandoBairros: 'Buscando bairros no OpenStreetMap…',
+  bairrosIndisponiveis: 'Não encontramos bairros na lista. Digite o nome do bairro.',
+} as const;
 
 export const IA_UNAVAILABLE_TEXT = 'IA indisponível: chave não configurada';
 export const RUN_NOT_STARTED_TEXT = 'A mineração não foi iniciada.';
@@ -116,7 +163,7 @@ export function canSubmit(v: MiningFormValues, submitting: boolean): boolean {
   return !submitting && Object.keys(pendingFields(v)).length === 0;
 }
 
-/** Corpo do `POST /runs`; "usar IA" só vale quando a IA está disponível (Req. 7.5). */
+/** Corpo do `POST /runs`; "usar IA" só vale quando a IA está disponível (Req. 7.5, 4.3, 10.1, 12.7). */
 export function buildCreateRunInput(v: MiningFormValues, iaAvailable: boolean): CreateRunInput {
   return {
     bairro: v.bairro.trim(),
@@ -125,7 +172,39 @@ export function buildCreateRunInput(v: MiningFormValues, iaAvailable: boolean): 
     nichos: sortNiches(v.nichos),
     excluirRedes: v.excluirRedes,
     iaEnabled: iaAvailable && v.iaEnabled,
+    fonte: v.fonte,
+    pagespeedEnabled: v.pagespeedEnabled,
+    cnpjEnabled: v.cnpjEnabled,
   };
+}
+
+export const SOURCE_OPTIONS: readonly { id: MiningSource; label: string; usesGoogle: boolean }[] = [
+  { id: 'OSM', label: 'OpenStreetMap', usesGoogle: false },
+  { id: 'GOOGLE', label: 'Google Places', usesGoogle: true },
+  { id: 'MISTA', label: 'Google + OpenStreetMap', usesGoogle: true },
+];
+
+/** Google indisponível → não dá para usar GOOGLE/MISTA; o motivo acompanha a opção (Req. 4.1, 4.2). */
+export function googleUnavailableReason(services: ServicesStatus | null): string | null {
+  if (!services) return null;
+  const g = services.places;
+  if (g.available) return null;
+  if (g.motivo === 'SEM_CHAVE') return 'Google Places indisponível: chave não configurada';
+  if (g.motivo === 'COTA_ESGOTADA') return 'Google Places indisponível: cota mensal esgotada';
+  return 'Google Places indisponível no momento';
+}
+
+/** Fonte padrão: `MISTA` quando o Google está disponível, senão `OSM` (Req. 4.1). */
+export function defaultSource(services: ServicesStatus | null): MiningSource {
+  return services && !services.places.available ? 'OSM' : 'MISTA';
+}
+
+/** PageSpeed indisponível (cota esgotada) desabilita a opção, com o motivo (Req. 2.7, 10.1). */
+export function pagespeedUnavailableReason(services: ServicesStatus | null): string | null {
+  if (!services) return null;
+  const p = services.pagespeed;
+  if (p.available) return null;
+  return 'PageSpeed indisponível: cota mensal esgotada';
 }
 
 /** Parâmetros do `/runs/lookup`, ou null enquanto bairro/cidade/UF não estão completos (Req. 10.4). */

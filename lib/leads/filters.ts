@@ -15,6 +15,7 @@ import type {
 } from '@prisma/client';
 import { BULK_MAX, MAP_MAX, NICHES, PRESETS, UFS, type PresetId } from './config';
 import { isValidCnpj, normalizeCnpj } from './cnpj';
+import { CONTATO_TABS, contatoWhere, type ContatoTab } from './contact';
 import { isValidCoord } from './geo';
 import { normalizeText } from './text';
 
@@ -36,6 +37,7 @@ const RUN_STATUSES = [
   'EM_ANDAMENTO',
   'CONCLUIDA',
   'ERRO',
+  'CANCELADA',
 ] as const satisfies readonly MiningStatus[];
 /** Status possíveis de `ProspectLead.status`. */
 export const LEAD_STATUSES = ['RAW', 'PENDING', 'IN_PROGRESS', 'CONVERTED_TO_PIPE', 'DISCARDED'] as const;
@@ -79,6 +81,9 @@ export const MSG = {
   canal: 'Canal inválido (use WhatsApp ou E-mail).',
   cnpj: 'CNPJ inválido',
   campoDesconhecido: 'Campo não permitido.',
+  contato: 'Aba de contato inválida (use com ou sem).',
+  ordem: 'Ordenação inválida (use score ou recentes).',
+  avaliar: 'Selecione de 1 a 30 empresas para avaliar.',
 } as const;
 
 // ---------------------------------------------------------------------------
@@ -295,6 +300,16 @@ const dropAuthorIds = (raw: unknown): unknown => {
   return obj;
 };
 
+/** T5 — `POST /companies/evaluate`: 1 a 30 uuids distintos. */
+export const evaluateIdsSchema: z.ZodType<string[], z.ZodTypeDef, unknown> = z
+  .array(z.string({ invalid_type_error: MSG.bulkId }).uuid(MSG.bulkId), {
+    required_error: MSG.avaliar,
+    invalid_type_error: MSG.avaliar,
+  })
+  .min(1, MSG.avaliar)
+  .max(30, MSG.avaliar)
+  .refine((ids) => new Set(ids).size === ids.length, MSG.bulkRepetido);
+
 /** `POST /companies/[id]/approach`: `{ canal: 'WHATSAPP' | 'EMAIL' }`; outros campos → 400. */
 export const approachBodySchema: z.ZodType<{ canal: ApproachChannel }, z.ZodTypeDef, unknown> = z.preprocess(
   dropAuthorIds,
@@ -387,6 +402,9 @@ export function matchesRunSearch(
 // Filtros do ranking (Req. 12.1–12.3, 12.9–12.11, 13.1, 13.2, 18.5, 18.6, 18.9)
 // ---------------------------------------------------------------------------
 
+export const RANKING_ORDER_MODES = ['score', 'recentes'] as const;
+export type RankingOrderMode = (typeof RANKING_ORDER_MODES)[number];
+
 export interface CompanyFilters {
   q?: string;
   cidade?: string;
@@ -409,6 +427,15 @@ export interface CompanyFilters {
   /** `AAAA-MM-DD`, inclusivo. */
   analyzedTo?: string;
   runId?: string;
+  temInstagram?: boolean;
+  temWhatsapp?: boolean;
+  temCnpj?: boolean;
+  situacao?: string;
+  desempenhoRuim?: boolean;
+  /** T4: aba `com`/`sem` contato; ausente = sem restrição (API/CSV sem aba). */
+  contato?: ContatoTab;
+  /** T3: `recentes` durante uma mineração em andamento; ausente = `score`. Só afeta a listagem. */
+  ordem?: RankingOrderMode;
 }
 
 const companyFiltersShape = {
@@ -435,6 +462,13 @@ const companyFiltersShape = {
   analyzedFrom: optionalDate,
   analyzedTo: optionalDate,
   runId: optionalUuid(MSG.mineracao),
+  temInstagram: optionalBool,
+  temWhatsapp: optionalBool,
+  temCnpj: optionalBool,
+  situacao: optionalText,
+  desempenhoRuim: optionalBool,
+  contato: optionalEnum(CONTATO_TABS, MSG.contato),
+  ordem: optionalEnum(RANKING_ORDER_MODES, MSG.ordem),
 };
 
 type FiltersShapeOutput = z.infer<z.ZodObject<typeof companyFiltersShape>>;
@@ -468,8 +502,12 @@ export const bulkIdsSchema: z.ZodType<string[], z.ZodTypeDef, unknown> = z
   .max(BULK_MAX, MSG.bulk)
   .refine((ids) => new Set(ids).size === ids.length, MSG.bulkRepetido);
 
-/** Converte filtros validados em `where` do Prisma. Todo texto usa `mode: 'insensitive'`. */
-export function buildCompanyWhere(f: CompanyFilters): Prisma.CompanyWhereInput {
+/**
+ * Converte filtros validados em `where` do Prisma. Todo texto usa `mode: 'insensitive'`.
+ * O nome do Cache_Google só casa a busca `q` quando o cache ainda é válido (`expiraEm > now`),
+ * para que Conteudo_Google expirado nunca apareça na listagem (Req. 6.5, 18.2).
+ */
+export function buildCompanyWhere(f: CompanyFilters, now: Date = new Date()): Prisma.CompanyWhereInput {
   const and: Prisma.CompanyWhereInput[] = [];
   const insensitive = 'insensitive' as const;
 
@@ -477,6 +515,8 @@ export function buildCompanyWhere(f: CompanyFilters): Prisma.CompanyWhereInput {
     and.push({
       OR: [
         { nome: { contains: f.q, mode: insensitive } },
+        { cnpjNomeFantasia: { contains: f.q, mode: insensitive } },
+        { googleCache: { nome: { contains: f.q, mode: insensitive }, expiraEm: { gt: now } } },
         { endereco: { contains: f.q, mode: insensitive } },
         { telefone: { contains: f.q, mode: insensitive } },
       ],
@@ -517,6 +557,14 @@ export function buildCompanyWhere(f: CompanyFilters): Prisma.CompanyWhereInput {
     });
   }
   if (f.runId) and.push({ runs: { some: { runId: f.runId } } });
+  if (f.temInstagram !== undefined) and.push({ temInstagram: f.temInstagram });
+  if (f.temWhatsapp !== undefined) and.push({ temWhatsapp: f.temWhatsapp });
+  if (f.temCnpj !== undefined) {
+    and.push(f.temCnpj ? { cnpj: { not: null } } : { cnpj: null });
+  }
+  if (f.situacao) and.push({ situacaoCadastral: { equals: f.situacao, mode: insensitive } });
+  if (f.desempenhoRuim !== undefined) and.push({ desempenhoRuim: f.desempenhoRuim });
+  if (f.contato) and.push(contatoWhere(f.contato, now));
 
   return and.length > 0 ? { AND: and } : {};
 }
@@ -528,13 +576,24 @@ export function buildCompanyWhere(f: CompanyFilters): Prisma.CompanyWhereInput {
 /** Ordenação única de lista, mapa e CSV: score desc (sem análise ao final), nome asc, id asc. */
 export const RANKING_ORDER: Prisma.CompanyOrderByWithRelationInput[] = [
   { scoreFinal: { sort: 'desc', nulls: 'last' } },
-  { nome: 'asc' },
+  { nomeExibicao: 'asc' },
   { id: 'asc' },
 ];
 
+/**
+ * T3: ordem "mais recentes" usada enquanto a mineração roda (linhas recém-descobertas ou recém-analisadas
+ * aparecem no topo, ainda sem score). `updatedAt` muda na descoberta e na gravação da análise.
+ */
+export const RANKING_ORDER_RECENT: Prisma.CompanyOrderByWithRelationInput[] = [{ updatedAt: 'desc' }, { id: 'asc' }];
+
+/** Ordenação da listagem conforme o modo pedido (padrão: score). */
+export function rankingOrderFor(mode: RankingOrderMode | undefined): Prisma.CompanyOrderByWithRelationInput[] {
+  return mode === 'recentes' ? RANKING_ORDER_RECENT : RANKING_ORDER;
+}
+
 export interface RankKey {
   id: string;
-  nome: string;
+  nomeExibicao: string;
   scoreFinal: number | null;
 }
 
@@ -548,7 +607,7 @@ export function compareRanking(a: RankKey, b: RankKey): number {
   if (!aNull && !bNull && a.scoreFinal !== b.scoreFinal) {
     return (b.scoreFinal as number) - (a.scoreFinal as number);
   }
-  return cmpStr(a.nome, b.nome) || cmpStr(a.id, b.id);
+  return cmpStr(a.nomeExibicao, b.nomeExibicao) || cmpStr(a.id, b.id);
 }
 
 /**
@@ -594,6 +653,12 @@ const RANKING_KEYS: readonly Exclude<keyof CompanyFilters, 'scoreMin' | 'scoreMa
   'analyzedFrom',
   'analyzedTo',
   'runId',
+  'temInstagram',
+  'temWhatsapp',
+  'temCnpj',
+  'situacao',
+  'desempenhoRuim',
+  'contato',
 ];
 
 /** Inteiro 0–100 a partir do texto do campo; `null` = vazio; `NaN` = inválido. */

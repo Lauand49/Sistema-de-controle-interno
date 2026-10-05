@@ -11,6 +11,8 @@ const api = vi.hoisted(() => ({
   getConfig: vi.fn(),
   lookupRun: vi.fn(),
   createRun: vi.fn(),
+  listCities: vi.fn(),
+  listNeighborhoods: vi.fn(),
 }));
 
 vi.mock('@/lib/leads/client-api', async (importOriginal) => {
@@ -27,11 +29,16 @@ vi.mock('next/link', () => ({
 import { LeadMinerApiError } from '@/lib/leads/client-api';
 import { MiningForm } from '@/components/lead-miner/MiningForm';
 import { RUN_NOT_STARTED_TEXT } from '@/components/lead-miner/mining-form-helpers';
+import { clearLocalidadesCache } from '@/hooks/lead-miner/useLocalidades';
 
 beforeEach(() => {
+  clearLocalidadesCache();
   api.getConfig.mockResolvedValue({ iaAvailable: false });
   api.lookupRun.mockResolvedValue({ run: null });
   api.createRun.mockReset();
+  // Listas indisponíveis: digitação livre (T2). O comportamento das listas é testado em mining-form-cascade.
+  api.listCities.mockResolvedValue({ items: [], indisponivel: true });
+  api.listNeighborhoods.mockResolvedValue({ items: [], indisponivel: true });
 });
 
 afterEach(() => {
@@ -42,9 +49,9 @@ afterEach(() => {
 const submitButton = () => screen.getByRole('button', { name: /Iniciar mineração|Iniciando/ }) as HTMLButtonElement;
 
 function fillForm() {
-  fireEvent.change(screen.getByLabelText('Bairro'), { target: { value: 'Vila Mariana' } });
-  fireEvent.change(screen.getByLabelText('Cidade'), { target: { value: 'São Paulo' } });
   fireEvent.change(screen.getByLabelText('UF'), { target: { value: 'SP' } });
+  fireEvent.change(screen.getByLabelText('Cidade'), { target: { value: 'São Paulo' } });
+  fireEvent.change(screen.getByLabelText('Bairro'), { target: { value: 'Vila Mariana' } });
   fireEvent.click(screen.getByLabelText('Clínica odontológica'));
 }
 
@@ -58,9 +65,9 @@ describe('MiningForm', () => {
   it('"Iniciar" fica desabilitado enquanto há campo pendente', async () => {
     await renderForm();
     expect(submitButton().disabled).toBe(true);
-    fireEvent.change(screen.getByLabelText('Bairro'), { target: { value: 'Vila Mariana' } });
-    fireEvent.change(screen.getByLabelText('Cidade'), { target: { value: 'São Paulo' } });
     fireEvent.change(screen.getByLabelText('UF'), { target: { value: 'SP' } });
+    fireEvent.change(screen.getByLabelText('Cidade'), { target: { value: 'São Paulo' } });
+    fireEvent.change(screen.getByLabelText('Bairro'), { target: { value: 'Vila Mariana' } });
     expect(submitButton().disabled).toBe(true); // falta o nicho
     fireEvent.click(screen.getByLabelText('Clínica odontológica'));
     expect(submitButton().disabled).toBe(false);

@@ -7,8 +7,10 @@
  */
 import React from 'react';
 import Link from 'next/link';
-import { AlertCircle, ArrowRight, CheckCircle2, Loader2, WifiOff, X } from 'lucide-react';
-import type { MiningStatus } from '@/lib/leads/client-api';
+import { AlertCircle, ArrowRight, Ban, CheckCircle2, Loader2, WifiOff, X } from 'lucide-react';
+import type { MiningStatus, RunProgress } from '@/lib/leads/client-api';
+import { cancelledLabel } from '@/lib/leads/run-cancel';
+import { StopRunButton } from './StopRunButton';
 import { canOpenRanking } from '@/lib/leads/filters';
 import { rankingHref, type RunDriverState } from '@/hooks/lead-miner/runState';
 import { FailedNichesNote } from './FailedNichesNote';
@@ -19,6 +21,7 @@ export const STAGE_LABEL: Record<MiningStatus, string> = {
   EM_ANDAMENTO: 'Analisando empresas',
   CONCLUIDA: 'Concluída',
   ERRO: 'Erro',
+  CANCELADA: 'Cancelada',
 };
 
 export const RECONNECTING_TEXT = 'Reconectando…';
@@ -33,10 +36,12 @@ export interface RunProgressCardProps {
   /** Ex.: "Vila Mariana, São Paulo/SP". */
   title?: string;
   onDismiss?: (runId: string) => void;
+  /** Quando informado, mostra "Parar" enquanto a mineração está ativa (T1). */
+  onStopped?: (progress: RunProgress) => void;
   className?: string;
 }
 
-export const RunProgressCard: React.FC<RunProgressCardProps> = ({ run, title, onDismiss, className = '' }) => {
+export const RunProgressCard: React.FC<RunProgressCardProps> = ({ run, title, onDismiss, onStopped, className = '' }) => {
   const p = run.progress;
   const status: MiningStatus | null = p?.status ?? null;
   const active = !run.done && (status === null || status === 'PENDENTE' || status === 'EM_ANDAMENTO');
@@ -44,8 +49,11 @@ export const RunProgressCard: React.FC<RunProgressCardProps> = ({ run, title, on
   const total = p?.total ?? 0;
   const percent = progressPercent(processados, total);
   const indeterminate = active && (status === null || status === 'PENDENTE');
-  const stage = status ? STAGE_LABEL[status] : 'Carregando…';
+  const cancelled = status === 'CANCELADA';
+  const stage = status ? (cancelled && p ? cancelledLabel(p) : STAGE_LABEL[status]) : 'Carregando…';
   const showLink = !!p && !active && canOpenRanking({ status: p.status, processados: p.processados });
+  // T3: já há empresas encontradas (gravadas na descoberta): dá para acompanhar os resultados ao vivo.
+  const showLiveLink = !!p && active && p.novos + p.existentes > 0;
   const barColor = run.error ? 'bg-red-500/70' : 'bg-gradient-to-r from-purple-600 to-indigo-600';
 
   return (
@@ -60,6 +68,8 @@ export const RunProgressCard: React.FC<RunProgressCardProps> = ({ run, title, on
             <span className="flex items-center gap-1.5">
               {active ? (
                 <Loader2 className="h-3.5 w-3.5 animate-spin text-purple-400" aria-hidden="true" />
+              ) : cancelled ? (
+                <Ban className="h-3.5 w-3.5 text-amber-400" aria-hidden="true" />
               ) : run.error ? (
                 <AlertCircle className="h-3.5 w-3.5 text-red-400" aria-hidden="true" />
               ) : (
@@ -78,6 +88,9 @@ export const RunProgressCard: React.FC<RunProgressCardProps> = ({ run, title, on
             )}
           </div>
         </div>
+        {active && p && onStopped && (
+          <StopRunButton runId={run.runId} title={title} onStopped={onStopped} className="shrink-0" />
+        )}
         {onDismiss && !active && (
           <button
             type="button"
@@ -128,6 +141,15 @@ export const RunProgressCard: React.FC<RunProgressCardProps> = ({ run, title, on
         </p>
       )}
 
+      {showLiveLink && (
+        <Link
+          href={rankingHref(run.runId)}
+          className="mt-3 inline-flex items-center gap-1.5 rounded-lg text-sm font-medium text-purple-300 hover:text-purple-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+        >
+          Ver resultados ao vivo
+          <ArrowRight className="h-4 w-4" aria-hidden="true" />
+        </Link>
+      )}
       {showLink && (
         <Link
           href={rankingHref(run.runId)}

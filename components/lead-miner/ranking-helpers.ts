@@ -13,7 +13,16 @@ import {
   type RankingUiState,
 } from '@/lib/leads/filters';
 import { BULK_MAX, EXPORT_MAX } from '@/lib/leads/config';
-import type { CompanyRow, ExportRequest, ExportResult, TriageResult, UserRef } from '@/lib/leads/client-api';
+import { CONTATO_TABS, DEFAULT_CONTATO_TAB, type ContatoTab } from '@/lib/leads/contact';
+import type {
+  CompanyRow,
+  EvaluationSummaryDto,
+  ExportRequest,
+  ExportResult,
+  TriageResult,
+  UserRef,
+} from '@/lib/leads/client-api';
+import { EVALUATION_MANUAL_MAX } from '@/lib/leads/evaluation';
 
 // ---------------------------------------------------------------------------
 // Estado da URL
@@ -38,6 +47,12 @@ export const RANKING_UI_KEYS = [
   'analyzedFrom',
   'analyzedTo',
   'runId',
+  'temInstagram',
+  'temWhatsapp',
+  'temCnpj',
+  'situacao',
+  'desempenhoRuim',
+  'contato',
 ] as const satisfies readonly (keyof CompanyFilters)[];
 
 export type RankingUiKey = (typeof RANKING_UI_KEYS)[number];
@@ -85,10 +100,42 @@ export function applyFilterPatch(state: RankingUrlState, patch: RankingUiState):
   return { ...state, ui, page: 1 };
 }
 
-/** Limpa todos os filtros, preservando só a mineração (`runId`) e a visão. */
+/** Limpa todos os filtros, preservando só a mineração (`runId`), a aba de contato e a visão. */
 export function clearFilters(state: RankingUrlState): RankingUrlState {
-  const ui: RankingUiState = state.ui.runId ? { runId: state.ui.runId } : {};
+  const ui: RankingUiState = {};
+  if (state.ui.runId) ui.runId = state.ui.runId;
+  if (state.ui.contato) ui.contato = state.ui.contato;
   return { ...state, ui, page: 1 };
+}
+
+// ---------------------------------------------------------------------------
+// Abas Com contato / Sem contato (T4)
+// ---------------------------------------------------------------------------
+
+/** Aba ativa: `com` é o padrão (URL sem `contato`); valor inválido também cai em `com`. */
+export function contatoTab(ui: RankingUiState): ContatoTab {
+  return (CONTATO_TABS as readonly string[]).includes(ui.contato ?? '') ? (ui.contato as ContatoTab) : DEFAULT_CONTATO_TAB;
+}
+
+/** Patch de filtro que troca de aba; a aba padrão sai da URL. */
+export function contatoTabPatch(tab: ContatoTab): RankingUiState {
+  return { contato: tab === DEFAULT_CONTATO_TAB ? '' : tab };
+}
+
+export const CONTATO_TAB_LABEL: Record<ContatoTab, string> = { com: 'Com contato', sem: 'Sem contato' };
+
+const nfTab = new Intl.NumberFormat('pt-BR');
+
+/** "Com contato (12)"; sem contagem (ainda carregando) mostra só o nome. */
+export function contatoTabText(tab: ContatoTab, count: number | null | undefined): string {
+  return typeof count === 'number' ? `${CONTATO_TAB_LABEL[tab]} (${nfTab.format(count)})` : CONTATO_TAB_LABEL[tab];
+}
+
+/** Mensagem da lista vazia por aba. */
+export function emptyMessageFor(tab: ContatoTab): string {
+  return tab === 'sem'
+    ? 'Nenhuma empresa sem contato atende aos filtros e à busca atuais.'
+    : 'Nenhuma empresa com contato atende aos filtros e à busca atuais.';
 }
 
 /** Chave estável dos filtros (sem página nem visão), para detectar mudança de filtro. */
@@ -122,6 +169,66 @@ export function buildRankingRequest(ui: RankingUiState): { query: URLSearchParam
     out.push('datas');
   }
   return { query, invalid: out };
+}
+
+/**
+ * Requisição da Tela_Ranking: como `buildRankingRequest`, mais a aba de contato (sempre explícita,
+ * assim lista, mapa e CSV seguem a mesma aba).
+ */
+export function buildTabbedRankingRequest(
+  ui: RankingUiState,
+  opts: { live?: boolean } = {},
+): ReturnType<typeof buildRankingRequest> {
+  const r = buildRankingRequest(ui);
+  r.query.set('contato', contatoTab(ui));
+  // T3: com a mineração em andamento, mais recentes primeiro (ainda não há score para ordenar).
+  if (opts.live) r.query.set('ordem', 'recentes');
+  return r;
+}
+
+// ---------------------------------------------------------------------------
+// Resultados progressivos (T3)
+// ---------------------------------------------------------------------------
+
+/** Intervalo de atualização da Tela_Ranking enquanto a mineração filtrada roda. */
+export const LIVE_POLL_MS = 3_000;
+
+/** Mineração ainda produzindo resultados (descoberta ou análise). */
+export function isRunLive(status: string | null | undefined): boolean {
+  return status === 'PENDENTE' || status === 'EM_ANDAMENTO';
+}
+
+/**
+ * Linha ainda sem análise numa mineração ativa: mostra "analisando…" no lugar do score.
+ * Empresa que já tinha análise antiga mantém o score anterior até a nova ser gravada.
+ */
+export function isAnalyzing(row: { lastAnalyzedAt: string | null; scoreFinal: number | null }, live: boolean): boolean {
+  return live && row.lastAnalyzedAt === null && row.scoreFinal === null;
+}
+
+export interface LiveCounters {
+  encontradas: number;
+  comContato: number;
+  analisadas: number;
+  /** Total a analisar; `null` enquanto a descoberta ainda não terminou. */
+  total: number | null;
+}
+
+/** Contadores ao vivo a partir do detalhe da mineração (`novos + existentes` = empresas encontradas). */
+export function liveCounters(run: {
+  novos: number;
+  existentes: number;
+  processados: number;
+  total: number;
+  status: string;
+  comContato?: number;
+}): LiveCounters {
+  return {
+    encontradas: run.novos + run.existentes,
+    comContato: run.comContato ?? 0,
+    analisadas: run.processados,
+    total: run.status === 'PENDENTE' ? null : run.total,
+  };
 }
 
 /** Query da página de listagem (filtros + `page`). */
@@ -250,4 +357,45 @@ export function formatDate(iso: string | null | undefined): string {
     month: '2-digit',
     year: 'numeric',
   }).format(d);
+}
+
+// ---------------------------------------------------------------------------
+// Avaliação dos leads sem contato (T5)
+// ---------------------------------------------------------------------------
+
+/**
+ * Ids que o botão "Avaliar" envia (no máximo 30): a seleção, se houver; senão os leads da página
+ * ainda sem avaliação ou só com a de regras (que a IA pode refazer).
+ */
+export function evaluationTargets(
+  rows: readonly Pick<CompanyRow, 'id' | 'avaliacao'>[],
+  selected: ReadonlySet<string>,
+  max: number = EVALUATION_MANUAL_MAX,
+): string[] {
+  const ids =
+    selected.size > 0
+      ? rows.filter((r) => selected.has(r.id)).map((r) => r.id)
+      : rows.filter((r) => r.avaliacao === null || r.avaliacao.fonte === 'REGRA').map((r) => r.id);
+  return ids.slice(0, Math.max(0, max));
+}
+
+const SEM_IA_REASON: Record<string, string> = {
+  IA_SEM_CHAVE: 'a IA não está configurada',
+  IA_COTA_ESGOTADA: 'a cota mensal da IA acabou',
+  IA_ERRO: 'a IA não respondeu',
+  IA_TIMEOUT: 'a IA demorou demais',
+  IA_RESPOSTA_INVALIDA: 'a resposta da IA foi inválida',
+  IA_SEM_TEMPO: 'faltou tempo para chamar a IA',
+};
+
+/** Mensagem do toast após "Avaliar". */
+export function evaluationMessage(r: EvaluationSummaryDto): { kind: 'success' | 'info'; text: string } {
+  if (r.avaliados === 0) {
+    return { kind: 'info', text: 'Nenhum lead precisava de avaliação (já avaliados ou com contato).' };
+  }
+  const base = `${plural(r.avaliados, 'lead avaliado', 'leads avaliados')}`;
+  if (r.porRegra === 0) return { kind: 'success', text: `${base} por IA.` };
+  const why = r.motivoSemIa ? SEM_IA_REASON[r.motivoSemIa] ?? 'a IA não foi usada' : 'a IA não foi usada';
+  if (r.porIa === 0) return { kind: 'info', text: `${base} por regras (sem IA): ${why}.` };
+  return { kind: 'info', text: `${base}: ${r.porIa} por IA e ${r.porRegra} por regras (sem IA), pois ${why}.` };
 }

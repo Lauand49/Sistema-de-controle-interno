@@ -1,6 +1,6 @@
 /**
  * Testes de integração dos painéis contra Postgres real (Tarefa 11.3).
- * Pulados sem `RUN_DB_TESTS=1`. Banco: `DATABASE_URL_TEST` (ou `DATABASE_URL` do `.env`); as
+ * Pulados sem `RUN_DB_TESTS=1` + `TEST_DATABASE_URL` (banco `*_test`; `npm run test:int`). Nunca usa `DATABASE_URL`; as
  * migrações pendentes são aplicadas com `prisma migrate deploy` antes dos testes.
  *
  * Padrão de `tests/lead-miner/integration/`: prefixo único por execução (`TAG`) em toda linha
@@ -22,6 +22,7 @@ import { randomUUID } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { RUN_INTEGRATION, assertTestDatabase, rawTestDatabaseUrl } from '../../support/assert-test-db';
 import type { Prisma, PrismaClient } from '@prisma/client';
 import type { DashboardRepository } from '@/lib/dashboards/repository';
 import {
@@ -66,7 +67,7 @@ import { formatDayKey } from '@/lib/dashboards/format';
 import { FORBIDDEN_MESSAGE, INVALID_PERIOD_MESSAGE, NOT_FOUND_MESSAGE } from '@/lib/dashboards/service';
 import { call } from './session';
 
-const RUN_DB_TESTS = process.env.RUN_DB_TESTS === '1';
+const RUN_DB_TESTS = RUN_INTEGRATION;
 
 vi.mock('server-only', () => ({}));
 
@@ -457,15 +458,8 @@ describe.skipIf(!RUN_DB_TESTS)('dashboards — repositório, rotas e migração 
   // -------------------------------------------------------------------------
 
   beforeAll(async () => {
-    if (!process.env.DATABASE_URL_TEST && !process.env.DATABASE_URL) {
-      try {
-        process.loadEnvFile(path.join(ROOT, '.env'));
-      } catch {
-        /* sem .env */
-      }
-    }
-    if (process.env.DATABASE_URL_TEST) process.env.DATABASE_URL = process.env.DATABASE_URL_TEST;
-    if (!process.env.DATABASE_URL) throw new Error('Defina DATABASE_URL_TEST ou DATABASE_URL');
+    // Trava: só o banco de teste (`TEST_DATABASE_URL`, nome `*_test`); nunca `DATABASE_URL`.
+    process.env.DATABASE_URL = assertTestDatabase(rawTestDatabaseUrl(), 'teste de integração');
 
     execFileSync('npx', ['prisma', 'migrate', 'deploy'], {
       cwd: ROOT,

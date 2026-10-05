@@ -20,7 +20,7 @@ const navLinkClass =
 
 function LeadMinerHome() {
   const active = useActiveRuns();
-  const { runs, add, dismiss } = useRunDrivers(active.runs);
+  const { runs, add, dismiss, applyProgress } = useRunDrivers(active.runs);
   const [titles, setTitles] = useState<Record<string, string>>({});
 
   const onRunStarted = useCallback(
@@ -64,7 +64,13 @@ function LeadMinerHome() {
         ) : (
           <div className="grid gap-3 md:grid-cols-2">
             {runs.map((r) => (
-              <RunProgressCard key={r.runId} run={r} title={titles[r.runId]} onDismiss={dismiss} />
+              <RunProgressCard
+                key={r.runId}
+                run={r}
+                title={titles[r.runId]}
+                onDismiss={dismiss}
+                onStopped={applyProgress}
+              />
             ))}
           </div>
         )}

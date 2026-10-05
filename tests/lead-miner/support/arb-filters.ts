@@ -78,7 +78,7 @@ export const arbScoreParam: fc.Arbitrary<unknown> = fc.oneof(
 /** Item de ranking com colisões frequentes de nome e score. */
 export const arbRankKey = fc.record({
   id: fc.uuid(),
-  nome: fc.stringOf(fc.constantFrom('a', 'B', 'c', 'á', ' '), { minLength: 0, maxLength: 3 }),
+  nomeExibicao: fc.stringOf(fc.constantFrom('a', 'B', 'c', 'á', ' '), { minLength: 0, maxLength: 3 }),
   scoreFinal: fc.option(fc.constantFrom(0, 10, 39, 40, 70, 100), { nil: null }),
 });
 

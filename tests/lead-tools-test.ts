@@ -1,4 +1,10 @@
-import { prisma } from '../lib/prisma';
+import { PrismaClient } from '@prisma/client';
+import { assertTestDatabase, rawTestDatabaseUrl } from './support/assert-test-db';
+
+// Script que cria e apaga linhas: só roda contra o banco de TESTE (`TEST_DATABASE_URL`, nome `*_test`).
+const prisma = new PrismaClient({
+  datasources: { db: { url: assertTestDatabase(rawTestDatabaseUrl(), 'tests/lead-tools-test.ts') } },
+});
 
 async function testLeadToolsModule() {
   console.log('🧪 Starting Lead Tools & Conversion Automated Test...\n');

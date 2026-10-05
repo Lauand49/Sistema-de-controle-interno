@@ -4,12 +4,12 @@
  * Tela_Ranking — `/tools/lead-miner/leads` (Req. 12, 13.9, 15.5, 15.7, 15.10, 16.6, 16.8, 16.9,
  * 17.1, 17.7, 17.8, 2.16). Filtros na query string; a lista vem paginada e ordenada do servidor.
  */
-import React, { Suspense, useCallback, useEffect, useMemo, useState } from 'react';
+import React, { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import Link from 'next/link';
 import dynamic from 'next/dynamic';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { toast } from 'sonner';
-import { ArrowLeft, History, List, Loader2, Map as MapIcon, Pickaxe, Trophy } from 'lucide-react';
+import { ArrowLeft, ClipboardCheck, History, List, Loader2, Map as MapIcon, Pickaxe, Trophy } from 'lucide-react';
 import { SciTecNavbar } from '@/components/navigation/SciTecNavbar';
 import { useProfile } from '@/contexts/ProfileContext';
 import { canAssignLeads } from '@/lib/permissions';
@@ -30,6 +30,9 @@ import { RankingTable } from '@/components/lead-miner/RankingTable';
 import { BulkActionsBar, type BulkAction } from '@/components/lead-miner/BulkActionsBar';
 import { AssignDialog } from '@/components/lead-miner/AssignDialog';
 import { RunFilterBanner } from '@/components/lead-miner/RunFilterBanner';
+import { LiveRunPanel } from '@/components/lead-miner/LiveRunPanel';
+import { useLiveRun } from '@/hooks/lead-miner/useLiveRun';
+import { CONTATO_PANEL_ID, ContatoTabs, contatoTabId } from '@/components/lead-miner/ContatoTabs';
 import {
   ASSIGN_ERROR_PREFIX,
   EXPORT_EMPTY_MESSAGE,
@@ -37,8 +40,13 @@ import {
   applyAssignee,
   applyFilterPatch,
   assignSuccessMessage,
-  buildRankingRequest,
+  buildTabbedRankingRequest,
   clearFilters,
+  contatoTab,
+  contatoTabPatch,
+  emptyMessageFor,
+  evaluationMessage,
+  evaluationTargets,
   exportRequestFor,
   exportSuccessMessage,
   exportTruncationNotice,
@@ -77,6 +85,8 @@ interface ListState {
   rows: CompanyRow[];
   total: number;
   totalPages: number;
+  /** Totais das abas (respeitam os filtros ativos); `null` até a primeira resposta. */
+  counts: { com: number; sem: number } | null;
   loading: boolean;
   error: string | null;
 }
@@ -90,7 +100,11 @@ function RankingScreen() {
 
   const urlState = useMemo(() => parseRankingUrl(new URLSearchParams(searchParams.toString())), [searchParams]);
   const { ui, page, view } = urlState;
-  const { query, invalid } = useMemo(() => buildRankingRequest(ui), [ui]);
+  // T3: acompanha a mineração filtrada; enquanto roda, ordena por mais recentes e atualiza a cada ~3 s.
+  const liveRun = useLiveRun(ui.runId);
+  const live = liveRun.live;
+  const { query, invalid } = useMemo(() => buildTabbedRankingRequest(ui, { live }), [ui, live]);
+  const tab = contatoTab(ui);
   const queryKey = query.toString();
   const fKey = filtersKey(ui);
 
@@ -108,23 +122,54 @@ function RankingScreen() {
   );
 
   // ---- Lista ---------------------------------------------------------------
-  const [list, setList] = useState<ListState>({ rows: [], total: 0, totalPages: 0, loading: true, error: null });
+  const [list, setList] = useState<ListState>({
+    rows: [],
+    total: 0,
+    totalPages: 0,
+    counts: null,
+    loading: true,
+    error: null,
+  });
   const [reloadToken, setReloadToken] = useState(0);
+  // Atualização silenciosa (T3): a cada resposta da mineração em andamento a lista é recarregada sem
+  // piscar, sem apagar o que já está na tela e sem trocar erro por lista vazia.
+  const silentRef = useRef(false);
+  const lastTickRef = useRef(liveRun.tick);
 
   useEffect(() => {
+    const silent = silentRef.current && lastTickRef.current !== liveRun.tick;
+    silentRef.current = false;
+    lastTickRef.current = liveRun.tick;
     const ctrl = new AbortController();
-    setList((s) => ({ ...s, loading: true, error: null }));
+    if (!silent) setList((s) => ({ ...s, loading: true, error: null }));
     leadMinerApi
       .listCompanies(listQuery(new URLSearchParams(queryKey), page), { signal: ctrl.signal })
       .then((res) =>
-        setList({ rows: res.items, total: res.total, totalPages: res.totalPages, loading: false, error: null }),
+        setList({
+          rows: res.items,
+          total: res.total,
+          totalPages: res.totalPages,
+          counts: res.contatoCounts ?? null,
+          loading: false,
+          error: null,
+        }),
       )
       .catch((e: unknown) => {
         if (ctrl.signal.aborted || isAbort(e)) return;
-        setList({ rows: [], total: 0, totalPages: 0, loading: false, error: errorMessage(e, 'Não foi possível carregar as empresas.') });
+        const message = errorMessage(e, 'Não foi possível carregar as empresas.');
+        setList((s) =>
+          // Falha isolada numa atualização em segundo plano: mantém a lista atual. Só mostra o erro
+          // se a tela ainda estava carregando (ex.: a carga inicial foi substituída por esta).
+          silent && !s.loading
+            ? s
+            : { rows: [], total: 0, totalPages: 0, counts: s.counts, loading: false, error: message },
+        );
       });
     return () => ctrl.abort();
-  }, [queryKey, page, reloadToken]);
+  }, [queryKey, page, reloadToken, liveRun.tick]);
+
+  // Marca a próxima atualização como silenciosa quando ela vem do acompanhamento (mesmo render do tick).
+  if (lastTickRef.current !== liveRun.tick) silentRef.current = true;
 
   // Página da URL além do fim (ex.: link antigo): volta para a última página existente.
   useEffect(() => {
@@ -213,6 +258,26 @@ function RankingScreen() {
     }
   };
 
+  // ---- Avaliação dos leads sem contato (T5) --------------------------------
+  const [evaluating, setEvaluating] = useState(false);
+  const evalIds = useMemo(() => evaluationTargets(list.rows, selected), [list.rows, selected]);
+
+  const onEvaluate = async () => {
+    if (evalIds.length === 0) return;
+    setEvaluating(true);
+    try {
+      const result = await leadMinerApi.evaluateCompanies(evalIds);
+      const msg = evaluationMessage(result);
+      if (msg.kind === 'success') toast.success(msg.text);
+      else toast.info(msg.text);
+      setReloadToken((n) => n + 1);
+    } catch (e) {
+      toast.error(errorMessage(e, 'Não foi possível avaliar os leads.'));
+    } finally {
+      setEvaluating(false);
+    }
+  };
+
   const onExport = async () => {
     if (selectedIds.length === 0 && !list.loading && !list.error && list.total === 0) {
       toast.warning(EXPORT_EMPTY_MESSAGE);
@@ -277,7 +342,15 @@ function RankingScreen() {
         </div>
       </header>
 
-      {ui.runId && <RunFilterBanner runId={ui.runId} onClear={() => onFilterChange({ runId: '' })} />}
+      {ui.runId && (
+        <RunFilterBanner
+          runId={ui.runId}
+          onClear={() => onFilterChange({ runId: '' })}
+          run={liveRun.run}
+          error={liveRun.error}
+        />
+      )}
+      {ui.runId && liveRun.run && <LiveRunPanel run={liveRun.run} live={live} />}
 
       <RankingFilters
         value={ui}
@@ -287,6 +360,8 @@ function RankingScreen() {
         assignees={canAssign ? assignees ?? [] : null}
         currentUserId={currentProfile?.id ?? null}
       />
+
+      <ContatoTabs active={tab} counts={list.counts} onChange={(t) => onFilterChange(contatoTabPatch(t))} />
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-slate-300" aria-live="polite">
@@ -301,6 +376,25 @@ function RankingScreen() {
             </>
           )}
         </p>
+        {tab === 'sem' && (
+          <button
+            type="button"
+            onClick={onEvaluate}
+            disabled={evaluating || list.loading || evalIds.length === 0}
+            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-bold text-slate-200 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            {evaluating ? (
+              <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            ) : (
+              <ClipboardCheck className="h-4 w-4" aria-hidden="true" />
+            )}
+            {evaluating
+              ? 'Avaliando…'
+              : evalIds.length > 0
+                ? `Avaliar (${evalIds.length})`
+                : 'Avaliar (nada pendente)'}
+          </button>
+        )}
         <div role="group" aria-label="Modo de visualização" className="inline-flex gap-1 rounded-xl border border-slate-800 bg-slate-900 p-1">
           <button type="button" aria-pressed={view === 'lista'} onClick={() => setView('lista')} className={tabClass(view === 'lista')}>
             <List className="h-4 w-4" aria-hidden="true" />
@@ -324,6 +418,7 @@ function RankingScreen() {
               points={map.data?.points ?? []}
               shown={map.data?.shown ?? 0}
               total={map.data?.total ?? 0}
+              semCoordsProprias={map.data?.semCoordsProprias ?? 0}
               loading={map.loading || !map.data}
             />
           )}
@@ -340,37 +435,41 @@ function RankingScreen() {
         onClearSelection={() => setSelected(new Set())}
       />
 
-      {list.error ? (
-        <div role="alert" className="rounded-2xl border border-red-900/60 bg-red-950/40 p-6 text-sm text-red-300">
-          <p>{list.error}</p>
-          <button
-            type="button"
-            onClick={() => setReloadToken((n) => n + 1)}
-            className="mt-3 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-bold text-slate-200 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
-          >
-            Tentar novamente
-          </button>
-        </div>
-      ) : list.loading && list.rows.length === 0 ? (
-        <div role="status" className="flex items-center justify-center gap-2 rounded-2xl border border-slate-800 bg-slate-900/60 p-10 text-sm text-slate-400">
-          <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-          Carregando empresas…
-        </div>
-      ) : list.rows.length === 0 ? (
-        <p className="rounded-2xl border border-slate-800 bg-slate-900/60 p-10 text-center text-sm text-slate-400">
-          Nenhuma empresa atende aos filtros e à busca atuais.
-        </p>
-      ) : (
-        <div className={list.loading ? 'opacity-60 transition-opacity' : undefined} aria-busy={list.loading}>
-          <RankingTable
-            rows={list.rows}
-            selected={selected}
-            onToggle={(id) => setSelected((s) => toggleId(s, id))}
-            onTogglePage={() => setSelected((s) => togglePageSelection(s, list.rows.map((r) => r.id)))}
-            offset={(currentPage - 1) * RANKING_PAGE_SIZE}
-          />
-        </div>
-      )}
+      <div role="tabpanel" id={CONTATO_PANEL_ID} aria-labelledby={contatoTabId(tab)}>
+        {list.error ? (
+          <div role="alert" className="rounded-2xl border border-red-900/60 bg-red-950/40 p-6 text-sm text-red-300">
+            <p>{list.error}</p>
+            <button
+              type="button"
+              onClick={() => setReloadToken((n) => n + 1)}
+              className="mt-3 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-bold text-slate-200 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+            >
+              Tentar novamente
+            </button>
+          </div>
+        ) : list.loading && list.rows.length === 0 ? (
+          <div role="status" className="flex items-center justify-center gap-2 rounded-2xl border border-slate-800 bg-slate-900/60 p-10 text-sm text-slate-400">
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
+            Carregando empresas…
+          </div>
+        ) : list.rows.length === 0 ? (
+          <p className="rounded-2xl border border-slate-800 bg-slate-900/60 p-10 text-center text-sm text-slate-400">
+            {emptyMessageFor(tab)}
+          </p>
+        ) : (
+          <div className={list.loading ? 'opacity-60 transition-opacity' : undefined} aria-busy={list.loading}>
+            <RankingTable
+              rows={list.rows}
+              selected={selected}
+              onToggle={(id) => setSelected((s) => toggleId(s, id))}
+              onTogglePage={() => setSelected((s) => togglePageSelection(s, list.rows.map((r) => r.id)))}
+              offset={(currentPage - 1) * RANKING_PAGE_SIZE}
+              live={live}
+            showEvaluation={tab === 'sem'}
+            />
+          </div>
+        )}
+      </div>
 
       {!list.error && list.total > 0 && (
         <Pagination

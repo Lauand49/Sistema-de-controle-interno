@@ -19,7 +19,7 @@ export type { CnpjLookupOutcome } from './cnpj';
 
 export interface BrasilApiHttp {
   /** Resolve `{ status, json }`; rejeita em erro de rede ou timeout (aborta no próprio `timeoutMs`). */
-  getCnpj(cnpj: string, timeoutMs: number): Promise<{ status: number; json: unknown }>;
+  getCnpj(cnpj: string, timeoutMs: number, signal?: AbortSignal): Promise<{ status: number; json: unknown }>;
 }
 
 export interface BrasilApiDeps {
@@ -93,9 +93,16 @@ type Attempt = CnpjLookupOutcome | 'RETRY' | 'DEADLINE';
 const INDISPONIVEL: CnpjLookupOutcome = { ok: false, reason: 'INDISPONIVEL' };
 
 /** Uma tentativa passando pelo limitador; não envia se o início agendado passar do `deadline`. */
-async function attempt(cnpj: string, deps: BrasilApiDeps, deadline: number | undefined): Promise<Attempt> {
+async function attempt(
+  cnpj: string,
+  deps: BrasilApiDeps,
+  deadline: number | undefined,
+  signal?: AbortSignal,
+): Promise<Attempt> {
   try {
     return await deps.limiter.schedule<Attempt>(async () => {
+      // Cancelada enquanto esperava a vez no limitador: não envia (T1).
+      if (signal?.aborted) return 'DEADLINE';
       let timeoutMs = BRASILAPI_TIMEOUT_MS;
       if (deadline !== undefined) {
         const remaining = deadline - deps.now().getTime();
@@ -104,9 +111,9 @@ async function attempt(cnpj: string, deps: BrasilApiDeps, deadline: number | und
       }
       let res: { status: number; json: unknown };
       try {
-        res = await deps.http.getCnpj(cnpj, timeoutMs);
+        res = await deps.http.getCnpj(cnpj, timeoutMs, signal);
       } catch {
-        return 'RETRY'; // rede/timeout
+        return signal?.aborted ? 'DEADLINE' : 'RETRY'; // cancelada: sem retentativa; senão rede/timeout
       }
       if (res.status === 404) return { ok: false, reason: 'NAO_ENCONTRADO' };
       if (res.status === 429 || res.status >= 500) return 'RETRY';
@@ -123,11 +130,11 @@ async function attempt(cnpj: string, deps: BrasilApiDeps, deadline: number | und
 export async function lookupCnpj(
   cnpj: string,
   deps: BrasilApiDeps,
-  opts: { deadline?: number } = {},
+  opts: { deadline?: number; /** Cancelamento da mineração (T1). */ signal?: AbortSignal } = {},
 ): Promise<CnpjLookupOutcome> {
   // CNPJ vazio, '.' ou '..' viraria segmento de ponto: nada é enviado (Req. 20.4).
   if (!isSafePathSegment(cnpj)) return INDISPONIVEL;
-  const first = await attempt(cnpj, deps, opts.deadline);
+  const first = await attempt(cnpj, deps, opts.deadline, opts.signal);
   if (first === 'DEADLINE') return INDISPONIVEL;
   if (first !== 'RETRY') return first;
 
@@ -139,6 +146,7 @@ export async function lookupCnpj(
   } catch {
     return INDISPONIVEL;
   }
-  const second = await attempt(cnpj, deps, opts.deadline);
+  if (opts.signal?.aborted) return INDISPONIVEL;
+  const second = await attempt(cnpj, deps, opts.deadline, opts.signal);
   return second === 'RETRY' || second === 'DEADLINE' ? INDISPONIVEL : second;
 }

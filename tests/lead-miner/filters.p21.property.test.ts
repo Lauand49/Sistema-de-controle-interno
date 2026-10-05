@@ -18,7 +18,7 @@ function collectTextNodes(node: unknown, out: Record<string, unknown>[] = []): R
 /** Filtros que produzem nó textual: q (3 campos), cidade, bairro, uf, nicho, leadStatus ≠ NONE. */
 function expectedTextNodes(f: CompanyFilters): number {
   let n = 0;
-  if (f.q) n += 3;
+  if (f.q) n += 5; // Etapa 3: nome, cnpjNomeFantasia, googleCache.nome, endereco, telefone
   if (f.cidade) n += 1;
   if (f.bairro) n += 1;
   if (f.uf) n += 1;

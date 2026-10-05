@@ -1,10 +1,11 @@
 /**
  * Testes de integração do repositório e do pipeline contra Postgres real (Tarefa 11.4).
- * Pulados sem `RUN_DB_TESTS=1`. Banco: `DATABASE_URL_TEST` (ou `DATABASE_URL`); as migrações
+ * Pulados sem `RUN_DB_TESTS=1` + `TEST_DATABASE_URL` (banco `*_test`; `npm run test:int`); as migrações
  * pendentes são aplicadas com `prisma migrate deploy` antes dos testes.
  * Requisitos: 8.3, 8.5, 8.7, 8.13, 8.14, 9.5, 9.6, 9.8, 9.9, 9.11, 9.12, 9.13, 9.14, 9.15, 2.13.
  */
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { assertTestDatabase } from '../../support/assert-test-db';
 import type { PrismaClient } from '@prisma/client';
 import { ApiError } from '@/lib/api-error';
 import { classify } from '@/lib/leads/classifier';
@@ -44,7 +45,7 @@ describe.skipIf(!RUN_DB_TESTS)('lead-miner — repositório/pipeline (Postgres)'
   let runSeq = 0;
 
   beforeAll(async () => {
-    const url = testDatabaseUrl();
+    const url = assertTestDatabase(testDatabaseUrl(), 'teste de integração'); // trava: só *_test
     migrateDeploy(url);
     db = newPrisma(url);
     userId = await createTestUser(db, prefix);

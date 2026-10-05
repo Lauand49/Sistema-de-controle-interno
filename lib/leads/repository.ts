@@ -33,6 +33,7 @@ import {
 } from './dedup';
 import { sortName } from './display';
 import { recomputeNomeExibicao, writeGoogleCache } from './google-cache';
+import { normalizeEmail } from './contact';
 import { normalizeInstagram, normalizeWhatsapp, serializeSinais } from './signals';
 import { detectGoogleChains } from './sources/google-places';
 import { normalizeCompanyName } from './text';
@@ -210,10 +211,16 @@ async function refreshFonte(tx: Prisma.TransactionClient, companyId: string): Pr
 }
 
 /** Tags OSM de contato normalizadas (Req. 8.5). */
-function osmContacts(f: FoundCompany): { instagramOsm: string | null; whatsappOsm: string | null } {
+function osmContacts(f: FoundCompany): {
+  instagramOsm: string | null;
+  whatsappOsm: string | null;
+  emailOsm?: string;
+} {
+  const emailOsm = normalizeEmail(f.emailOsm ?? null);
   return {
     instagramOsm: normalizeInstagram(f.instagramOsm ?? null),
     whatsappOsm: normalizeWhatsapp(f.whatsappOsm ?? null),
+    ...(emailOsm !== null ? { emailOsm } : {}),
   };
 }
 
@@ -240,6 +247,9 @@ async function applyOsmToExisting(
   }
   if (contacts.whatsappOsm !== null && contacts.whatsappOsm !== current.whatsappOsm) {
     patch.whatsappOsm = contacts.whatsappOsm;
+  }
+  if (contacts.emailOsm !== undefined && contacts.emailOsm !== current.emailOsm) {
+    patch.emailOsm = contacts.emailOsm;
   }
 
   const fillOsmId = key.osmId !== null && current.osmId === null;
@@ -701,15 +711,23 @@ async function markProcessed(
   return count > 0;
 }
 
-/** processados += 1; CONCLUIDA/finishedAt ao atingir `total` (Req. 8.5, 8.7). */
+/**
+ * processados += 1; CONCLUIDA/finishedAt ao atingir `total` (Req. 8.5, 8.7). Em mineração
+ * CANCELADA (T1) uma análise que termina depois do cancelamento ainda conta em `processados`,
+ * mas o status nunca volta a CONCLUIDA.
+ */
 async function incrementProcessed(tx: Prisma.TransactionClient, runId: string): Promise<void> {
   await tx.$executeRaw`
     UPDATE "MiningRun" SET
       processados = processados + 1,
-      status = CASE WHEN processados + 1 >= total THEN 'CONCLUIDA'::"MiningStatus" ELSE status END,
-      "finishedAt" = CASE WHEN processados + 1 >= total THEN now() ELSE "finishedAt" END,
+      status = CASE WHEN status = 'EM_ANDAMENTO'::"MiningStatus" AND processados + 1 >= total
+                    THEN 'CONCLUIDA'::"MiningStatus" ELSE status END,
+      "finishedAt" = CASE WHEN status = 'EM_ANDAMENTO'::"MiningStatus" AND processados + 1 >= total
+                          THEN now() ELSE "finishedAt" END,
       "updatedAt" = now()
-    WHERE id = ${runId} AND status = 'EM_ANDAMENTO'::"MiningStatus" AND processados < total`;
+    WHERE id = ${runId}
+      AND status IN ('EM_ANDAMENTO'::"MiningStatus", 'CANCELADA'::"MiningStatus")
+      AND processados < total`;
 }
 
 // ---------------------------------------------------------------------------

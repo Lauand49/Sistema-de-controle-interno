@@ -17,16 +17,29 @@ import {
   NETWORK_ERROR_MESSAGE,
   type RunProgress,
 } from '@/lib/leads/client-api';
+import type { ServicesStatus } from '@/lib/leads/client-api';
+import { useCities, useNeighborhoods } from '@/hooks/lead-miner/useLocalidades';
+import { Combobox } from './Combobox';
+import { findExactOption } from './combobox-helpers';
 import { NicheChecklist } from './NicheChecklist';
 import { PresetPicker } from './PresetPicker';
 import { PreviousRunNotice } from './PreviousRunNotice';
+import { ServiceStatusPanel } from './ServiceStatusPanel';
+import { SourcePicker } from './SourcePicker';
 import {
+  applyCidadeChange,
+  applyUfChange,
+  bairroEnabled,
   buildCreateRunInput,
   canSubmit,
+  cidadeEnabled,
+  defaultSource,
+  LOCALIDADE_HINTS,
   IA_UNAVAILABLE_TEXT,
   INITIAL_FORM_VALUES,
   lookupParams,
   matchingPreset,
+  pagespeedUnavailableReason,
   pendingFields,
   presetNiches,
   RUN_NOT_STARTED_TEXT,
@@ -54,13 +67,23 @@ export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
   const [submitting, setSubmitting] = useState(false);
   const submittingRef = useRef(false);
   const [ia, setIa] = useState<IaState>('loading');
+  const [services, setServices] = useState<ServicesStatus | null>(null);
+  /** Garante que a fonte padrão (OSM/MISTA) só é aplicada uma vez, sem sobrescrever a escolha do usuário. */
+  const sourceDefaulted = useRef(false);
 
   useEffect(() => {
     const ac = new AbortController();
     leadMinerApi
       .getConfig({ signal: ac.signal })
       .then((cfg) => {
-        if (!ac.signal.aborted) setIa(cfg.iaAvailable ? 'available' : 'unavailable');
+        if (ac.signal.aborted) return;
+        setIa(cfg.iaAvailable ? 'available' : 'unavailable');
+        setServices(cfg.services);
+        if (!sourceDefaulted.current) {
+          sourceDefaulted.current = true;
+          const fonte = defaultSource(cfg.services);
+          if (fonte !== INITIAL_FORM_VALUES.fonte) setValues((v) => ({ ...v, fonte }));
+        }
       })
       .catch(() => {
         if (!ac.signal.aborted) setIa('error');
@@ -69,8 +92,73 @@ export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
   }, []);
 
   const iaAvailable = ia === 'available';
+  const pagespeedBlocked = pagespeedUnavailableReason(services);
   const pending = pendingFields(values);
   const enabled = canSubmit(values, submitting);
+
+  // ---- Localização em cascata: UF → Cidade → Bairro (T2) ----
+  const cidadeOk = cidadeEnabled(values);
+  const bairroOk = bairroEnabled(values);
+  const cities = useCities(values.uf);
+  /** Cidade confirmada (escolhida/Enter/saída do campo) para a qual se buscam os bairros no OSM. */
+  const [cidadeCommitted, setCidadeCommitted] = useState('');
+  /** Cidade digitada que não está na lista do IBGE: usada como digitada, sem consultar o OSM. */
+  const [cidadeForaDaLista, setCidadeForaDaLista] = useState(false);
+  const bairros = useNeighborhoods(values.uf, cidadeCommitted);
+
+  const clearServerErrors = (...keys: MiningFormField[]) =>
+    setServerErrors((e) => {
+      if (!keys.some((k) => k in e)) return e;
+      const next = { ...e };
+      for (const k of keys) delete next[k];
+      return next;
+    });
+
+  const changeUf = (uf: string) => {
+    setValues((v) => applyUfChange(v, uf));
+    setCidadeCommitted('');
+    setCidadeForaDaLista(false);
+    clearServerErrors('uf', 'cidade', 'bairro');
+  };
+  const changeCidade = (cidade: string) => {
+    setValues((v) => applyCidadeChange(v, cidade));
+    setCidadeCommitted('');
+    setCidadeForaDaLista(false);
+    clearServerErrors('cidade', 'bairro');
+  };
+  const commitCidade = (typed: string) => {
+    const text = typed.trim();
+    if (text === '') return;
+    const exact = findExactOption(cities.items, text);
+    // Grafia canônica do IBGE ("sao paulo" → "São Paulo") sem apagar o bairro (é a mesma cidade).
+    if (exact && exact !== typed) setValues((v) => (v.cidade === typed ? { ...v, cidade: exact } : v));
+    const known = exact !== null;
+    if (known || cities.status !== 'ready') {
+      setCidadeForaDaLista(false);
+      setCidadeCommitted(exact ?? text);
+    } else {
+      // Lista do IBGE carregada e a cidade não consta: digitação livre, sem consulta ao OSM.
+      setCidadeForaDaLista(true);
+      setCidadeCommitted('');
+    }
+  };
+
+  const cidadeNote = !cidadeOk
+    ? LOCALIDADE_HINTS.escolhaUf
+    : cities.status === 'loading'
+      ? LOCALIDADE_HINTS.carregandoCidades
+      : cities.status === 'unavailable'
+        ? LOCALIDADE_HINTS.cidadesIndisponiveis
+        : cidadeForaDaLista
+          ? LOCALIDADE_HINTS.cidadeForaDaLista
+          : null;
+  const bairroNote = !bairroOk
+    ? LOCALIDADE_HINTS.escolhaCidade
+    : bairros.status === 'loading'
+      ? LOCALIDADE_HINTS.carregandoBairros
+      : bairros.status === 'unavailable' || cidadeForaDaLista
+        ? LOCALIDADE_HINTS.bairrosIndisponiveis
+        : null;
 
   const update = <K extends keyof MiningFormValues>(key: K, value: MiningFormValues[K]) => {
     setValues((v) => ({ ...v, [key]: value }));
@@ -133,6 +221,9 @@ export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
   };
   const describedBy = (field: MiningFormField) =>
     serverErrors[field] || pending[field] ? `mining-${field}-hint` : undefined;
+  const joinIds = (...ids: Array<string | undefined>) => ids.filter(Boolean).join(' ') || undefined;
+  const cidadeHintId = joinIds(describedBy('cidade'), cidadeNote ? 'mining-cidade-note' : undefined);
+  const bairroHintId = joinIds(describedBy('bairro'), bairroNote ? 'mining-bairro-note' : undefined);
   const border = (field: MiningFormField) => (serverErrors[field] ? 'border-red-500/70' : 'border-slate-700');
 
   const pendingCount = Object.keys(pending).length;
@@ -147,45 +238,10 @@ export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
       aria-busy={submitting}
       className="space-y-6 rounded-2xl border border-slate-800 bg-slate-900/60 p-6"
     >
-      <div className="grid gap-4 md:grid-cols-[1fr_1fr_8rem]">
-        <div>
-          <label htmlFor="mining-bairro" className="mb-1 block text-sm font-semibold text-slate-200">
-            Bairro
-          </label>
-          <input
-            id="mining-bairro"
-            type="text"
-            value={values.bairro}
-            maxLength={TEXT_MAX}
-            autoComplete="off"
-            placeholder="Ex.: Vila Mariana"
-            onChange={(e) => update('bairro', e.target.value)}
-            aria-describedby={describedBy('bairro')}
-            aria-invalid={!!serverErrors.bairro || undefined}
-            aria-required="true"
-            className={`${inputClass} ${border('bairro')}`}
-          />
-          {hint('bairro')}
-        </div>
-        <div>
-          <label htmlFor="mining-cidade" className="mb-1 block text-sm font-semibold text-slate-200">
-            Cidade
-          </label>
-          <input
-            id="mining-cidade"
-            type="text"
-            value={values.cidade}
-            maxLength={TEXT_MAX}
-            autoComplete="off"
-            placeholder="Ex.: São Paulo"
-            onChange={(e) => update('cidade', e.target.value)}
-            aria-describedby={describedBy('cidade')}
-            aria-invalid={!!serverErrors.cidade || undefined}
-            aria-required="true"
-            className={`${inputClass} ${border('cidade')}`}
-          />
-          {hint('cidade')}
-        </div>
+      <ServiceStatusPanel services={services} loading={ia === 'loading'} />
+
+      {/* Localização em cascata: UF → Cidade → Bairro (T2). Cada campo só habilita após o anterior. */}
+      <div className="grid gap-4 md:grid-cols-[8rem_1fr_1fr]">
         <div>
           <label htmlFor="mining-uf" className="mb-1 block text-sm font-semibold text-slate-200">
             UF
@@ -193,7 +249,7 @@ export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
           <select
             id="mining-uf"
             value={values.uf}
-            onChange={(e) => update('uf', e.target.value)}
+            onChange={(e) => changeUf(e.target.value)}
             aria-describedby={describedBy('uf')}
             aria-invalid={!!serverErrors.uf || undefined}
             aria-required="true"
@@ -208,6 +264,57 @@ export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
           </select>
           {hint('uf')}
         </div>
+        <div>
+          <label htmlFor="mining-cidade" className="mb-1 block text-sm font-semibold text-slate-200">
+            Cidade
+          </label>
+          <Combobox
+            id="mining-cidade"
+            value={values.cidade}
+            options={cities.items}
+            loading={cities.status === 'loading'}
+            disabled={!cidadeOk}
+            maxLength={TEXT_MAX}
+            placeholder="Ex.: São Paulo"
+            onChange={changeCidade}
+            onCommit={commitCidade}
+            aria-describedby={cidadeHintId}
+            aria-invalid={!!serverErrors.cidade || undefined}
+            aria-required
+            className={`${inputClass} ${border('cidade')}`}
+          />
+          {hint('cidade')}
+          {cidadeNote && (
+            <p id="mining-cidade-note" className="mt-1 text-xs text-slate-400">
+              {cidadeNote}
+            </p>
+          )}
+        </div>
+        <div>
+          <label htmlFor="mining-bairro" className="mb-1 block text-sm font-semibold text-slate-200">
+            Bairro
+          </label>
+          <Combobox
+            id="mining-bairro"
+            value={values.bairro}
+            options={bairros.items}
+            loading={bairros.status === 'loading'}
+            disabled={!bairroOk}
+            maxLength={TEXT_MAX}
+            placeholder="Ex.: Vila Mariana"
+            onChange={(t) => update('bairro', t)}
+            aria-describedby={bairroHintId}
+            aria-invalid={!!serverErrors.bairro || undefined}
+            aria-required
+            className={`${inputClass} ${border('bairro')}`}
+          />
+          {hint('bairro')}
+          {bairroNote && (
+            <p id="mining-bairro-note" className="mt-1 text-xs text-slate-400">
+              {bairroNote}
+            </p>
+          )}
+        </div>
       </div>
 
       <PreviousRunNotice
@@ -215,6 +322,13 @@ export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
         onRemine={() => void submit()}
         remineDisabled={!enabled}
         remineHint={submitting ? 'Iniciando…' : pending.nichos ? 'Selecione ao menos um nicho.' : undefined}
+      />
+
+      <SourcePicker
+        value={values.fonte}
+        onChange={(fonte) => update('fonte', fonte)}
+        services={services}
+        disabled={submitting}
       />
 
       <PresetPicker active={matchingPreset(values.nichos)} onPick={pickPreset} />
@@ -270,6 +384,37 @@ export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
                   : IA_UNAVAILABLE_TEXT}
             </p>
           )}
+        </div>
+        <div className="flex flex-col gap-0.5">
+          <div className="flex items-center gap-2">
+            <input
+              id="mining-pagespeed"
+              type="checkbox"
+              checked={values.pagespeedEnabled && !pagespeedBlocked}
+              disabled={!!pagespeedBlocked}
+              onChange={(e) => update('pagespeedEnabled', e.target.checked)}
+              aria-describedby="mining-pagespeed-hint"
+              className="h-4 w-4 rounded border-slate-600 bg-slate-900 accent-purple-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
+            />
+            <label htmlFor="mining-pagespeed" className={`text-sm ${pagespeedBlocked ? 'text-slate-500' : 'text-slate-300'}`}>
+              Analisar desempenho (PageSpeed)
+            </label>
+          </div>
+          <p id="mining-pagespeed-hint" className="text-xs text-slate-400">
+            {pagespeedBlocked ?? (services?.pagespeed.semChave ? 'Sem chave: usa a cota reduzida do Google' : '')}
+          </p>
+        </div>
+        <div className="flex items-center gap-2">
+          <input
+            id="mining-cnpj"
+            type="checkbox"
+            checked={values.cnpjEnabled}
+            onChange={(e) => update('cnpjEnabled', e.target.checked)}
+            className="h-4 w-4 rounded border-slate-600 bg-slate-900 accent-purple-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+          />
+          <label htmlFor="mining-cnpj" className="text-sm text-slate-300">
+            Consultar CNPJ (BrasilAPI)
+          </label>
         </div>
       </div>
 

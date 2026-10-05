@@ -96,6 +96,22 @@ export class RunDriverPool {
     for (const id of this.order) this.start(id);
   }
 
+  /**
+   * Aplica um progresso vindo de fora (ex.: resposta de `POST /cancel`). Se já não está ativo,
+   * encerra o laço desta mineração e marca o card como concluído.
+   */
+  applyProgress(progress: RunProgress): void {
+    const s = this.states.get(progress.id);
+    if (!s) return;
+    if (isActiveStatus(progress.status)) {
+      this.setState(progress.id, { ...s, progress });
+      return;
+    }
+    this.drivers.get(progress.id)?.abort();
+    this.drivers.delete(progress.id);
+    this.setState(progress.id, applyDriveResult({ ...s, progress }, { kind: 'finished', progress }));
+  }
+
   private start(id: string): void {
     const state = this.states.get(id);
     if (this.stopped || !state || state.done || this.drivers.has(id)) return;

@@ -262,6 +262,7 @@ enum MiningStatus {
   EM_ANDAMENTO
   CONCLUIDA
   ERRO
+  CANCELADA // parada pelo usuário (migração 20261016000000); libera o índice parcial de mineração ativa
 }
 
 enum CompanyCategory {
@@ -324,11 +325,11 @@ model Company {
 
   // ── Etapa 3 (lead-miner-enrichment) ──
   // nome: nome próprio (OSM/manual); '' para Empresa só do Google
-  nomeExibicao        String      @default("") // Nome_Exibicao para ordenação; mantido junto do cache/Dados_CNPJ
+  nomeExibicao        String            @default("") // Nome_Exibicao para ordenação; mantido junto do cache/Dados_CNPJ
   instagramOsm        String? // tag contact:instagram normalizada
   whatsappOsm         String? // tag contact:whatsapp normalizada
   cnpjOrigem          CnpjOrigin?
-  cnpjCandidatos      Json        @default("[]") // CnpjCandidate[]
+  cnpjCandidatos      Json              @default("[]") // CnpjCandidate[]
   cnpjStatus          String? // "CNPJ não encontrado na Receita" | "Consulta à Receita indisponível" | "CNPJ do site é de outra UF…"
   cnpjDadosCnpj       String? // CNPJ a que os Dados_CNPJ se referem
   cnpjConsultadoEm    DateTime?
@@ -348,6 +349,14 @@ model Company {
   temWhatsapp         Boolean? // snapshot
   desempenhoRuim      Boolean? // snapshot (filtro do ranking)
   reanaliseAte        DateTime? // lease da Reanalise
+  // ── T4 (ajustes pós-etapa 3) ──
+  emailOsm            String? // tag OSM contact:email/email normalizada
+  temContato          Boolean           @default(false) // mantido por trigger (ver contact.ts): telefone/WhatsApp/e-mail/Instagram
+  // ── T5: avaliação básica dos leads sem contato ──
+  avaliacaoResumo     String? // texto curto (IA ou regras)
+  sugestaoAcao        String? // próxima ação sugerida (inclui como obter contato)
+  avaliadoEm          DateTime?
+  fonteAvaliacao      EvaluationSource?
 
   analyses         CompanyAnalysis[]
   runs             MiningRunCompany[]
@@ -364,6 +373,7 @@ model Company {
   @@index([nicho])
   @@index([assignedTo])
   @@index([lastAnalyzedAt])
+  @@index([temContato, scoreFinal(sort: Desc)])
 }
 
 /// Cache_Google: todo Conteudo_Google da Empresa, válido por 30 dias (Req. 6.1).
@@ -474,6 +484,7 @@ model MiningRun {
   createdAt               DateTime     @default(now())
   updatedAt               DateTime     @updatedAt
   finishedAt              DateTime?
+  avaliacaoIniciadaEm     DateTime? // P3: marca única da avaliação automática dos sem contato (ao concluir)
   // ── Etapa 3 (lead-miner-enrichment) ── (fonte = Fonte_Efetiva)
   fonteSolicitada         MiningSource @default(OSM)
   pagespeedEnabled        Boolean      @default(false)
@@ -604,4 +615,10 @@ model FinancialTransaction {
   dueDate       DateTime?
   paymentDate   DateTime?
   createdAt     DateTime  @default(now())
+}
+
+/// T5: quem produziu a avaliação básica de um lead sem contato.
+enum EvaluationSource {
+  IA
+  REGRA
 }
