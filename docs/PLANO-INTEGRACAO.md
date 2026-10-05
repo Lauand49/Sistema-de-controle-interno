@@ -191,6 +191,7 @@ Em Negócios → Ferramentas, o card **"Minerador de Leads"** substitui o placeh
 | 3 — Melhorias | Google Places + fallback OSM; PageSpeed Insights; enriquecimento CNPJ (BrasilAPI); detecção Instagram/WhatsApp/tecnologias; mensagem de abordagem por IA | concluída em 2026-10-04 na branch `etapa-3-melhorias` (PR pendente; ver 8.4); ajustes pós-etapa 3 (parar mineração, localização em cascata, abas com/sem contato, resultados progressivos, avaliação dos sem contato) na mesma branch (ver 8.4.1) |
 | 4 — Deploy | Dockerfile standalone, Cloud Run, Neon, OAuth Internal, orçamento/quotas, guia passo a passo | arquivos e guias prontos na branch `etapa-4-deploy` (PR pendente; **nada foi implantado**; depende de pessoas; ver 8.5) |
 
+| 5 — Revisão de acesso | Revisão de acesso, dados e painéis; correção do laço de recarga ao deslogar | concluída na branch `etapa-5-revisao-acesso` (PR pendente; ver 8.6 e `docs/AUDITORIA-ACESSO.md`) |
 Cada etapa: branch própria a partir desta, PR para `main`, `npm run build` passando antes de entregar.
 
 ### 8.1 Registro da Etapa 0
@@ -385,6 +386,17 @@ Branch `etapa-4-deploy`, criada a partir de `etapa-3-melhorias` (ainda não merg
 - Nenhum teste de integração foi executado (só com `npm run test:int` em `scitec_test`).
 - As migrações `20261019` e `20261020` não foram aplicadas a nenhum banco.
 - Preços e limites citados nos guias vêm de documentação consultada em outubro de 2026; confirme na calculadora e nos consoles antes de decidir.
+
+### 8.6 Revisão de acesso
+
+Relatório completo em `docs/AUDITORIA-ACESSO.md` (inventário de páginas e rotas, achados, decisões pendentes). Branch `etapa-5-revisao-acesso` (a partir de `etapa-4-deploy`). Sem specs.
+
+- **Laço ao deslogar (L-01).** Causa: o cliente decide "logado" pelo `/api/me` (banco) e o servidor pelo cookie; o `logout()` limpava o perfil antes do cookie sumir, o efeito-guarda mandava para `/login` e o `/login` devolvia para `/`. O mesmo ocorria com `/api/me` 500 ou usuário sem registro. Correção em `contexts/ProfileContext.tsx` (`endSession` único, sem limpar o perfil, libera nova tentativa se falhar) e `app/login/page.tsx` (só redireciona se o usuário da sessão existe no banco). `middleware.ts`, `auth.ts` e `auth.config.ts` **não** mudaram.
+- **Acesso fechado:** `GET /api/tools/pricing` passou a exigir Negócios/Presidência (A-01); `POST /api/requests` só aceita `linkedCardId` de unidade que o solicitante enxerga (A-04); o último acesso (`lastLoginAt`) só vai para o próprio, a Presidência e o Gerente do departamento (A-05, novo `canSeeLastLogin` em `lib/permissions.ts`).
+- **Exibição:** prazos de tarefas e solicitações apareciam com um dia a menos em São Paulo; agora usam a data gravada (A-06, `formatDueDate`).
+- **Decisões do dono pendentes:** D-01 a D-08 em `docs/AUDITORIA-ACESSO.md` (403 × 404, diretório de pessoas, vínculos de tarefa, ordem de validação em `hierarchy`, página de precificação, dados individuais no painel de unidade, prazo com hora, `/api/health` pública).
+- **Testes novos (offline):** `tests/auth/` (middleware real com JWT assinado; harness de login/logout), `tests/access/` (matriz de 12 personas × 43 rotas; dados da pessoa) e `tests/dashboards/f5-numeros-e-acesso.test.ts` (repositório Prisma real + duplo em memória). `vitest.config.ts` ganhou `server.deps.inline: ['next-auth']` para rodar o middleware real.
+- **Não verificado:** comportamento do roteador do Next no navegador (o harness simula o roteador e o `signOut`); contagens dos painéis em Postgres real; nenhum teste de integração rodou.
 
 ---
 

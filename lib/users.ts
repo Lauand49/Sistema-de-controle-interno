@@ -7,8 +7,10 @@ import { prisma } from '@/lib/prisma';
 import { audit } from '@/lib/audit';
 import {
   type DepartmentCode,
+  type Person,
   type SectorCode,
   isDepartmentCode,
+  canSeeLastLogin,
   isSectorCode,
   personTitle,
   personType,
@@ -56,6 +58,11 @@ export function toUserDTO(
     createdAt: u.createdAt.toISOString(),
     ...(u._count ? { _count: u._count } : {}),
   };
+}
+
+/** Dados de `target` para `actor`: o último acesso só vai para quem pode acompanhar a pessoa. */
+export function forViewer(actor: Person, target: UserDTO): UserDTO {
+  return canSeeLastLogin(actor, target) ? target : { ...target, lastLoginAt: null };
 }
 
 export async function findUserDTO(id: string): Promise<UserDTO | null> {

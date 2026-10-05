@@ -34,6 +34,14 @@ export function formatDayKey(dayKey: string): string {
   return `${d}/${m}/${y}`;
 }
 
+/**
+ * Prazo (`dueDate`) vindo da API → 'DD/MM/AAAA'. O prazo é uma data sem horário gravada à meia-noite UTC;
+ * `new Date(x).toLocaleDateString()` em São Paulo (UTC-3) mostraria o dia anterior. Usa só a parte de data.
+ */
+export function formatDueDate(iso: string): string {
+  return formatDayKey(iso.slice(0, 10));
+}
+
 const intFormatter = new Intl.NumberFormat('pt-BR');
 
 /** Número no formato pt-BR (separador de milhar "."). */

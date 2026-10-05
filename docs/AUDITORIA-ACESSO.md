@@ -1,0 +1,195 @@
+# Auditoria de acesso, dados e painéis
+
+Revisão da Etapa 5 (branch `etapa-5-revisao-acesso`). Fonte das regras: `docs/PLANO-INTEGRACAO.md` seções 4, 7, 8.1 e 8.3. Fonte única das permissões: `lib/permissions.ts`.
+
+**Situação final (Etapa 5 concluída):** o inventário (Fase 1) está nas tabelas abaixo; os achados confirmados, as correções e as decisões que dependem do dono estão nas seções finais. Nada foi aberto: toda correção só **fecha** acesso ou corrige exibição. `middleware.ts`, `auth.ts` e `auth.config.ts` não foram alterados.
+
+## Resumo
+
+| Severidade | Corrigidos | Pendentes (decisão do dono) |
+|---|---|---|
+| Alta | 1 (L-01, laço de recarga ao deslogar) | 0 |
+| Média | 1 (A-01, precificação aberta a qualquer ativo) | 1 (D-02, diretório de pessoas com e-mail e cargo para qualquer ativo) |
+| Baixa | 3 (A-04, A-05, A-06) | 6 (D-01, D-03, D-04, D-05, D-07, D-08) |
+| Operacional | n/a | 1 (D-06, `/api/health` pública) |
+
+Como foi verificado: 1 harness de ponta a ponta do login/logout (middleware real com JWT assinado), 1 matriz de 12 personas × 43 rotas, testes de dados da pessoa e de painéis. Nenhum teste de integração foi executado (sem `TEST_DATABASE_URL`).
+
+## Como ler
+
+**Camadas de proteção**
+
+1. `middleware.ts` (Edge): exige sessão (JWT) em tudo, exceto `/login`, `/api/auth/*` e `/api/dev/users` (este responde 404 fora do desenvolvimento). Sem sessão: `401 JSON` nas APIs, redirecionamento para `/login` nas páginas. **Não consulta o banco**, só o cookie.
+2. `withAuth` (`lib/api.ts`), em toda rota de API: lê a sessão, **recarrega o usuário do banco a cada requisição** (`findUserDTO`), e devolve `401` sem usuário, `403` se `PENDENTE`/`INATIVO` (salvo `allowInactive`, usado só por `/api/me`).
+3. Regra da rota: helpers de `lib/permissions.ts` (`canViewUnit`, `canEditUnit`, `canUseNegociosTools`, `progressScope`, ...), em geral após carregar o **objeto** (card, tarefa, funil, solicitação, lead) para checar a unidade a que ele pertence.
+4. Páginas são componentes de cliente; a interface só **esconde** ações. O servidor é quem nega.
+
+**Colunas da tabela**
+
+- **Escopo:** Pública · Sessão (qualquer autenticado ativo) · Unidade · Papel · Objeto (checa a unidade/dono do objeto carregado por id).
+- **Verificação:** o helper ou a lógica aplicada.
+
+## Páginas (`app/**/page.tsx`)
+
+| Página | Escopo | Verificação na página | Observação |
+|---|---|---|---|
+| `/login` | Pública | servidor: se já há sessão (`auth()`), `redirect(callbackUrl)` | Não chama APIs protegidas. Ver Fase 2 (laço). |
+| `/` | Sessão | `useProfile`; o middleware barra anônimos | Início. |
+| `/pipe` | Unidade | `canEditUnit` esconde botões; dados vêm de `/api/pipes` (servidor filtra) | Modo leitura quando não participa. |
+| `/setores/[dept]` | Unidade | `canEditUnit`, `canViewUnitDashboard`, `canUseNegociosTools` (UI); dados por API | Parâmetro de URL `dept`: quem não participa recebe 403 nas APIs. |
+| `/tasks` | Sessão | UI mostra filtros por papel; API filtra por visibilidade | |
+| `/requests` | Sessão | API filtra por solicitante/responsável/departamentos | |
+| `/team` | Papel | `canViewPendingUsers`, `canViewAudit`, `canManage*` (UI) | Ações no servidor em `/api/users/*`, `/api/units/*`. |
+| `/paineis` | Sessão | `/api/dashboards` lista só o que o ator pode abrir | |
+| `/paineis/unidades/[code]` | Unidade | `canViewUnitDashboard` (UI) + `getUnitDashboard` (servidor) | |
+| `/paineis/membros/[userId]` | Objeto (pessoa) | `getMemberDashboard` (servidor) | |
+| `/tools` | Sessão | `canUseNegociosTools`, `canViewUnit` (UI) | Catálogo de ferramentas. |
+| `/tools/pricing` | Papel (Negócios) | **página sem checagem de perfil** | `POST` exige Negócios; `GET` (tabelas de taxas) está aberto a qualquer ativo. Ver achado A-01. |
+| `/tools/lead-sheet` | Papel (Negócios) | `canUseNegociosTools`, `canAssignLeads` (UI) | API exige Negócios. |
+| `/tools/lead-filter` | Papel (Negócios) | `canUseNegociosTools` (UI) | API exige Negócios. |
+| `/tools/lead-miner` | Papel (Negócios) | `LeadMinerGate` (UI) | Todas as APIs `requireNegocios`. |
+| `/tools/lead-miner/runs` | Papel (Negócios) | `LeadMinerGate` | |
+| `/tools/lead-miner/leads` | Papel (Negócios) | `LeadMinerGate` | |
+| `/tools/lead-miner/leads/[id]` | Papel (Negócios) + Objeto | `LeadMinerGate` + API | Base de empresas é compartilhada em Negócios (sem dono por unidade). |
+
+## Rotas de API (`app/api/**/route.ts`)
+
+### Autenticação e saúde
+
+| Rota | Método | Escopo | Verificação | Observação |
+|---|---|---|---|---|
+| `/api/auth/[...nextauth]` | GET/POST | Pública | Auth.js | Login Google; provedor `dev-login` só com `NODE_ENV=development` e `DEV_LOGIN=true`. |
+| `/api/dev/users` | GET | Pública | `DEV_LOGIN_ENABLED` | 404 fora do desenvolvimento. |
+| `/api/health` | GET | Sessão (pelo middleware) | simples: nenhuma; `?deep=1`: `isGlobal` | Decisão pendente do dono: tornar pública. **Não alterar nesta etapa.** |
+| `/api/me` | GET | Sessão (`allowInactive`) | devolve o próprio usuário | Único que aceita `PENDENTE`/`INATIVO`. |
+
+### Pessoas, unidades e auditoria
+
+| Rota | Método | Escopo | Verificação | Observação |
+|---|---|---|---|---|
+| `/api/users` | GET | Papel | `ATIVO`: qualquer ativo; `PENDENTE`: `canViewPendingUsers`; `INATIVO`: Presidência ou Gerente do depto | Devolve e-mail, cargo, último login e contagens a qualquer ativo. Ver Fase 4. |
+| `/api/users/[id]` | GET | Objeto (pessoa) | `PENDENTE`: `canViewPendingUsers` ou o próprio; `progressScope` decide o progresso | Perfil básico de qualquer pessoa (inclusive `INATIVO`) é devolvido a qualquer ativo. Ver Fase 4. |
+| `/api/users/[id]` | PATCH | Objeto (pessoa) | `canEditProfile`; `cargo` só `isGlobal` | |
+| `/api/users/[id]/hierarchy` | POST | Papel + Objeto | `canApproveUserInto`, `canChangeDepartment`, `canManageVice`, `canDeactivate` | Ações: aprovar, trocar depto, nomear/remover Vice, desativar, reativar. Auditado. |
+| `/api/units` | GET | Sessão | nenhuma além de ativo | Lista unidades, gerente e nº de membros. |
+| `/api/units/[code]/members` | GET | Unidade | `canViewUnit` | Membros ativos da unidade (DTO completo). |
+| `/api/units/[code]/members` | POST | Unidade | `canManageSectorMembers` | |
+| `/api/units/[code]/members/[userId]` | DELETE | Unidade | `canManageSectorMembers`; remover Gerente: `canManageManagers` | |
+| `/api/units/[code]/manager` | PUT/DELETE | Papel | `canManageManagers` (Presidente e Vice) | Substituição com confirmação; auditado. |
+| `/api/audit` | GET | Papel | `canViewAudit`; escopo: Presidência tudo; Gerente de depto, seu depto; Gerente de setor, seus setores | |
+
+### Funis, cards, campos, tarefas, solicitações, financeiro
+
+| Rota | Método | Escopo | Verificação | Observação |
+|---|---|---|---|---|
+| `/api/pipes` | GET | Unidade | sem filtro: `visibleUnitCodes`; com `department`: `canViewUnit` | |
+| `/api/pipes` | POST | Unidade | `canEditUnit` | |
+| `/api/pipes/[id]` | GET | Objeto | `canViewUnit(unit do funil)` | |
+| `/api/cards` | POST | Unidade | `canEditUnit(unit do funil)` | |
+| `/api/cards/[id]` | GET | Objeto | `canViewUnit(unit do card)` | |
+| `/api/cards/[id]` | PATCH/DELETE | Objeto | `canEditUnit(unit do card)` | |
+| `/api/cards/[id]/move` | PATCH | Objeto | `canEditUnit(unit do card)` | Fase destino é buscada pelo id. |
+| `/api/fields` | POST | Unidade | `canEditUnit` | |
+| `/api/fields/[id]` | DELETE | Objeto | `canEditUnit(unit do funil do campo)` | |
+| `/api/tasks` | GET | Papel/Unidade | filtro de visibilidade (responsável, unidades visíveis, dept do Gerente) + `canViewUnit` em `department=` | |
+| `/api/tasks` | POST | Unidade | `canEditUnit`; tarefa geral vai ao autor | |
+| `/api/tasks/[id]` | PATCH/DELETE | Objeto | `canEditTask` (responsável ou membro da unidade; Presidência) | Não há GET por id. |
+| `/api/requests` | GET | Papel | filtro: próprio solicitante/responsável, ou depto de origem/destino; Presidência tudo | |
+| `/api/requests` | POST | Papel | precisa de departamento (ou Presidência) | |
+| `/api/requests/[id]` | PATCH | Objeto | `canViewRequest` + `canHandleRequest`/`canEditRequestContent` | |
+| `/api/requests/[id]` | DELETE | Objeto | `canDeleteRequest` | |
+| `/api/finance` | GET/POST | Unidade | `canAccessFinance` (= `canViewUnit('ADMJURFIN')`) | |
+
+### Negócios: leads e precificação
+
+| Rota | Método | Escopo | Verificação | Observação |
+|---|---|---|---|---|
+| `/api/tools/leads` | GET/POST | Papel | `canUseNegociosTools` | |
+| `/api/tools/leads/[id]` | PATCH | Objeto | `canEditLead` (dono ou gerência) | |
+| `/api/tools/leads/[id]` | DELETE | Papel | `canDeleteLead` (= `canAssignLeads`) | |
+| `/api/tools/leads/[id]/convert` | POST | Objeto | `canEditLead` + `canEditUnit('NEGOCIOS')` | |
+| `/api/tools/pricing` | GET | **Sessão** | **nenhuma checagem de departamento** | Expõe tabelas de taxas. Achado A-01. |
+| `/api/tools/pricing` | POST | Papel | `canUseNegociosTools` | |
+
+### Minerador de leads (`/api/tools/lead-miner/**`)
+
+Todas chamam `requireNegocios(actor)` (= `canUseNegociosTools`) **antes** de qualquer leitura. Regras adicionais:
+
+| Rota | Método | Regra adicional |
+|---|---|---|
+| `assignees` | GET | `canAssignLeads` |
+| `companies` (lista), `companies/map`, `companies/export` | GET/POST | só Negócios/Presidência; base compartilhada |
+| `companies/[id]` | GET | Negócios |
+| `companies/[id]/claim` | POST | `canChangeLeadAssignee(actor, null, actor.id)` |
+| `companies/assign` | POST | `canAssignLeads`, `canBeLeadAssignee(destino)`, `canChangeLeadAssignee` por empresa |
+| `companies/[id]/approach`, `cnpj`, `reanalyze`, `companies/evaluate`, `companies/triage` | POST/PUT/DELETE | Negócios |
+| `runs` (GET/POST), `runs/active`, `runs/lookup`, `runs/[id]` | GET/POST | Negócios (qualquer autor pode ver o andamento) |
+| `runs/[id]/discover`, `runs/[id]/batch` | POST | Negócios **e** ser o autor da mineração (`403` se não for) |
+| `runs/[id]/cancel` | POST | autor, gerência de Negócios ou Presidência/Vice (`canCancelRun`) |
+| `runs/[id]/evaluate` | POST | Negócios |
+| `config`, `localidades/cidades`, `localidades/bairros` | GET | Negócios |
+
+### Painéis
+
+| Rota | Método | Escopo | Verificação | Observação |
+|---|---|---|---|---|
+| `/api/dashboards` | GET | Papel | `getHub` lista só o que o ator abre | |
+| `/api/dashboards/units/[code]` | GET | Unidade | `getUnitDashboard` (serviço) | A revisar na Fase 5. |
+| `/api/dashboards/members/[userId]` | GET | Objeto (pessoa) | `getMemberDashboard` (serviço) | A revisar na Fase 5. |
+
+## Achados preliminares da Fase 1 (histórico: todos resolvidos nas fases 2 a 5, ver seção seguinte)
+
+| Id | Severidade prévia | Onde | Resumo |
+|---|---|---|---|
+| A-01 | média | `GET /api/tools/pricing` | A rota de leitura das tabelas de precificação não exige `canUseNegociosTools`, embora o plano trate a precificação como ferramenta exclusiva de Negócios/Presidência. |
+| A-02 (→ D-01) | baixa | rotas por id (`cards`, `pipes`, `requests`, `tasks`) | Objeto inexistente responde `404`; objeto existente de outra unidade responde `403`. Permite distinguir "existe" de "não existe" a quem souber o id (ids são UUID). Política de resposta não definida no plano. |
+| A-03 (→ D-02, A-05) | média | `GET /api/users`, `GET /api/users/[id]` | Qualquer ativo recebe e-mail, cargo, último login e contagens de outras pessoas. O plano não define o que o diretório expõe. |
+
+As demais rotas seguem o padrão "carrega o objeto, checa a unidade dele, nega com 403". A matriz da Fase 3 confirmou esse padrão em todas as rotas por objeto testadas.
+
+## Achados confirmados (Fases 2 e 3)
+
+| Id | Severidade | Onde | Situação | Resumo e correção |
+|---|---|---|---|---|
+| L-01 | **alta** (disponibilidade) | `contexts/ProfileContext.tsx`, `app/login/page.tsx` | Corrigido (F2) | Laço de recarga ao deslogar. Cliente decide "logado" pelo `/api/me` (banco) e o servidor pelo cookie. `logout()` limpava o perfil antes do cookie sumir; o efeito-guarda mandava para `/login` e o servidor devolvia para `/`. Também ocorria com `/api/me` 500 e com usuário sem registro. Correção: `endSession()` único (marca `signingOut` antes, não limpa o perfil, libera nova tentativa se falhar) e `/login` só redireciona se o usuário da sessão existe no banco. `middleware.ts`, `auth.ts` e `auth.config.ts` **não** foram alterados. |
+| A-01 | média | `GET /api/tools/pricing` | Corrigido (F3) | Qualquer ativo lia as tabelas de taxas por hora e modificadores. Agora exige `canUseNegociosTools` (igual ao `POST`). A página não usa o `GET`. |
+| A-04 | baixa | `POST /api/requests` (`linkedCardId`) | Corrigido (F3) | O solicitante podia vincular o id de um card de qualquer unidade; ao concluir a solicitação, o atendente gravava um comentário nesse card. Agora o card precisa estar numa unidade que o solicitante enxerga; inexistente e sem acesso respondem igual (400). |
+| A-05 | baixa | `GET /api/users`, `/api/users/[id]`, `/api/units/[code]/members` | Corrigido (F4) | Qualquer ativo recebia o **último acesso** (`lastLoginAt`) de todas as pessoas; nenhuma tela usa o campo. Agora só vai para o próprio, a Presidência e o Gerente do departamento da pessoa (`canSeeLastLogin` em `lib/permissions.ts`, mesmo alcance do progresso completo); os demais recebem `null`. |
+| A-06 | baixa (dados errados na tela) | `app/tasks`, `components/tasks/SectorTaskBoard`, `app/requests`, `app/setores/[dept]` | Corrigido (F5) | O prazo (`dueDate`, data sem hora gravada à meia-noite UTC) era exibido com `new Date(x).toLocaleDateString('pt-BR')`, que em São Paulo (UTC-3) mostra o **dia anterior**. O painel já contava pelo dia certo; a tela de tarefas e as solicitações mostravam um dia a menos. Novo `formatDueDate` (`lib/dashboards/format.ts`) usa só a parte de data. |
+
+### Verificação da matriz (F3)
+
+`tests/access/matrix.test.ts`: 12 personas (anônimo, Pendente, Inativo, Presidente, Vice, Gerente de Negócios, Gerente de Setor, Assessor de Negócios e de AdmJurFin/Gente/Mídias, Gerentes de AdmJurFin/Gente) × 43 rotas/métodos, incluindo acesso por objeto (card, funil, campo, tarefa, solicitação, lead, usuário) e listas filtradas no servidor. A coluna "permitidos" é escrita à mão a partir do plano, não derivada de `lib/permissions.ts`. Em toda linha: sem sessão = 401; Pendente/Inativo = 403; fora da lista = 403, sem escrita no banco e sem dados do objeto no corpo. Resultado: única divergência era A-01.
+
+## Decisões pendentes do dono (não decididas pelo agente)
+
+| Id (severidade) | Tema | Situação atual | Opções |
+|---|---|---|---|
+| D-01 (baixa) | 403 × 404 em rotas por id (antes A-02) | Objeto inexistente responde 404 e existente de outra unidade responde 403. Quem souber um UUID distingue "existe" de "não existe". Risco baixo (ids não sequenciais). | (a) manter; (b) responder 404 nos dois casos para quem não vê a unidade. |
+| D-02 (média) | Diretório de pessoas (antes A-03) | Qualquer ativo recebe nome, e-mail, departamento, cargo e contagens de cards/tarefas de qualquer pessoa (`GET /api/users`, `/api/users/[id]`); o último acesso já foi restrito (A-05). O plano não define o diretório, e a tela de equipe usa e-mail e contagens. | reduzir campos para quem não é gerente/Presidência. |
+| D-03 (baixa) | `cardId`/`leadId` em tarefas | `POST/PATCH /api/tasks` aceitam qualquer id de card/lead sem checar a unidade; é só um vínculo (a tarefa não devolve dados do card). Baixa. | validar que o card é de unidade visível ao autor. |
+| D-04 (baixa) | Ordem das validações em `POST /api/users/[id]/hierarchy` | `404`/`400 (não está pendente)` vêm antes do `403`, então um Assessor descobre se um id existe/está pendente. Baixa. | mover o `assert` da ação para antes das checagens de estado. |
+| D-05 (baixa) | `/tools/pricing` (página) | A página abre para qualquer ativo; o servidor nega o `POST` e o `GET`. | esconder a página fora de Negócios (só UI). |
+| D-07 (baixa) | Painel de unidade mostra dados individuais a quem só vê o próprio progresso | O requisito 4.5/6.3 do spec manda listar tarefas atrasadas **com responsável** e, em Negócios, **leads por responsável**. Um Assessor que abre o painel do próprio departamento vê esses dados de colegas, embora a matriz diga "progresso individual: só o próprio". Os resumos por membro já respeitam `progressScope`. | (a) manter (as tarefas do departamento já são visíveis a seus membros em `/api/tasks`); (b) filtrar listas por `progressScope` e juntar o restante em "Outros". |
+| D-08 (baixa) | Prazo com hora enviado por cliente de API | A tela envia `AAAA-MM-DD`. Um cliente externo que mande `2026-10-05T23:30:00-03:00` grava 06/10 em UTC e o painel conta o dia 06. Sem impacto na interface. | normalizar `dueDate` no servidor para data sem hora. |
+| D-06 (operacional) | `/api/health` | Continua atrás do middleware (sem sessão = 401), o que impede o healthcheck do Cloud Run. Fora do escopo desta etapa. | tornar pública (altera `middleware.ts`). |
+
+### Verificação dos dados da pessoa (F4)
+
+`tests/access/person-data.test.ts` (offline):
+
+- **Campos por papel.** `/api/me` devolve o próprio usuário completo. `/api/users`, `/api/users/[id]` e `/api/units/[code]/members` devolvem nome, e-mail, departamento, setores, cargo e `createdAt` a qualquer ativo (diretório; decisão D-02) e omitem `lastLoginAt` de quem não pode acompanhar a pessoa (A-05). O progresso individual segue `progressScope` (o Gerente de Setor só vê o do setor dele). A auditoria devolve só `id/nome/avatar` de ator e alvo e respeita o escopo por departamento/setor.
+- **Mudanças valem na requisição seguinte.** `withAuth` recarrega o usuário do banco a cada chamada (o token só carrega o id). Testado: transferir de departamento, rebaixar/nomear Gerente, desativar/reativar e aprovar pendente mudam o resultado da chamada seguinte, com a mesma sessão. Cargos e status que viajem na sessão são ignorados. Usuário removido com sessão válida → 401 (o cliente encerra a sessão, ver L-01).
+- **Identidade vem da sessão.** `POST /api/requests` grava `requesterId` e `fromDept` do ator mesmo quando o corpo manda outros valores (a interface envia `requesterId`; é ignorado). `PATCH /api/users/[id]`: só o próprio ou a Presidência; `cargo` só a Presidência.
+- **Interface × servidor.** As telas usam os mesmos helpers de `lib/permissions.ts` apenas para esconder ações; a decisão é sempre do servidor (coberta pela matriz da F3).
+
+### Verificação dos painéis (F5)
+
+`tests/dashboards/f5-numeros-e-acesso.test.ts` usa o repositório Prisma **real** e o serviço real, com um cliente Prisma em memória que avalia os `where` de `filters.ts`:
+
+- **Números** (dados conhecidos, calculados à mão): tarefas abertas/atrasadas/concluídas no período (vence hoje não é atrasada; cancelada não conta; concluída fora dos 30 dias só aparece em "todo o período"), resumo por membro com zeros, tarefa sem responsável só no total, cards por fase, solicitações recebidas/enviadas/atrasadas (concluída fora do período não entra), leads por status e por responsável, conversão por coorte (1 de 4 = 25%).
+- **Fuso**: às 23:00 de São Paulo (02:00 UTC do dia seguinte) o prazo de hoje não está atrasado; à 00:00 de São Paulo passa a atrasado; a janela de 30 dias começa à meia-noite de São Paulo. (A lógica usa `Intl` com `America/Sao_Paulo`, independe do `TZ` do servidor.)
+- **Escopo**: Gerente de Setor vê o membro **só** nas atividades do setor (tarefas, atrasadas, cards; sem solicitações nem leads); a Presidência vê tudo do mesmo membro; Assessor só a própria linha; 12 casos de acesso por parâmetro de URL (unidade/membro de outro departamento, setor sem participação, Gerente de Negócios → membro de Mídias, código inexistente = 404, período inválido = 400). Hub lista só o que o ator abre. Respostas sem e-mail, descrição ou contatos.
+- **Vazios**: membro sem tarefas/cards/leads e setor sem funil nem membros respondem com zeros e listas vazias.
+- **Consultas**: o número de chamadas ao banco é o mesmo com 3 ou com 150 membros (sem N+1); o painel de unidade usa menos de 20 e o hub usa 1.
+- **Não verificado**: contagens contra um Postgres real (`tests/dashboards/integration/`, exige `npm run test:int` com `TEST_DATABASE_URL` apontando para `scitec_test`, não disponível neste ambiente) e a aparência das telas no navegador.

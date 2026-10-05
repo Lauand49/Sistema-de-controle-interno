@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import type { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { withAuth, badRequest } from '@/lib/api';
-import { isDepartmentCode, isGlobal } from '@/lib/permissions';
+import { canViewUnit, isDepartmentCode, isGlobal } from '@/lib/permissions';
 
 export const dynamic = 'force-dynamic';
 
@@ -68,6 +68,18 @@ export const POST = withAuth(async (request, { actor }) => {
     });
     if (!handler || handler.status !== 'ATIVO' || (!handler.globalRole && handler.department?.code !== toDept)) {
       throw badRequest('O responsável deve ser um membro ativo do departamento de destino.');
+    }
+  }
+
+  // O card vinculado precisa ser de uma unidade que o solicitante enxerga (senão a conclusão da solicitação
+  // escreveria um comentário em card alheio). Inexistente e sem acesso recebem a mesma resposta.
+  if (linkedCardId) {
+    const linked = await prisma.card.findUnique({
+      where: { id: String(linkedCardId) },
+      select: { phase: { select: { pipe: { select: { unit: { select: { code: true } } } } } } },
+    });
+    if (!linked || !canViewUnit(actor, linked.phase.pipe.unit.code)) {
+      throw badRequest('Card vinculado inválido ou sem acesso.');
     }
   }
 

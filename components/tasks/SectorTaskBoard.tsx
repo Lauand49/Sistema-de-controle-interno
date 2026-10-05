@@ -22,6 +22,7 @@ import {
   Layers,
   ChevronRight,
 } from 'lucide-react';
+import { formatDueDate } from '@/lib/dashboards/format';
 
 interface SectorTaskBoardProps {
   department: string;
@@ -403,7 +404,7 @@ export const SectorTaskBoard: React.FC<SectorTaskBoardProps> = ({
                           {task.dueDate && (
                             <span className="flex items-center gap-1 text-slate-400 text-[10px]">
                               <Calendar className="w-3.5 h-3.5 text-purple-400" />
-                              {new Date(task.dueDate).toLocaleDateString('pt-BR')}
+                              {formatDueDate(task.dueDate)}
                             </span>
                           )}
                         </div>

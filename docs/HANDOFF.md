@@ -4,6 +4,15 @@
 
 Atualizado ao fim dos ajustes pós-etapa 3 (T1–T6) e das correções da revisão (P1–P5). Leia junto com `docs/PLANO-INTEGRACAO.md` (seção 8.4 e 8.4.1) e `AGENTS.md`.
 
+
+## Etapa 5 — revisão de acesso, dados e painéis (branch `etapa-5-revisao-acesso`)
+
+- Relatório: `docs/AUDITORIA-ACESSO.md` (inventário, achados L-01, A-01, A-04 a A-06, decisões D-01 a D-08). Texto do PR: `docs/PR-ETAPA-5.md`. Plano: seção 8.6.
+- **Laço ao deslogar:** cliente e servidor discordavam sobre "estar logado". Ver `contexts/ProfileContext.tsx` (`endSession`) e `app/login/page.tsx`. Não mexa em `middleware.ts` para isso.
+- **Testes:** `npm test` roda tudo offline. `tests/auth/` usa o middleware real (precisa de `server.deps.inline: ['next-auth']` no `vitest.config.ts`). `tests/access/matrix.test.ts` lista à mão quem pode o quê (não deriva de `lib/permissions.ts`): ao mudar uma regra, atualize a linha correspondente.
+- **Pendente do dono:** decisões D-01 a D-08 (principalmente D-02, diretório de pessoas, e D-06, `/api/health` pública).
+- **Não verificado:** navegador real; Postgres real; nenhum teste de integração rodou.
+
 ## Etapa 4 — deploy (arquivos prontos, nada implantado)
 
 - **Guias:** `docs/DEPLOY-VARIAVEIS.md`, `docs/DEPLOY-BANCO.md`, `docs/DEPLOY-CLOUD-RUN.md`, `docs/DEPLOY-GUIA-PRESIDENTE.md`. Arquivos: `Dockerfile`, `.dockerignore`, `cloudbuild.yaml`, `cloudrun.service.yaml`, `.github/workflows/ci.yml`, `app/api/health/route.ts`, `lib/env.ts`, `instrumentation*.ts`.

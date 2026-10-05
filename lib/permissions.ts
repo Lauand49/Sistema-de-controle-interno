@@ -272,6 +272,14 @@ export function progressScope(
   return shared.length > 0 ? shared : null;
 }
 
+/**
+ * Ver o último acesso de `target`. Mesmo alcance do progresso individual completo
+ * (o próprio, Presidência, Gerente do departamento dele); os demais recebem `null`.
+ */
+export function canSeeLastLogin(actor: Person | null | undefined, target: Person): boolean {
+  return progressScope(actor, target) === 'ALL';
+}
+
 // ─────────────────────────────── Painéis (dashboards) ───────────────────────────────
 
 /** Painel de unidade: mesmo critério de canViewUnit, restrito a códigos válidos (Req. 1.1). */

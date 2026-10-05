@@ -16,7 +16,8 @@ import {
   SimulationInput,
 } from '@/lib/pricing';
 
-export const GET = withAuth(async () => {
+export const GET = withAuth(async (_req, { actor }) => {
+  assert(canUseNegociosTools(actor), 'O motor de precificação é exclusivo de Negócios e da Presidência.');
   return NextResponse.json({
     roles: ROLES_RATES,
     clientSizes: CLIENT_SIZE_MODIFIERS,
