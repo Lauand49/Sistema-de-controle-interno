@@ -1,6 +1,6 @@
 'use client';
 
-import React, { createContext, useCallback, useContext, useEffect, useState } from 'react';
+import React, { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import { signOut } from 'next-auth/react';
 import { User } from '@/types';
@@ -23,6 +23,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [profiles, setProfiles] = useState<User[]>([]);
   const [currentProfile, setCurrentProfile] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const signingOut = useRef(false);
   const router = useRouter();
   const pathname = usePathname();
   const isLoginPage = pathname === '/login';
@@ -39,6 +40,17 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const fetchMe = useCallback(async () => {
     try {
       const res = await fetch('/api/me', { cache: 'no-store' });
+      if (res.status === 401) {
+        // Cookie de sessão ainda válido, mas sem usuário correspondente no banco (ex.: banco trocado ou
+        // recriado). Só redirecionar para /login não resolve: o /login vê a sessão e volta para "/",
+        // num laço infinito. Encerra a sessão (apaga o cookie) e só então vai para o login.
+        setCurrentProfile(null);
+        if (!signingOut.current) {
+          signingOut.current = true;
+          await signOut({ callbackUrl: '/login' });
+        }
+        return;
+      }
       if (!res.ok) {
         setCurrentProfile(null);
         return;
@@ -64,7 +76,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
 
   // Sem sessão válida fora do /login → volta para o login (o middleware também protege).
   useEffect(() => {
-    if (!loading && !currentProfile && !isLoginPage) router.replace('/login');
+    if (!loading && !currentProfile && !isLoginPage && !signingOut.current) router.replace('/login');
   }, [loading, currentProfile, isLoginPage, router]);
 
   const logout = useCallback(async () => {
