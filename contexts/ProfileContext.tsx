@@ -28,6 +28,20 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const pathname = usePathname();
   const isLoginPage = pathname === '/login';
 
+  // Encerra a sessão no servidor (apaga o cookie) e só então navega para /login (carga dura do next-auth).
+  // `signingOut` impede navegar para /login enquanto o cookie existe: o /login do servidor devolveria o
+  // usuário para "/" e o efeito-guarda abaixo o mandaria de novo (laço).
+  const endSession = useCallback(async () => {
+    if (signingOut.current) return;
+    signingOut.current = true;
+    try {
+      await signOut({ callbackUrl: '/login' });
+    } catch (err) {
+      console.error('Erro ao encerrar a sessão:', err);
+      signingOut.current = false; // permite tentar de novo
+    }
+  }, []);
+
   const fetchProfiles = useCallback(async () => {
     try {
       const res = await fetch('/api/users');
@@ -45,10 +59,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
         // recriado). Só redirecionar para /login não resolve: o /login vê a sessão e volta para "/",
         // num laço infinito. Encerra a sessão (apaga o cookie) e só então vai para o login.
         setCurrentProfile(null);
-        if (!signingOut.current) {
-          signingOut.current = true;
-          await signOut({ callbackUrl: '/login' });
-        }
+        await endSession();
         return;
       }
       if (!res.ok) {
@@ -64,7 +75,7 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     } finally {
       setLoading(false);
     }
-  }, [fetchProfiles]);
+  }, [fetchProfiles, endSession]);
 
   useEffect(() => {
     if (isLoginPage) {
@@ -79,10 +90,9 @@ export const ProfileProvider: React.FC<{ children: React.ReactNode }> = ({ child
     if (!loading && !currentProfile && !isLoginPage && !signingOut.current) router.replace('/login');
   }, [loading, currentProfile, isLoginPage, router]);
 
-  const logout = useCallback(async () => {
-    setCurrentProfile(null);
-    await signOut({ callbackUrl: '/login' });
-  }, []);
+  // O perfil NÃO é limpo aqui: o signOut termina com carga dura em /login. Limpar antes faria o efeito-guarda
+  // navegar para /login com o cookie ainda válido (o servidor devolveria o usuário para "/").
+  const logout = endSession;
 
   const blocked = !isLoginPage && currentProfile && currentProfile.status !== 'ATIVO';
 
