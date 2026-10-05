@@ -27,6 +27,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { isDepartmentManager, isGlobal, isSectorManager } from '@/lib/permissions';
+import { formatDueDate } from '@/lib/dashboards/format';
 
 type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE' | 'CANCELLED';
 type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
@@ -784,7 +785,7 @@ function TaskCard({
           {task.dueDate && (
             <span className="text-[10px] text-slate-400 flex items-center gap-1">
               <Calendar className="w-3 h-3 text-purple-400" />
-              {new Date(task.dueDate).toLocaleDateString('pt-BR')}
+              {formatDueDate(task.dueDate)}
             </span>
           )}
         </div>

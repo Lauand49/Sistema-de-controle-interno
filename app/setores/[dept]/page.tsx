@@ -57,6 +57,7 @@ import {
   unitName,
 } from '@/lib/permissions';
 import { dashboardPages } from '@/lib/dashboards/client-api';
+import { formatDueDate } from '@/lib/dashboards/format';
 
 export default function SectorWorkspacePage() {
   const params = useParams();
@@ -1714,7 +1715,7 @@ export default function SectorWorkspacePage() {
                           <span>
                             SLA:{' '}
                             <strong className="text-amber-400">
-                              {new Date(req.dueDate).toLocaleDateString('pt-BR')}
+                              {formatDueDate(req.dueDate)}
                             </strong>
                           </span>
                         )}

@@ -144,6 +144,7 @@ As demais rotas seguem o padrão "carrega o objeto, checa a unidade dele, nega c
 | A-01 | média | `GET /api/tools/pricing` | Corrigido (F3) | Qualquer ativo lia as tabelas de taxas por hora e modificadores. Agora exige `canUseNegociosTools` (igual ao `POST`). A página não usa o `GET`. |
 | A-04 | baixa | `POST /api/requests` (`linkedCardId`) | Corrigido (F3) | O solicitante podia vincular o id de um card de qualquer unidade; ao concluir a solicitação, o atendente gravava um comentário nesse card. Agora o card precisa estar numa unidade que o solicitante enxerga; inexistente e sem acesso respondem igual (400). |
 | A-05 | baixa | `GET /api/users`, `/api/users/[id]`, `/api/units/[code]/members` | Corrigido (F4) | Qualquer ativo recebia o **último acesso** (`lastLoginAt`) de todas as pessoas; nenhuma tela usa o campo. Agora só vai para o próprio, a Presidência e o Gerente do departamento da pessoa (`canSeeLastLogin` em `lib/permissions.ts`, mesmo alcance do progresso completo); os demais recebem `null`. |
+| A-06 | baixa (dados errados na tela) | `app/tasks`, `components/tasks/SectorTaskBoard`, `app/requests`, `app/setores/[dept]` | Corrigido (F5) | O prazo (`dueDate`, data sem hora gravada à meia-noite UTC) era exibido com `new Date(x).toLocaleDateString('pt-BR')`, que em São Paulo (UTC-3) mostra o **dia anterior**. O painel já contava pelo dia certo; a tela de tarefas e as solicitações mostravam um dia a menos. Novo `formatDueDate` (`lib/dashboards/format.ts`) usa só a parte de data. |
 
 ### Verificação da matriz (F3)
 
@@ -158,6 +159,8 @@ As demais rotas seguem o padrão "carrega o objeto, checa a unidade dele, nega c
 | D-03 | `cardId`/`leadId` em tarefas | `POST/PATCH /api/tasks` aceitam qualquer id de card/lead sem checar a unidade; é só um vínculo (a tarefa não devolve dados do card). Baixa. | validar que o card é de unidade visível ao autor. |
 | D-04 | Ordem das validações em `POST /api/users/[id]/hierarchy` | `404`/`400 (não está pendente)` vêm antes do `403`, então um Assessor descobre se um id existe/está pendente. Baixa. | mover o `assert` da ação para antes das checagens de estado. |
 | D-05 | `/tools/pricing` (página) | A página abre para qualquer ativo; o servidor nega o `POST` e o `GET`. | esconder a página fora de Negócios (só UI). |
+| D-07 | Painel de unidade mostra dados individuais a quem só vê o próprio progresso | O requisito 4.5/6.3 do spec manda listar tarefas atrasadas **com responsável** e, em Negócios, **leads por responsável**. Um Assessor que abre o painel do próprio departamento vê esses dados de colegas, embora a matriz diga "progresso individual: só o próprio". Os resumos por membro já respeitam `progressScope`. | (a) manter (as tarefas do departamento já são visíveis a seus membros em `/api/tasks`); (b) filtrar listas por `progressScope` e juntar o restante em "Outros". |
+| D-08 | Prazo com hora enviado por cliente de API | A tela envia `AAAA-MM-DD`. Um cliente externo que mande `2026-10-05T23:30:00-03:00` grava 06/10 em UTC e o painel conta o dia 06. Sem impacto na interface. | normalizar `dueDate` no servidor para data sem hora. |
 | D-06 | `/api/health` | Continua atrás do middleware (sem sessão = 401), o que impede o healthcheck do Cloud Run. Fora do escopo desta etapa. | tornar pública (altera `middleware.ts`). |
 
 ### Verificação dos dados da pessoa (F4)
@@ -168,3 +171,14 @@ As demais rotas seguem o padrão "carrega o objeto, checa a unidade dele, nega c
 - **Mudanças valem na requisição seguinte.** `withAuth` recarrega o usuário do banco a cada chamada (o token só carrega o id). Testado: transferir de departamento, rebaixar/nomear Gerente, desativar/reativar e aprovar pendente mudam o resultado da chamada seguinte, com a mesma sessão. Cargos e status que viajem na sessão são ignorados. Usuário removido com sessão válida → 401 (o cliente encerra a sessão, ver L-01).
 - **Identidade vem da sessão.** `POST /api/requests` grava `requesterId` e `fromDept` do ator mesmo quando o corpo manda outros valores (a interface envia `requesterId`; é ignorado). `PATCH /api/users/[id]`: só o próprio ou a Presidência; `cargo` só a Presidência.
 - **Interface × servidor.** As telas usam os mesmos helpers de `lib/permissions.ts` apenas para esconder ações; a decisão é sempre do servidor (coberta pela matriz da F3).
+
+### Verificação dos painéis (F5)
+
+`tests/dashboards/f5-numeros-e-acesso.test.ts` usa o repositório Prisma **real** e o serviço real, com um cliente Prisma em memória que avalia os `where` de `filters.ts`:
+
+- **Números** (dados conhecidos, calculados à mão): tarefas abertas/atrasadas/concluídas no período (vence hoje não é atrasada; cancelada não conta; concluída fora dos 30 dias só aparece em "todo o período"), resumo por membro com zeros, tarefa sem responsável só no total, cards por fase, solicitações recebidas/enviadas/atrasadas (concluída fora do período não entra), leads por status e por responsável, conversão por coorte (1 de 4 = 25%).
+- **Fuso**: às 23:00 de São Paulo (02:00 UTC do dia seguinte) o prazo de hoje não está atrasado; à 00:00 de São Paulo passa a atrasado; a janela de 30 dias começa à meia-noite de São Paulo. (A lógica usa `Intl` com `America/Sao_Paulo`, independe do `TZ` do servidor.)
+- **Escopo**: Gerente de Setor vê o membro **só** nas atividades do setor (tarefas, atrasadas, cards; sem solicitações nem leads); a Presidência vê tudo do mesmo membro; Assessor só a própria linha; 12 casos de acesso por parâmetro de URL (unidade/membro de outro departamento, setor sem participação, Gerente de Negócios → membro de Mídias, código inexistente = 404, período inválido = 400). Hub lista só o que o ator abre. Respostas sem e-mail, descrição ou contatos.
+- **Vazios**: membro sem tarefas/cards/leads e setor sem funil nem membros respondem com zeros e listas vazias.
+- **Consultas**: o número de chamadas ao banco é o mesmo com 3 ou com 150 membros (sem N+1); o painel de unidade usa menos de 20 e o hub usa 1.
+- **Não verificado**: contagens contra um Postgres real (`tests/dashboards/integration/`, exige `npm run test:int` com `TEST_DATABASE_URL` apontando para `scitec_test`, não disponível neste ambiente) e a aparência das telas no navegador.

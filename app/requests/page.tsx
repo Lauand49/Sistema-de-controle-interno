@@ -25,6 +25,7 @@ import {
   Calendar,
   Layers,
 } from 'lucide-react';
+import { formatDueDate } from '@/lib/dashboards/format';
 
 export default function CrossDeptRequestsPage() {
   const { currentProfile } = useProfile();
@@ -355,7 +356,7 @@ export default function CrossDeptRequestsPage() {
                     {req.dueDate && (
                       <span className="flex items-center gap-1 text-amber-400 font-medium">
                         <Calendar className="w-3 h-3" /> SLA:{' '}
-                        {new Date(req.dueDate).toLocaleDateString('pt-BR')}
+                        {formatDueDate(req.dueDate)}
                       </span>
                     )}
                   </div>
