@@ -62,8 +62,9 @@ COPY --from=build --chown=node:node /app/public ./public
 # Usuário não-root (já existe na imagem oficial do Node).
 USER node
 EXPOSE 8080
-# O Cloud Run ignora HEALTHCHECK (usa sondas próprias, ver docs/DEPLOY-CLOUD-RUN.md); vale para
-# `docker run` e Docker Compose. Qualquer resposta HTTP < 500 prova que o servidor está de pé: sem
+# Pensado para `docker run`/Docker Compose. O Cloud Run tem sondas próprias (startup/liveness, configuradas
+# no serviço; ver docs/DEPLOY-CLOUD-RUN.md) e a documentação delas não menciona o HEALTHCHECK do Dockerfile:
+# não dependa dele lá. Qualquer resposta HTTP < 500 prova que o servidor está de pé: sem
 # sessão o middleware responde 401 em /api/health (ver app/api/health/route.ts).
 HEALTHCHECK --interval=30s --timeout=5s --start-period=20s --retries=3 \
   CMD node -e "fetch('http://127.0.0.1:'+(process.env.PORT||8080)+'/api/health').then(r=>process.exit(r.status<500?0:1)).catch(()=>process.exit(1))"
