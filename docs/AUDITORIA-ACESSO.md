@@ -2,7 +2,18 @@
 
 Revisão da Etapa 5 (branch `etapa-5-revisao-acesso`). Fonte das regras: `docs/PLANO-INTEGRACAO.md` seções 4, 7, 8.1 e 8.3. Fonte única das permissões: `lib/permissions.ts`.
 
-Este arquivo é atualizado a cada fase. **Fase 1 (inventário)**: lista de tudo que existe e como cada item é protegido hoje. Achados, correções e decisões pendentes entram nas seções finais, conforme as fases 2 a 6 avançam.
+**Situação final (Etapa 5 concluída):** o inventário (Fase 1) está nas tabelas abaixo; os achados confirmados, as correções e as decisões que dependem do dono estão nas seções finais. Nada foi aberto: toda correção só **fecha** acesso ou corrige exibição. `middleware.ts`, `auth.ts` e `auth.config.ts` não foram alterados.
+
+## Resumo
+
+| Severidade | Corrigidos | Pendentes (decisão do dono) |
+|---|---|---|
+| Alta | 1 (L-01, laço de recarga ao deslogar) | 0 |
+| Média | 1 (A-01, precificação aberta a qualquer ativo) | 1 (D-02, diretório de pessoas com e-mail e cargo para qualquer ativo) |
+| Baixa | 3 (A-04, A-05, A-06) | 6 (D-01, D-03, D-04, D-05, D-07, D-08) |
+| Operacional | n/a | 1 (D-06, `/api/health` pública) |
+
+Como foi verificado: 1 harness de ponta a ponta do login/logout (middleware real com JWT assinado), 1 matriz de 12 personas × 43 rotas, testes de dados da pessoa e de painéis. Nenhum teste de integração foi executado (sem `TEST_DATABASE_URL`).
 
 ## Como ler
 
@@ -126,15 +137,15 @@ Todas chamam `requireNegocios(actor)` (= `canUseNegociosTools`) **antes** de qua
 | `/api/dashboards/units/[code]` | GET | Unidade | `getUnitDashboard` (serviço) | A revisar na Fase 5. |
 | `/api/dashboards/members/[userId]` | GET | Objeto (pessoa) | `getMemberDashboard` (serviço) | A revisar na Fase 5. |
 
-## Achados preliminares da Fase 1 (a confirmar com testes nas fases seguintes)
+## Achados preliminares da Fase 1 (histórico: todos resolvidos nas fases 2 a 5, ver seção seguinte)
 
 | Id | Severidade prévia | Onde | Resumo |
 |---|---|---|---|
 | A-01 | média | `GET /api/tools/pricing` | A rota de leitura das tabelas de precificação não exige `canUseNegociosTools`, embora o plano trate a precificação como ferramenta exclusiva de Negócios/Presidência. |
-| A-02 | baixa | rotas por id (`cards`, `pipes`, `requests`, `tasks`) | Objeto inexistente responde `404`; objeto existente de outra unidade responde `403`. Permite distinguir "existe" de "não existe" a quem souber o id (ids são UUID). Política de resposta não definida no plano. |
-| A-03 | a definir | `GET /api/users`, `GET /api/users/[id]` | Qualquer ativo recebe e-mail, cargo, último login e contagens de outras pessoas. O plano não define o que o diretório expõe. |
+| A-02 (→ D-01) | baixa | rotas por id (`cards`, `pipes`, `requests`, `tasks`) | Objeto inexistente responde `404`; objeto existente de outra unidade responde `403`. Permite distinguir "existe" de "não existe" a quem souber o id (ids são UUID). Política de resposta não definida no plano. |
+| A-03 (→ D-02, A-05) | média | `GET /api/users`, `GET /api/users/[id]` | Qualquer ativo recebe e-mail, cargo, último login e contagens de outras pessoas. O plano não define o que o diretório expõe. |
 
-As demais rotas seguem o padrão "carrega o objeto, checa a unidade dele, nega com 403". Os testes das Fases 2 a 5 confirmam ou refutam cada linha acima.
+As demais rotas seguem o padrão "carrega o objeto, checa a unidade dele, nega com 403". A matriz da Fase 3 confirmou esse padrão em todas as rotas por objeto testadas.
 
 ## Achados confirmados (Fases 2 e 3)
 
@@ -152,16 +163,16 @@ As demais rotas seguem o padrão "carrega o objeto, checa a unidade dele, nega c
 
 ## Decisões pendentes do dono (não decididas pelo agente)
 
-| Id | Tema | Situação atual | Opções |
+| Id (severidade) | Tema | Situação atual | Opções |
 |---|---|---|---|
-| D-01 | 403 × 404 em rotas por id (antes A-02) | Objeto inexistente responde 404 e existente de outra unidade responde 403. Quem souber um UUID distingue "existe" de "não existe". Risco baixo (ids não sequenciais). | (a) manter; (b) responder 404 nos dois casos para quem não vê a unidade. |
-| D-02 | Diretório de pessoas (antes A-03) | Qualquer ativo recebe e-mail, cargo, último login e contagens de qualquer pessoa (`GET /api/users`, `/api/users/[id]`). Ver Fase 4. | reduzir campos para quem não é gerente/Presidência. |
-| D-03 | `cardId`/`leadId` em tarefas | `POST/PATCH /api/tasks` aceitam qualquer id de card/lead sem checar a unidade; é só um vínculo (a tarefa não devolve dados do card). Baixa. | validar que o card é de unidade visível ao autor. |
-| D-04 | Ordem das validações em `POST /api/users/[id]/hierarchy` | `404`/`400 (não está pendente)` vêm antes do `403`, então um Assessor descobre se um id existe/está pendente. Baixa. | mover o `assert` da ação para antes das checagens de estado. |
-| D-05 | `/tools/pricing` (página) | A página abre para qualquer ativo; o servidor nega o `POST` e o `GET`. | esconder a página fora de Negócios (só UI). |
-| D-07 | Painel de unidade mostra dados individuais a quem só vê o próprio progresso | O requisito 4.5/6.3 do spec manda listar tarefas atrasadas **com responsável** e, em Negócios, **leads por responsável**. Um Assessor que abre o painel do próprio departamento vê esses dados de colegas, embora a matriz diga "progresso individual: só o próprio". Os resumos por membro já respeitam `progressScope`. | (a) manter (as tarefas do departamento já são visíveis a seus membros em `/api/tasks`); (b) filtrar listas por `progressScope` e juntar o restante em "Outros". |
-| D-08 | Prazo com hora enviado por cliente de API | A tela envia `AAAA-MM-DD`. Um cliente externo que mande `2026-10-05T23:30:00-03:00` grava 06/10 em UTC e o painel conta o dia 06. Sem impacto na interface. | normalizar `dueDate` no servidor para data sem hora. |
-| D-06 | `/api/health` | Continua atrás do middleware (sem sessão = 401), o que impede o healthcheck do Cloud Run. Fora do escopo desta etapa. | tornar pública (altera `middleware.ts`). |
+| D-01 (baixa) | 403 × 404 em rotas por id (antes A-02) | Objeto inexistente responde 404 e existente de outra unidade responde 403. Quem souber um UUID distingue "existe" de "não existe". Risco baixo (ids não sequenciais). | (a) manter; (b) responder 404 nos dois casos para quem não vê a unidade. |
+| D-02 (média) | Diretório de pessoas (antes A-03) | Qualquer ativo recebe nome, e-mail, departamento, cargo e contagens de cards/tarefas de qualquer pessoa (`GET /api/users`, `/api/users/[id]`); o último acesso já foi restrito (A-05). O plano não define o diretório, e a tela de equipe usa e-mail e contagens. | reduzir campos para quem não é gerente/Presidência. |
+| D-03 (baixa) | `cardId`/`leadId` em tarefas | `POST/PATCH /api/tasks` aceitam qualquer id de card/lead sem checar a unidade; é só um vínculo (a tarefa não devolve dados do card). Baixa. | validar que o card é de unidade visível ao autor. |
+| D-04 (baixa) | Ordem das validações em `POST /api/users/[id]/hierarchy` | `404`/`400 (não está pendente)` vêm antes do `403`, então um Assessor descobre se um id existe/está pendente. Baixa. | mover o `assert` da ação para antes das checagens de estado. |
+| D-05 (baixa) | `/tools/pricing` (página) | A página abre para qualquer ativo; o servidor nega o `POST` e o `GET`. | esconder a página fora de Negócios (só UI). |
+| D-07 (baixa) | Painel de unidade mostra dados individuais a quem só vê o próprio progresso | O requisito 4.5/6.3 do spec manda listar tarefas atrasadas **com responsável** e, em Negócios, **leads por responsável**. Um Assessor que abre o painel do próprio departamento vê esses dados de colegas, embora a matriz diga "progresso individual: só o próprio". Os resumos por membro já respeitam `progressScope`. | (a) manter (as tarefas do departamento já são visíveis a seus membros em `/api/tasks`); (b) filtrar listas por `progressScope` e juntar o restante em "Outros". |
+| D-08 (baixa) | Prazo com hora enviado por cliente de API | A tela envia `AAAA-MM-DD`. Um cliente externo que mande `2026-10-05T23:30:00-03:00` grava 06/10 em UTC e o painel conta o dia 06. Sem impacto na interface. | normalizar `dueDate` no servidor para data sem hora. |
+| D-06 (operacional) | `/api/health` | Continua atrás do middleware (sem sessão = 401), o que impede o healthcheck do Cloud Run. Fora do escopo desta etapa. | tornar pública (altera `middleware.ts`). |
 
 ### Verificação dos dados da pessoa (F4)
 
