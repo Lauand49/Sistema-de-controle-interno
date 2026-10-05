@@ -135,3 +135,26 @@ Todas chamam `requireNegocios(actor)` (= `canUseNegociosTools`) **antes** de qua
 | A-03 | a definir | `GET /api/users`, `GET /api/users/[id]` | Qualquer ativo recebe e-mail, cargo, último login e contagens de outras pessoas. O plano não define o que o diretório expõe. |
 
 As demais rotas seguem o padrão "carrega o objeto, checa a unidade dele, nega com 403". Os testes das Fases 2 a 5 confirmam ou refutam cada linha acima.
+
+## Achados confirmados (Fases 2 e 3)
+
+| Id | Severidade | Onde | Situação | Resumo e correção |
+|---|---|---|---|---|
+| L-01 | **alta** (disponibilidade) | `contexts/ProfileContext.tsx`, `app/login/page.tsx` | Corrigido (F2) | Laço de recarga ao deslogar. Cliente decide "logado" pelo `/api/me` (banco) e o servidor pelo cookie. `logout()` limpava o perfil antes do cookie sumir; o efeito-guarda mandava para `/login` e o servidor devolvia para `/`. Também ocorria com `/api/me` 500 e com usuário sem registro. Correção: `endSession()` único (marca `signingOut` antes, não limpa o perfil, libera nova tentativa se falhar) e `/login` só redireciona se o usuário da sessão existe no banco. `middleware.ts`, `auth.ts` e `auth.config.ts` **não** foram alterados. |
+| A-01 | média | `GET /api/tools/pricing` | Corrigido (F3) | Qualquer ativo lia as tabelas de taxas por hora e modificadores. Agora exige `canUseNegociosTools` (igual ao `POST`). A página não usa o `GET`. |
+| A-04 | baixa | `POST /api/requests` (`linkedCardId`) | Corrigido (F3) | O solicitante podia vincular o id de um card de qualquer unidade; ao concluir a solicitação, o atendente gravava um comentário nesse card. Agora o card precisa estar numa unidade que o solicitante enxerga; inexistente e sem acesso respondem igual (400). |
+
+### Verificação da matriz (F3)
+
+`tests/access/matrix.test.ts`: 12 personas (anônimo, Pendente, Inativo, Presidente, Vice, Gerente de Negócios, Gerente de Setor, Assessor de Negócios e de AdmJurFin/Gente/Mídias, Gerentes de AdmJurFin/Gente) × 47 rotas/métodos, incluindo acesso por objeto (card, funil, campo, tarefa, solicitação, lead, usuário) e listas filtradas no servidor. A coluna "permitidos" é escrita à mão a partir do plano, não derivada de `lib/permissions.ts`. Em toda linha: sem sessão = 401; Pendente/Inativo = 403; fora da lista = 403, sem escrita no banco e sem dados do objeto no corpo. Resultado: única divergência era A-01.
+
+## Decisões pendentes do dono (não decididas pelo agente)
+
+| Id | Tema | Situação atual | Opções |
+|---|---|---|---|
+| D-01 | 403 × 404 em rotas por id (antes A-02) | Objeto inexistente responde 404 e existente de outra unidade responde 403. Quem souber um UUID distingue "existe" de "não existe". Risco baixo (ids não sequenciais). | (a) manter; (b) responder 404 nos dois casos para quem não vê a unidade. |
+| D-02 | Diretório de pessoas (antes A-03) | Qualquer ativo recebe e-mail, cargo, último login e contagens de qualquer pessoa (`GET /api/users`, `/api/users/[id]`). Ver Fase 4. | reduzir campos para quem não é gerente/Presidência. |
+| D-03 | `cardId`/`leadId` em tarefas | `POST/PATCH /api/tasks` aceitam qualquer id de card/lead sem checar a unidade; é só um vínculo (a tarefa não devolve dados do card). Baixa. | validar que o card é de unidade visível ao autor. |
+| D-04 | Ordem das validações em `POST /api/users/[id]/hierarchy` | `404`/`400 (não está pendente)` vêm antes do `403`, então um Assessor descobre se um id existe/está pendente. Baixa. | mover o `assert` da ação para antes das checagens de estado. |
+| D-05 | `/tools/pricing` (página) | A página abre para qualquer ativo; o servidor nega o `POST` e o `GET`. | esconder a página fora de Negócios (só UI). |
+| D-06 | `/api/health` | Continua atrás do middleware (sem sessão = 401), o que impede o healthcheck do Cloud Run. Fora do escopo desta etapa. | tornar pública (altera `middleware.ts`). |
