@@ -89,7 +89,7 @@ export function LoginClient({ callbackUrl, error, domain, devLoginEnabled, googl
             type="button"
             onClick={handleGoogle}
             disabled={submitting || !googleConfigured}
-            className="w-full px-4 py-3 text-sm font-bold rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="w-full px-4 py-3 text-sm font-bold rounded-xl min-h-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <LogIn className="w-4 h-4" aria-hidden="true" /> Entrar com Google
           </button>
@@ -142,7 +142,7 @@ export function LoginClient({ callbackUrl, error, domain, devLoginEnabled, googl
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-3 py-2 text-xs font-bold rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 disabled:opacity-50"
+                className="px-3 py-2 text-xs font-bold rounded-xl min-h-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 bg-amber-500 hover:bg-amber-400 text-slate-950 disabled:opacity-50"
               >
                 Entrar
               </button>
@@ -156,7 +156,7 @@ export function LoginClient({ callbackUrl, error, domain, devLoginEnabled, googl
                       type="button"
                       onClick={() => handleDevLogin(u.email)}
                       disabled={submitting}
-                      className="w-full text-left px-3 py-2 rounded-xl border border-slate-800 bg-slate-900/70 hover:border-amber-600/60 flex items-center justify-between gap-2 disabled:opacity-50"
+                      className="w-full text-left px-3 py-2 rounded-xl min-h-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 border border-slate-800 bg-slate-900/70 hover:border-amber-600/60 flex items-center justify-between gap-2 disabled:opacity-50"
                     >
                       <span className="min-w-0">
                         <span className="block text-xs font-bold text-white truncate">{u.name}</span>

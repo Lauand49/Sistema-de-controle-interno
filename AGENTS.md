@@ -24,6 +24,7 @@ Este projeto foi iniciado com o Kiro e continuado com outros agentes. Para saber
 - Nunca commite `.env`, chaves ou segredos; chaves de API só no servidor.
 - Migrações do Prisma usam a data real do dia no nome.
 - Antes de abrir PR: `npm run build` e `npm test`.
+- **UI nova usa `components/ui` e os tokens do Tailwind; sem emoji como ícone (só lucide-react); sem cores fixas fora dos tokens** (azul sólido não é cor primária). Guia: `docs/DESIGN.md`; guarda: `tests/ui/design-guard.test.ts`.
 
 ### Banco de dados e testes de integração (regra inviolável)
 

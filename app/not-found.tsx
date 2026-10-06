@@ -15,9 +15,9 @@ export default function NotFound() {
         <div className="pt-2 flex items-center justify-center gap-3">
           <Link
             href="/"
-            className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-bold transition-colors inline-flex items-center gap-2"
+            className="min-h-10 px-4 rounded-control bg-gradient-to-r from-primary-from to-primary-to hover:brightness-110 text-white text-sm font-bold transition-all inline-flex items-center gap-2 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
           >
-            <Home className="w-4 h-4" /> Ir para o Início
+            <Home className="w-4 h-4" aria-hidden="true" /> Ir para o Início
           </Link>
         </div>
       </div>

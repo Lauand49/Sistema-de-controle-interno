@@ -19,7 +19,7 @@ export default function GlobalError({
           </p>
           <button
             onClick={() => reset()}
-            className="px-5 py-2 text-xs font-bold text-white bg-purple-600 hover:bg-purple-500 rounded-xl transition-colors"
+            className="min-h-10 px-5 py-2 text-sm font-bold text-white bg-purple-600 hover:bg-purple-500 rounded-xl transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400"
           >
             Recarregar Aplicação
           </button>

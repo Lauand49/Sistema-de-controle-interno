@@ -5,6 +5,14 @@
 Atualizado ao fim dos ajustes pós-etapa 3 (T1–T6) e das correções da revisão (P1–P5). Leia junto com `docs/PLANO-INTEGRACAO.md` (seção 8.4 e 8.4.1) e `AGENTS.md`.
 
 
+## Etapa 6 — revisão de design (branch `etapa-6-design`)
+
+- Guia: `docs/DESIGN.md`. Auditoria: `docs/DESIGN-AUDITORIA.md`. Conferência manual: `docs/DESIGN-CHECKLIST.md`. PR: `docs/PR-ETAPA-6.md`. Plano: seção 8.7.
+- Regra: UI nova usa `components/ui` e os tokens; sem emoji como ícone; sem azul sólido como primário. A guarda é `tests/ui/design-guard.test.ts` (lista de exceções documentada).
+- **Falta migrar (por economia):** `PageHeader`, `StatCard`, `EmptyState` e `Badge` existem e estão testados/documentados, mas a maioria das telas ainda tem cabeçalhos, cartões e estados vazios próprios; os modais antigos usam `ModalFrame` (comportamento) e não `Modal` (visual); formulários do minerador (`MiningForm`, `Combobox`) ainda têm classes próprias de campo; rótulos de campos dentro de `.map()` e alguns rótulos sem `htmlFor` não foram ligados. Verificar no navegador com o checklist.
+- **Achados de lógica não alterados:** o campo "Gerente Responsável" (funil de Negócios, fase Ganho) é texto livre (`prisma/seed.ts`); o texto da atividade "Demanda intersetorial ... CONCLUÍDA" é gravado pela API (`app/api/requests/[id]/route.ts`) e não foi trocado para "Solicitação" (formato de dado salvo).
+
+
 ## Etapa 5 — revisão de acesso, dados e painéis (branch `etapa-5-revisao-acesso`)
 
 - Relatório: `docs/AUDITORIA-ACESSO.md` (inventário, achados L-01, A-01, A-04 a A-06, decisões D-01 a D-08). Texto do PR: `docs/PR-ETAPA-5.md`. Plano: seção 8.6.

@@ -41,3 +41,15 @@ Identidade: tema escuro, roxo/índigo como cor primária, cards `rounded-2xl`, �
   <Field label="Valor"><CurrencyInput value={v} onChange={setV} /></Field>
 </Modal>
 ```
+
+## Modais
+Novo diálogo: `Modal` (cabeçalho, corpo rolável, rodapé). Os modais antigos ainda têm visual próprio, mas usam `ModalFrame` (mesmo comportamento: `role="dialog"`, Esc, foco preso, trava de rolagem); migrar para `Modal` quando forem mexidos.
+
+## Exceções documentadas (guarda em `tests/ui/design-guard.test.ts`)
+| Onde | Exceção | Motivo |
+|---|---|---|
+| `app/tools/pricing/page.tsx` | emojis no texto da proposta | texto copiado para a área de transferência, é conteúdo |
+| `CreateRequestModal`, `ClosedDealContractModal` | emoji na descrição enviada | vira dado salvo; o formato gravado não muda |
+| `app/tools/page.tsx` | gradiente azul do cartão de uma ferramenta | cor de identidade da categoria |
+| `app/tasks/page.tsx` | ponto azul de "em andamento" | cor semântica de status |
+| Azul/ciano/âmbar/rosa translúcidos (`bg-blue-500/20`...) | badges e cores de departamento | identidade de departamento e status, não ação primária |
