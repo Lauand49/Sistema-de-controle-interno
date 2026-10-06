@@ -11,7 +11,7 @@ export const AnalysisHistory: React.FC<{ analyses: readonly CompanyAnalysis[] }>
   return (
     <Section id="ficha-historico" title="Histórico de análises" icon={<History className="h-5 w-5 text-purple-400" aria-hidden="true" />}>
       <div className="overflow-x-auto">
-        <table className="w-full text-left text-sm">
+        <table className="w-full min-w-[480px] text-left text-sm">
           <caption className="sr-only">Análises da empresa, da mais recente para a mais antiga</caption>
           <thead className="text-xs uppercase tracking-wide text-slate-400">
             <tr>

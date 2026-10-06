@@ -523,7 +523,7 @@ export default function TeamPage() {
             {auditLogs.length === 0 ? (
               <EmptyState title="Nenhum registro no seu escopo." />
             ) : (
-              <table className="w-full text-xs">
+              <table className="w-full min-w-[640px] text-xs">
                 <thead className="text-left text-slate-400 border-b border-slate-800">
                   <tr>
                     <th scope="col" className="p-3">Quando</th>

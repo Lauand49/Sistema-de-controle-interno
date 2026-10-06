@@ -669,7 +669,7 @@ export default function LeadSheetPage() {
                 Pré-visualização dos 3 primeiros registros:
               </span>
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-slate-300">
+                <table className="w-full min-w-[720px] text-left text-xs text-slate-300">
                   <thead className="border-b border-slate-800 text-purple-400">
                     <tr>
                       <th className="p-2">Empresa</th>
@@ -808,7 +808,7 @@ export default function LeadSheetPage() {
           <div className="space-y-4 animate-in fade-in duration-200">
             <div className="bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+                <table className="w-full min-w-[960px] text-left text-xs">
                   <thead className="bg-slate-950/80 border-b border-slate-800 text-purple-300 font-bold uppercase tracking-wider">
                     <tr>
                       <th className="p-3.5">Empresa / Cliente</th>

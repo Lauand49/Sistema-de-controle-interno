@@ -726,7 +726,7 @@ export default function SectorWorkspacePage() {
                   return (
                     <div className="border border-slate-800 rounded-2xl bg-slate-900/60 overflow-hidden shadow-xl">
                       <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs border-collapse">
+                        <table className="w-full min-w-[640px] text-left text-xs border-collapse">
                           <thead>
                             <tr className="border-b border-slate-800 bg-slate-950/80 text-slate-400 text-[11px] uppercase tracking-wider font-extrabold">
                               <th className="p-3.5">Empresa / Lead</th>
@@ -948,7 +948,7 @@ export default function SectorWorkspacePage() {
                   </div>
 
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs">
+                    <table className="w-full min-w-[640px] text-left text-xs">
                       <thead>
                         <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider text-[11px]">
                           <th className="pb-3">Descrição</th>
