@@ -142,25 +142,25 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
                     <Sparkles className="w-3 h-3 text-purple-400" /> SciTec jr. OS
                   </span>
                 </div>
-                <h1 title={pipeName || undefined} className="text-sm lg:text-base font-black text-white tracking-tight mt-0.5 truncate max-w-[160px] sm:max-w-[220px]">
+                <h1 title={pipeName || undefined} className="text-sm lg:text-base font-black text-white tracking-tight mt-0.5 truncate max-w-[140px] sm:max-w-[160px] 2xl:max-w-[260px]">
                   {pipeName || 'Sistema Integrado da EJ'}
                 </h1>
               </div>
             </Link>
 
             {/* Navigation Tabs (Desktop xl+) */}
-            <nav className="hidden xl:flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-purple-900/40">
+            <nav className="hidden xl:flex items-center gap-0.5 2xl:gap-1 bg-slate-900/80 p-1 rounded-xl border border-purple-900/40">
               <Link
                 href="/"
                 aria-label="Início"
                 title="Início"
-                className={`px-3 min-h-10 text-xs font-bold rounded-lg flex items-center gap-1.5 whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${isHomeActive
+                className={`px-2 2xl:px-3 min-h-10 text-xs font-bold rounded-lg flex items-center gap-1.5 whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${isHomeActive
                   ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
                   : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
                   }`}
               >
                 <Home className="w-3.5 h-3.5" aria-hidden="true" />
-                <span className="hidden 2xl:inline">Início</span>
+                <span className="hidden xl:inline">Início</span>
               </Link>
 
               {/* Workspaces / Setores Dropdown */}
@@ -171,13 +171,13 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
                   title="Setores"
                   aria-expanded={isSectorDropdownOpen}
                   onClick={() => setIsSectorDropdownOpen(!isSectorDropdownOpen)}
-                  className={`px-3 min-h-10 text-xs font-bold rounded-lg flex items-center gap-1.5 whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${isAnySectorActive
+                  className={`px-2 2xl:px-3 min-h-10 text-xs font-bold rounded-lg flex items-center gap-1.5 whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${isAnySectorActive
                     ? 'bg-purple-900/80 text-white border border-purple-600/40'
                     : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
                     }`}
                 >
                   <Layers className="w-3.5 h-3.5 text-purple-400" aria-hidden="true" />
-                  <span className="hidden 2xl:inline">Setores</span>
+                  <span className="hidden xl:inline">Setores</span>
                   <ChevronDown
                     className={`w-3 h-3 transition-transform ${isSectorDropdownOpen ? 'rotate-180' : ''
                       }`}
@@ -232,12 +232,12 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
                 href="/requests"
                 aria-label="Solicitações"
                 title="Solicitações"
-                className={`px-3 min-h-10 text-xs font-bold rounded-lg flex items-center gap-1.5 whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${isRequestsActive
+                className={`px-2 2xl:px-3 min-h-10 text-xs font-bold rounded-lg flex items-center gap-1.5 whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${isRequestsActive
                   ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
                   : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
                   }`}
               >
-                <Send className="w-3.5 h-3.5" aria-hidden="true" /> <span className="hidden 2xl:inline">Solicitações</span>
+                <Send className="w-3.5 h-3.5" aria-hidden="true" /> <span className="hidden xl:inline">Solicitações</span>
                 {pendingRequestsCount > 0 && (
                   <span className="bg-amber-500/20 text-amber-300 text-[11px] px-1.5 py-0.2 rounded-full border border-amber-500/40">
                     {pendingRequestsCount}
@@ -249,36 +249,36 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
                 href="/tasks"
                 aria-label="Minhas Tarefas"
                 title="Minhas Tarefas"
-                className={`px-3 min-h-10 text-xs font-bold rounded-lg flex items-center gap-1.5 whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${isTasksActive
+                className={`px-2 2xl:px-3 min-h-10 text-xs font-bold rounded-lg flex items-center gap-1.5 whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${isTasksActive
                   ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
                   : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
                   }`}
               >
-                <CheckSquare className="w-3.5 h-3.5" aria-hidden="true" /> <span className="hidden 2xl:inline">Minhas Tarefas</span>
+                <CheckSquare className="w-3.5 h-3.5" aria-hidden="true" /> <span className="hidden xl:inline 2xl:hidden">Tarefas</span><span className="hidden 2xl:inline">Minhas Tarefas</span>
               </Link>
 
               <Link
                 href="/team"
                 aria-label="Equipe"
                 title="Equipe"
-                className={`px-3 min-h-10 text-xs font-bold rounded-lg flex items-center gap-1.5 whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${isTeamActive
+                className={`px-2 2xl:px-3 min-h-10 text-xs font-bold rounded-lg flex items-center gap-1.5 whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${isTeamActive
                   ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
                   : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
                   }`}
               >
-                <Users className="w-3.5 h-3.5" aria-hidden="true" /> <span className="hidden 2xl:inline">Equipe</span>
+                <Users className="w-3.5 h-3.5" aria-hidden="true" /> <span className="hidden xl:inline">Equipe</span>
               </Link>
 
               <Link
                 href="/paineis"
                 aria-label="Painéis"
                 title="Painéis"
-                className={`px-3 min-h-10 text-xs font-bold rounded-lg flex items-center gap-1.5 whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${isPaineisActive
+                className={`px-2 2xl:px-3 min-h-10 text-xs font-bold rounded-lg flex items-center gap-1.5 whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${isPaineisActive
                   ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
                   : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
                   }`}
               >
-                <LayoutDashboard className="w-3.5 h-3.5" aria-hidden="true" /> <span className="hidden 2xl:inline">Painéis</span>
+                <LayoutDashboard className="w-3.5 h-3.5" aria-hidden="true" /> <span className="hidden xl:inline">Painéis</span>
               </Link>
             </nav>
           </div>
@@ -317,17 +317,19 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
               aria-label="Nova solicitação"
             >
               <Send className="w-3.5 h-3.5 text-purple-400" />
-              <span className="hidden md:inline">Nova solicitação</span>
+              <span className="hidden 2xl:inline">Nova solicitação</span>
             </button>
 
             {/* Optional New Card Button */}
             {onNewCardClick && (
               <button
                 onClick={onNewCardClick}
+                aria-label="Novo card"
+                title="Novo card"
                 className="min-h-10 px-3 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-lg shadow-purple-900/40 flex items-center gap-1.5 transition-all"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span className="hidden md:inline">Novo Card</span>
+                <span className="hidden 2xl:inline">Novo Card</span>
               </button>
             )}
 

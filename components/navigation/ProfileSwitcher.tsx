@@ -52,7 +52,7 @@ export const ProfileSwitcher: React.FC = () => {
         onClick={() => setIsOpen(!isOpen)}
         aria-label={`Menu do perfil de ${currentProfile.name}`}
         aria-expanded={isOpen}
-        className="flex items-center gap-2.5 px-2 sm:px-3 min-h-10 max-w-[12rem] 2xl:max-w-[20rem] rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-purple-800/40 hover:border-purple-600/60 transition-all text-left group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+        className="flex items-center gap-2.5 px-2 sm:px-3 min-h-10 max-w-[10rem] xl:max-w-[11rem] 2xl:max-w-[20rem] rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-purple-800/40 hover:border-purple-600/60 transition-all text-left group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
         title={`${currentProfile.name} · ${getUserCargoTitle(currentProfile)}`}
       >
         <div className="relative shrink-0">
@@ -69,12 +69,12 @@ export const ProfileSwitcher: React.FC = () => {
           <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-slate-950" />
         </div>
 
-        <div className="hidden 2xl:flex flex-col min-w-0 text-xs leading-tight">
+        <div className="hidden lg:flex flex-col min-w-0 text-xs leading-tight">
           <div className="flex items-center gap-1.5">
-            <span className="font-bold text-white min-w-0 truncate">
+            <span className="font-bold text-white min-w-0 truncate" title={currentProfile.name}>
               {currentProfile.name}
             </span>
-            <PersonTypeBadge type={currentProfile.personType} className="shrink-0" />
+            <PersonTypeBadge type={currentProfile.personType} className="hidden 2xl:inline-flex shrink-0" />
           </div>
           <span className="text-[11px] text-purple-300 truncate font-medium">
             {getUserCargoTitle(currentProfile)}

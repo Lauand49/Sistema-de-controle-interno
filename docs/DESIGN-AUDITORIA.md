@@ -1,4 +1,4 @@
-# Auditoria de design (Etapa 6, fase D0)
+    # Auditoria de design (Etapa 6, fase D0)
 
 Inventário por leitura e `grep` (sem navegador). Números são ocorrências em `app/` e `components/` no início da etapa.
 
