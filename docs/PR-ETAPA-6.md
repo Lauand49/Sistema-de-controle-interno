@@ -25,6 +25,13 @@ Só apresentação. Nenhuma rota de API, permissão, schema, migração ou forma
 - **Controles:** ~90 controles crus trocados por `Input`/`Select`/`Textarea`/`DateInput` (inclui `MiningForm`, `Combobox` e filtros do minerador).
 - **Guarda:** agora falha também com `<input>`, `<select>` ou `<textarea>` crus (exceções: checkbox, radio, file, range, color, hidden).
 
+## Terceira rodada
+- Menu do perfil com ícones e linhas uniformes (40px); "Novo card" e "Nova solicitação" com rótulo a partir de 1024px; "Mais" com Equipe e Painéis entre 1280 e 1535px.
+- Tabelas com largura mínima dentro de contêiner rolável (a página não rola de lado).
+- 15 botões primários com gradiente escrito à mão trocados por `Button` (mesmos handlers, `disabled`, aria e tipo de botão).
+- Rótulos ligados com `htmlFor`/`id` na planilha de leads e na precificação (inclui linhas de `.map()`).
+- Acesso restrito e fila vazia de lead-filter/lead-sheet com `ErrorState`/`EmptyState`.
+
 ## Como testar
 ```bash
 export PATH=$HOME/.local/bin:$PATH

@@ -31,3 +31,14 @@ Marque no navegador (tema escuro, zoom 100%). Larguras: **1280, 1024, 768, 390 p
 | Estados vazio/carregando/erro | todas | mesmo visual (ícone, título, texto); erro de painel com "Tentar novamente" |
 | Modais (card, tarefa, solicitação, funil, campo, lançamento, importação, atribuição, CNPJ, membro, transição, conversão, fechamento) | 1280, 390 | cabeçalho e rodapé fixos, corpo rola; Esc fecha; Tab fica dentro; botão de envio no rodapé funciona; em 390px ocupa a tela toda por baixo |
 | Importar planilha (triagem) | 1280, 390 | área de soltar é botão focável; depois de escolher, o mapeamento aparece e "Iniciar Triagem" fica no rodapé |
+
+## Rodada 3 (conferir também)
+| O quê | Larguras | Esperado |
+|---|---|---|
+| Menu do perfil (clicar no avatar) | 1280, 390 | ícones de Tarefas, Equipe e Sair com o mesmo tamanho; linhas com 40px; avatar do cabeçalho do menu alinhado |
+| Botões "Novo card" e "Nova solicitação" | 1280, 1024 | rótulo de texto visível a partir de 1024px |
+| Menu superior | 1280 a 1535 | Início, Setores, Solicitações, Tarefas visíveis; Equipe e Painéis dentro de "Mais"; a partir de 1536 todos inline |
+| Tabelas (equipe/auditoria, planilha, setores, minerações, histórico de análises) | 1024, 768, 390 | só a tabela rola de lado; a página nunca |
+| Botões primários roxos | todas | mesmo visual e foco visível; mesmos cliques e estados desativados de antes |
+| Rótulos | planilha de leads, precificação (linhas de serviço e despesas) | clicar no rótulo foca o campo correspondente |
+| Acesso restrito (triagem e planilha, com usuário fora de Negócios) e fila vazia da triagem | 1280, 390 | cartão de aviso/vazio padrão com links e botões funcionando |
