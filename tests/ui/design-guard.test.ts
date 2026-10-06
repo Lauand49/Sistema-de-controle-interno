@@ -21,6 +21,29 @@ const BLUE_EXCEPTIONS: Record<string, string> = {
   'app/tools/page.tsx': 'cartão da ferramenta usa gradiente azul como identidade da categoria',
   'app/tasks/page.tsx': 'indicador de status "em andamento" (ponto)',
 };
+/**
+ * `bg-gradient-to-` só em components/ui (Button, etc.). Exceções por arquivo: decoração de marca/ícones,
+ * barras de progresso, estado ativo da navbar e cores de identidade dos departamentos / cartão de /tools.
+ */
+const GRADIENT_EXCEPTIONS: Record<string, string> = {
+  'app/tools/page.tsx': 'cartões das ferramentas: cor de identidade de cada categoria',
+  'app/setores/[dept]/page.tsx': 'cores de identidade dos departamentos (faixas e cartões de ferramentas)',
+  'app/tools/pricing/page.tsx': 'cartões decorativos de resultado',
+  'app/tools/lead-sheet/page.tsx': 'destaques decorativos da planilha',
+  'app/tools/lead-filter/page.tsx': 'destaque decorativo da triagem',
+  'app/tools/lead-miner/leads/page.tsx': 'ícone decorativo do cabeçalho',
+  'app/team/page.tsx': 'destaques decorativos de cartões de pessoas',
+  'app/page.tsx': 'cartões de workspace com cor de identidade do departamento',
+  'app/not-found.tsx': 'botão da página 404 (links de retorno)',
+  'components/lead-miner/ficha/CompanyHeader.tsx': 'ícone decorativo da ficha',
+  'components/lead-miner/ficha/ScoreBreakdownCard.tsx': 'barra de progresso do score',
+  'components/lead-miner/RunProgressCard.tsx': 'barra de progresso da mineração',
+  'components/lead-miner/BulkActionsBar.tsx': 'ação primária da barra em massa (links/botões próprios)',
+  'components/navigation/SciTecNavbar.tsx': 'estado ativo da navbar e marca',
+  'components/dashboards/PipePhases.tsx': 'barra de progresso',
+  'components/dashboards/DashboardSection.tsx': 'ícone decorativo da seção',
+  'components/dashboards/LeadsSummary.tsx': 'barra de progresso',
+};
 const SOLID_BLUE = /\b(?:bg|from|to)-(?:blue|sky)-[5-7]00(?![\d/])/;
 
 function walk(dir: string, out: string[] = []): string[] {
@@ -93,8 +116,15 @@ describe('guarda de design', () => {
     expect(found).toEqual([]);
   });
 
+  it('nenhum gradiente escrito à mão fora de components/ui e das exceções documentadas', () => {
+    const found = files
+      .filter((p) => !p.startsWith('components/ui/') && !(p in GRADIENT_EXCEPTIONS))
+      .flatMap((p) => code(p).filter((l) => l.includes('bg-gradient-to-')).map((l) => `${p}: ${l.trim().slice(0, 90)}`));
+    expect(found).toEqual([]);
+  });
+
   it('as exceções existem e têm motivo', () => {
-    for (const [p, why] of Object.entries({ ...EMOJI_EXCEPTIONS, ...BLUE_EXCEPTIONS })) {
+    for (const [p, why] of Object.entries({ ...EMOJI_EXCEPTIONS, ...BLUE_EXCEPTIONS, ...GRADIENT_EXCEPTIONS })) {
       expect(statSync(p).isFile()).toBe(true);
       expect(why.length).toBeGreaterThan(10);
     }

@@ -34,6 +34,8 @@ Só apresentação. Nenhuma rota de API, permissão, schema, migração ou forma
 
 - Rodada 4: `ButtonLink`, 12 botões secundários em `Button`, "Triagem concluída" em `EmptyState`.
 
+- Rodada 5: `IconButton`/`danger-ghost`, `Badge` com tons de prioridade, `ContatoTabs` em `Tabs`, `NavLink` (aria-current, teste responsivo), `StopRunButton` com `Button`, `Drawer`; guarda contra gradientes soltos.
+
 ## Como testar
 ```bash
 export PATH=$HOME/.local/bin:$PATH
