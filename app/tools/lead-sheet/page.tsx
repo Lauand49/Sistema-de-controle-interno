@@ -574,10 +574,10 @@ export default function LeadSheetPage() {
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">
+                <label htmlFor="ls-2" className="block font-semibold text-slate-300 mb-1">
                   Contato Principal (Nome)
                 </label>
-                <Select
+                <Select id="ls-2"
                   value={mapping.contactName}
                   onChange={(e) => setMapping({ ...mapping, contactName: e.target.value })}
                   className="w-full"
@@ -592,10 +592,10 @@ export default function LeadSheetPage() {
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">
+                <label htmlFor="ls-3" className="block font-semibold text-slate-300 mb-1">
                   Telefone / E-mail / WhatsApp
                 </label>
-                <Select
+                <Select id="ls-3"
                   value={mapping.contactInfo}
                   onChange={(e) => setMapping({ ...mapping, contactInfo: e.target.value })}
                   className="w-full"
@@ -610,10 +610,10 @@ export default function LeadSheetPage() {
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">
+                <label htmlFor="ls-4" className="block font-semibold text-slate-300 mb-1">
                   Segmento / Nicho
                 </label>
-                <Select
+                <Select id="ls-4"
                   value={mapping.segment}
                   onChange={(e) => setMapping({ ...mapping, segment: e.target.value })}
                   className="w-full"
@@ -628,10 +628,10 @@ export default function LeadSheetPage() {
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">
+                <label htmlFor="ls-5" className="block font-semibold text-slate-300 mb-1">
                   Plano de Ação / Recomendação
                 </label>
-                <Select
+                <Select id="ls-5"
                   value={mapping.actionPlan}
                   onChange={(e) => setMapping({ ...mapping, actionPlan: e.target.value })}
                   className="w-full"
@@ -646,10 +646,10 @@ export default function LeadSheetPage() {
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">
+                <label htmlFor="ls-6" className="block font-semibold text-slate-300 mb-1">
                   Observações / Contexto
                 </label>
-                <Select
+                <Select id="ls-6"
                   value={mapping.notes}
                   onChange={(e) => setMapping({ ...mapping, notes: e.target.value })}
                   className="w-full"

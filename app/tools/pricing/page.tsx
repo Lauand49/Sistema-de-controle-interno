@@ -418,12 +418,12 @@ SciTec jr. - Consultoria & Engenharia em Computação
                 {/* Porte do Cliente */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-semibold text-slate-300">Porte do Cliente</label>
+                    <label htmlFor="pr-1" className="text-xs font-semibold text-slate-300">Porte do Cliente</label>
                     <span className="text-[11px] font-bold text-purple-400">
                       +{(pricingResult.modificadores.porte * 100).toFixed(0)}%
                     </span>
                   </div>
-                  <Select
+                  <Select id="pr-1"
                     value={porteCliente}
                     onChange={(e) => setPorteCliente(e.target.value)}
                     className="w-full"
@@ -439,14 +439,14 @@ SciTec jr. - Consultoria & Engenharia em Computação
                 {/* Urgência */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-semibold text-slate-300 flex items-center gap-1">
+                    <label htmlFor="pr-2" className="text-xs font-semibold text-slate-300 flex items-center gap-1">
                       <Flame className="w-3.5 h-3.5 text-amber-400" /> Urgência do Projeto
                     </label>
                     <span className="text-[11px] font-bold text-amber-400">
                       +{(pricingResult.modificadores.urgencia * 100).toFixed(0)}%
                     </span>
                   </div>
-                  <Select
+                  <Select id="pr-2"
                     value={urgencia}
                     onChange={(e) => setUrgencia(e.target.value)}
                     className="w-full"
@@ -462,7 +462,7 @@ SciTec jr. - Consultoria & Engenharia em Computação
                 {/* Experiência da Equipe no Escopo */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-semibold text-slate-300 flex items-center gap-1">
+                    <label htmlFor="pr-3" className="text-xs font-semibold text-slate-300 flex items-center gap-1">
                       <Award className="w-3.5 h-3.5 text-purple-400" /> Experiência no Escopo
                     </label>
                     <span
@@ -478,7 +478,7 @@ SciTec jr. - Consultoria & Engenharia em Computação
                       {(pricingResult.modificadores.experiencia * 100).toFixed(0)}%
                     </span>
                   </div>
-                  <Select
+                  <Select id="pr-3"
                     value={nivelExperiencia}
                     onChange={(e) => setNivelExperiencia(Number(e.target.value))}
                     className="w-full"
@@ -495,7 +495,7 @@ SciTec jr. - Consultoria & Engenharia em Computação
                 {/* Complexidade Técnica */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-semibold text-slate-300 flex items-center gap-1">
+                    <label htmlFor="pr-4" className="text-xs font-semibold text-slate-300 flex items-center gap-1">
                       <Layers className="w-3.5 h-3.5 text-indigo-400" /> Complexidade Técnica
                     </label>
                     <span
@@ -511,7 +511,7 @@ SciTec jr. - Consultoria & Engenharia em Computação
                       {(pricingResult.modificadores.complexidade * 100).toFixed(0)}%
                     </span>
                   </div>
-                  <Select
+                  <Select id="pr-4"
                     value={nivelComplexidade}
                     onChange={(e) => setNivelComplexidade(Number(e.target.value))}
                     className="w-full"
@@ -531,7 +531,7 @@ SciTec jr. - Consultoria & Engenharia em Computação
                 {/* Team Size */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-semibold text-slate-300 flex items-center gap-1">
+                    <label htmlFor="pr-5" className="text-xs font-semibold text-slate-300 flex items-center gap-1">
                       <Users className="w-3.5 h-3.5 text-blue-400" /> Equipe (Pessoas)
                     </label>
                     <span className="text-[11px] font-bold text-blue-400">
@@ -539,7 +539,7 @@ SciTec jr. - Consultoria & Engenharia em Computação
                       {(pricingResult.modificadores.pessoas * 100).toFixed(0)}%
                     </span>
                   </div>
-                  <Input
+                  <Input id="pr-5"
                     type="number"
                     min={1}
                     max={20}
@@ -575,7 +575,7 @@ SciTec jr. - Consultoria & Engenharia em Computação
                 {/* Commercial Discount */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-semibold text-slate-300 flex items-center gap-1">
+                    <label htmlFor="pr-7" className="text-xs font-semibold text-slate-300 flex items-center gap-1">
                       <Percent className="w-3.5 h-3.5 text-emerald-400" /> Desconto Comercial
                     </label>
                     <span className="text-[11px] font-bold text-emerald-400">
@@ -583,7 +583,7 @@ SciTec jr. - Consultoria & Engenharia em Computação
                     </span>
                   </div>
                   <div className="relative">
-                    <Input
+                    <Input id="pr-7"
                       type="number"
                       min={0}
                       max={50}
@@ -655,11 +655,11 @@ SciTec jr. - Consultoria & Engenharia em Computação
 
                       {/* Horas Input */}
                       <div className="w-full md:w-28">
-                        <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                        <label htmlFor={`pr-8-${index}`} className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
                           Horas
                         </label>
                         <div className="relative">
-                          <Input
+                          <Input id={`pr-8-${index}`}
                             type="number"
                             min={1}
                             max={1000}
@@ -751,10 +751,10 @@ SciTec jr. - Consultoria & Engenharia em Computação
                       className="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 flex flex-col md:flex-row items-start md:items-center gap-3"
                     >
                       <div className="flex-1 w-full">
-                        <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                        <label htmlFor={`pr-9-${idx}`} className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
                           Descrição da Despesa
                         </label>
-                        <Input
+                        <Input id={`pr-9-${idx}`}
                           type="text"
                           value={cost.descricao}
                           onChange={(e) => updateExtraCostRow(idx, 'descricao', e.target.value)}
