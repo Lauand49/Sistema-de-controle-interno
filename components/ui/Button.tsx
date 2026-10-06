@@ -1,5 +1,5 @@
 import React from 'react';
-import { Loader2 } from 'lucide-react';
+import { Loader2, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/ui/format';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
@@ -23,7 +23,7 @@ export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElemen
   size?: ButtonSize;
   loading?: boolean;
   /** Ícone lucide (componente) antes do texto. */
-  icon?: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean | 'true' }>;
+  icon?: LucideIcon;
 }
 
 export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(

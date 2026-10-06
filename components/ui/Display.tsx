@@ -1,7 +1,8 @@
 import React from 'react';
+import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/ui/format';
 
-type Icon = React.ComponentType<{ className?: string; 'aria-hidden'?: boolean | 'true' }>;
+type Icon = LucideIcon;
 
 export type BadgeTone = 'neutral' | 'primary' | 'success' | 'warning' | 'danger' | 'info';
 const TONES: Record<BadgeTone, string> = {

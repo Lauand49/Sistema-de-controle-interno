@@ -50,10 +50,12 @@ export const ProfileSwitcher: React.FC = () => {
       {/* Trigger Button */}
       <button
         onClick={() => setIsOpen(!isOpen)}
-        className="flex items-center gap-2.5 px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-purple-800/40 hover:border-purple-600/60 transition-all text-left group"
-        title="Menu do Perfil"
+        aria-label={`Menu do perfil de ${currentProfile.name}`}
+        aria-expanded={isOpen}
+        className="flex items-center gap-2.5 px-2 sm:px-3 min-h-10 max-w-[12rem] 2xl:max-w-[20rem] rounded-xl bg-slate-900/90 hover:bg-slate-800 border border-purple-800/40 hover:border-purple-600/60 transition-all text-left group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+        title={`${currentProfile.name} · ${getUserCargoTitle(currentProfile)}`}
       >
-        <div className="relative">
+        <div className="relative shrink-0">
           <img
             src={
               currentProfile.avatar ||
@@ -67,20 +69,21 @@ export const ProfileSwitcher: React.FC = () => {
           <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-slate-950" />
         </div>
 
-        <div className="hidden sm:flex flex-col text-xs leading-tight">
+        <div className="hidden 2xl:flex flex-col min-w-0 text-xs leading-tight">
           <div className="flex items-center gap-1.5">
-            <span className="font-bold text-white max-w-[110px] truncate">
+            <span className="font-bold text-white min-w-0 truncate">
               {currentProfile.name}
             </span>
-            <PersonTypeBadge type={currentProfile.personType} />
+            <PersonTypeBadge type={currentProfile.personType} className="shrink-0" />
           </div>
-          <span className="text-[10px] text-purple-300/80 truncate max-w-[140px] font-medium">
+          <span className="text-[11px] text-purple-300 truncate font-medium">
             {getUserCargoTitle(currentProfile)}
           </span>
         </div>
 
         <ChevronDown
-          className={`w-3.5 h-3.5 text-purple-400 transition-transform duration-200 ${
+          aria-hidden="true"
+          className={`shrink-0 w-3.5 h-3.5 text-purple-400 transition-transform duration-200 ${
             isOpen ? 'rotate-180' : ''
           }`}
         />
@@ -119,7 +122,7 @@ export const ProfileSwitcher: React.FC = () => {
             <Link
               href="/tasks"
               onClick={() => setIsOpen(false)}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-slate-300 hover:text-white hover:bg-slate-800/80 transition-colors"
+              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-slate-300 hover:text-white hover:bg-slate-800/80 transition-colors min-h-10"
             >
               <CheckSquare className="w-4 h-4 text-purple-400" /> Minhas Tarefas
             </Link>
@@ -129,7 +132,7 @@ export const ProfileSwitcher: React.FC = () => {
               onClick={() => setIsOpen(false)}
               className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-slate-300 hover:text-white hover:bg-slate-800/80 transition-colors"
             >
-              <Users className="w-4 h-4 text-blue-400" /> Equipe & Membros
+              <Users className="w-4 h-4 text-info" aria-hidden="true" /> Equipe & Membros
             </Link>
           </div>
 

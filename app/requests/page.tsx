@@ -55,7 +55,7 @@ export default function CrossDeptRequestsPage() {
         setRequests(Array.isArray(data) ? data : []);
       }
     } catch {
-      toast.error('Erro ao carregar solicitações intersetoriais.');
+      toast.error('Erro ao carregar solicitações.');
     } finally {
       setLoading(false);
     }
@@ -124,7 +124,7 @@ export default function CrossDeptRequestsPage() {
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
       <SciTecNavbar onRefresh={fetchRequests} loading={loading} />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
+      <main className="flex-1 min-w-0 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
         {/* Banner Hero */}
         <div className="relative rounded-3xl bg-gradient-to-r from-purple-950/80 via-slate-900 to-indigo-950/80 border border-purple-800/40 p-6 md:p-8 shadow-2xl overflow-hidden">
           <div className="absolute top-0 right-0 transform translate-x-12 -translate-y-12 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
@@ -138,7 +138,7 @@ export default function CrossDeptRequestsPage() {
                 Central de Solicitações da SciTec jr.
               </h1>
               <p className="text-xs md:text-sm text-purple-200/80 leading-relaxed">
-                Canal unificado para demandas cruzadas entre Negócios, AdmJurFin, Gente e Mídias.
+                Canal unificado de solicitações entre Negócios, AdmJurFin, Gente e Mídias.
                 Cada pedido gera automaticamente um card no Kanban do setor responsável com rastreamento de SLA.
               </p>
             </div>

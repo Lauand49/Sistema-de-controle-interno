@@ -85,7 +85,7 @@ export default function LeadMinerPage() {
   return (
     <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100">
       <SciTecNavbar />
-      <main className="mx-auto w-full max-w-6xl flex-1 space-y-6 p-6">
+      <main className="flex-1 min-w-0 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
         <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="space-y-2">
             <Link

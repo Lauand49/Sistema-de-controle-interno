@@ -501,7 +501,7 @@ export default function LeadMinerRankingPage() {
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
       <SciTecNavbar />
-      <main className="flex-1 max-w-7xl w-full mx-auto p-6">
+      <main className="flex-1 min-w-0 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
         <LeadMinerGate>
           <Suspense
             fallback={

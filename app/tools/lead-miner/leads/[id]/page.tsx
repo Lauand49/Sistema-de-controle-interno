@@ -198,7 +198,7 @@ export default function CompanyFichaPage() {
   return (
     <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100">
       <SciTecNavbar />
-      <main className="mx-auto w-full max-w-6xl flex-1 space-y-6 p-6">
+      <main className="flex-1 min-w-0 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
         <Link
           href={BACK_HREF}
           className="inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-purple-300 hover:text-purple-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"

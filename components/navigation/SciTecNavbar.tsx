@@ -20,6 +20,7 @@ import {
   LayoutDashboard,
   Menu,
   X,
+  Home,
 } from 'lucide-react';
 import { ProfileSwitcher } from './ProfileSwitcher';
 import { CreateRequestModal } from '../modals/CreateRequestModal';
@@ -121,8 +122,8 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
       <header className="bg-gradient-to-r from-slate-950 via-purple-950/60 to-slate-950 border-b border-purple-900/40 sticky top-0 z-30 backdrop-blur-md">
         <div className="px-4 lg:px-6 py-2.5 flex items-center justify-between gap-4">
           {/* Brand Logo & Title */}
-          <div className="flex items-center gap-4">
-            <Link href="/" className="flex items-center gap-3 group">
+          <div className="flex items-center gap-4 min-w-0">
+            <Link href="/" className="flex items-center gap-3 group min-w-0 shrink-0">
               <div className="relative">
                 <div className="absolute -inset-0.5 bg-gradient-to-r from-purple-600 to-indigo-600 rounded-xl blur opacity-75 group-hover:opacity-100 transition duration-300"></div>
                 <div className="relative w-9 h-9 rounded-xl bg-purple-900/80 border border-purple-500/40 p-1.5 flex items-center justify-center overflow-hidden">
@@ -140,7 +141,7 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
                     <Sparkles className="w-3 h-3 text-purple-400" /> SciTec jr. OS
                   </span>
                 </div>
-                <h1 className="text-sm lg:text-base font-black text-white tracking-tight mt-0.5 truncate max-w-[200px] sm:max-w-none">
+                <h1 title={pipeName || undefined} className="text-sm lg:text-base font-black text-white tracking-tight mt-0.5 truncate max-w-[160px] sm:max-w-[220px]">
                   {pipeName || 'Sistema Integrado da EJ'}
                 </h1>
               </div>
@@ -150,26 +151,32 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
             <nav className="hidden xl:flex items-center gap-1 bg-slate-900/80 p-1 rounded-xl border border-purple-900/40">
               <Link
                 href="/"
-                className={`px-3 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all ${isHomeActive
+                aria-label="Início"
+                title="Início"
+                className={`px-3 min-h-10 text-xs font-bold rounded-lg flex items-center gap-1.5 whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${isHomeActive
                   ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
                   : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
                   }`}
               >
-                Início
+                <Home className="w-3.5 h-3.5" aria-hidden="true" />
+                <span className="hidden 2xl:inline">Início</span>
               </Link>
 
               {/* Workspaces / Setores Dropdown */}
               <div className="relative">
                 <button
                   type="button"
+                  aria-label="Setores"
+                  title="Setores"
+                  aria-expanded={isSectorDropdownOpen}
                   onClick={() => setIsSectorDropdownOpen(!isSectorDropdownOpen)}
-                  className={`px-3 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all ${isAnySectorActive
+                  className={`px-3 min-h-10 text-xs font-bold rounded-lg flex items-center gap-1.5 whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${isAnySectorActive
                     ? 'bg-purple-900/80 text-white border border-purple-600/40'
                     : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
                     }`}
                 >
-                  <Layers className="w-3.5 h-3.5 text-purple-400" />
-                  <span>Setores</span>
+                  <Layers className="w-3.5 h-3.5 text-purple-400" aria-hidden="true" />
+                  <span className="hidden 2xl:inline">Setores</span>
                   <ChevronDown
                     className={`w-3 h-3 transition-transform ${isSectorDropdownOpen ? 'rotate-180' : ''
                       }`}
@@ -222,12 +229,14 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
               {/* Central de Solicitações */}
               <Link
                 href="/requests"
-                className={`px-3 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all ${isRequestsActive
+                aria-label="Solicitações"
+                title="Solicitações"
+                className={`px-3 min-h-10 text-xs font-bold rounded-lg flex items-center gap-1.5 whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${isRequestsActive
                   ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
                   : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
                   }`}
               >
-                <Send className="w-3.5 h-3.5" /> Solicitações
+                <Send className="w-3.5 h-3.5" aria-hidden="true" /> <span className="hidden 2xl:inline">Solicitações</span>
                 {pendingRequestsCount > 0 && (
                   <span className="bg-amber-500/20 text-amber-300 text-[10px] px-1.5 py-0.2 rounded-full border border-amber-500/40">
                     {pendingRequestsCount}
@@ -237,32 +246,38 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
 
               <Link
                 href="/tasks"
-                className={`px-3 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all ${isTasksActive
+                aria-label="Minhas Tarefas"
+                title="Minhas Tarefas"
+                className={`px-3 min-h-10 text-xs font-bold rounded-lg flex items-center gap-1.5 whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${isTasksActive
                   ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
                   : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
                   }`}
               >
-                <CheckSquare className="w-3.5 h-3.5" /> Minhas Tarefas
+                <CheckSquare className="w-3.5 h-3.5" aria-hidden="true" /> <span className="hidden 2xl:inline">Minhas Tarefas</span>
               </Link>
 
               <Link
                 href="/team"
-                className={`px-3 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all ${isTeamActive
+                aria-label="Equipe"
+                title="Equipe"
+                className={`px-3 min-h-10 text-xs font-bold rounded-lg flex items-center gap-1.5 whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${isTeamActive
                   ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
                   : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
                   }`}
               >
-                <Users className="w-3.5 h-3.5" /> Equipe
+                <Users className="w-3.5 h-3.5" aria-hidden="true" /> <span className="hidden 2xl:inline">Equipe</span>
               </Link>
 
               <Link
                 href="/paineis"
-                className={`px-3 py-1 text-xs font-bold rounded-lg flex items-center gap-1.5 transition-all ${isPaineisActive
+                aria-label="Painéis"
+                title="Painéis"
+                className={`px-3 min-h-10 text-xs font-bold rounded-lg flex items-center gap-1.5 whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${isPaineisActive
                   ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
                   : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
                   }`}
               >
-                <LayoutDashboard className="w-3.5 h-3.5" /> Painéis
+                <LayoutDashboard className="w-3.5 h-3.5" aria-hidden="true" /> <span className="hidden 2xl:inline">Painéis</span>
               </Link>
             </nav>
           </div>
@@ -271,13 +286,13 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
           <div className="flex items-center gap-2 shrink-0">
             {onSearchChange && (
               <div className="relative hidden md:block">
-                <Search className="w-3.5 h-3.5 text-purple-400 absolute left-3 top-2.5" />
+                <Search className="w-3.5 h-3.5 text-purple-400 absolute left-3 top-3" aria-hidden="true" />
                 <input
                   type="text"
-                  placeholder="Buscar no funil..."
+                  aria-label="Buscar no funil" placeholder="Buscar no funil..."
                   value={searchQuery}
                   onChange={(e) => onSearchChange(e.target.value)}
-                  className="pl-8 pr-3 py-1.5 text-xs rounded-xl border border-purple-800/40 bg-purple-950/30 text-white placeholder:text-purple-300/40 focus:outline-none focus:ring-2 focus:ring-purple-500 w-32 lg:w-44 transition-all"
+                  className="pl-8 pr-3 min-h-10 py-1.5 text-xs rounded-xl border border-purple-800/40 bg-purple-950/30 text-white placeholder:text-purple-300/40 focus:outline-none focus:ring-2 focus:ring-purple-500 w-32 lg:w-44 transition-all"
                 />
               </div>
             )}
@@ -286,7 +301,8 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
               <button
                 onClick={onRefresh}
                 title="Atualizar dados"
-                className="p-1.5 text-purple-300 hover:text-white rounded-xl bg-purple-950/40 hover:bg-purple-900/60 border border-purple-800/40 transition-colors"
+                aria-label="Atualizar dados"
+                className="min-w-10 min-h-10 inline-flex items-center justify-center p-1.5 text-purple-300 hover:text-white rounded-xl bg-purple-950/40 hover:bg-purple-900/60 border border-purple-800/40 transition-colors"
               >
                 <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin text-purple-400' : ''}`} />
               </button>
@@ -295,18 +311,19 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
             {/* Global Button: Nova Solicitação (hidden on small screens, accessible via mobile menu) */}
             <button
               onClick={() => setIsCreateRequestOpen(true)}
-              className="hidden sm:flex px-3 py-1.5 text-xs font-bold text-white bg-slate-900 hover:bg-purple-950/80 border border-purple-700/50 hover:border-purple-500 rounded-xl shadow-md items-center gap-1.5 transition-all"
-              title="Criar solicitação intersetorial entre diretorias"
+              className="hidden sm:flex min-h-10 px-3 py-1.5 text-xs font-bold text-white bg-slate-900 hover:bg-purple-950/80 border border-purple-700/50 hover:border-purple-500 rounded-xl shadow-md items-center gap-1.5 transition-all"
+              title="Criar solicitação entre diretorias"
+              aria-label="Nova solicitação"
             >
               <Send className="w-3.5 h-3.5 text-purple-400" />
-              <span className="hidden md:inline">Solicitação</span>
+              <span className="hidden md:inline">Nova solicitação</span>
             </button>
 
             {/* Optional New Card Button */}
             {onNewCardClick && (
               <button
                 onClick={onNewCardClick}
-                className="px-3 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-lg shadow-purple-900/40 flex items-center gap-1.5 transition-all"
+                className="min-h-10 px-3 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-lg shadow-purple-900/40 flex items-center gap-1.5 transition-all"
               >
                 <Plus className="w-3.5 h-3.5" />
                 <span className="hidden md:inline">Novo Card</span>
@@ -322,8 +339,9 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
             <button
               type="button"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              aria-label="Abrir menu de navegação"
-              className="p-1.5 text-purple-300 hover:text-white rounded-xl bg-purple-950/40 hover:bg-purple-900/60 border border-purple-800/40 transition-colors xl:hidden relative"
+              aria-label={isMobileMenuOpen ? 'Fechar menu de navegação' : 'Abrir menu de navegação'}
+              aria-expanded={isMobileMenuOpen}
+              className="min-w-10 min-h-10 inline-flex items-center justify-center p-1.5 text-purple-300 hover:text-white rounded-xl bg-purple-950/40 hover:bg-purple-900/60 border border-purple-800/40 transition-colors xl:hidden relative"
             >
               {isMobileMenuOpen ? (
                 <X className="w-4 h-4 text-purple-300" />
@@ -342,10 +360,10 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
           <div className="xl:hidden bg-slate-950/95 border-b border-purple-900/50 backdrop-blur-xl px-4 py-3 space-y-3 animate-fadeIn shadow-2xl">
             {onSearchChange && (
               <div className="relative md:hidden pb-1">
-                <Search className="w-3.5 h-3.5 text-purple-400 absolute left-3 top-2.5" />
+                <Search className="w-3.5 h-3.5 text-purple-400 absolute left-3 top-3" aria-hidden="true" />
                 <input
                   type="text"
-                  placeholder="Buscar no funil..."
+                  aria-label="Buscar no funil" placeholder="Buscar no funil..."
                   value={searchQuery}
                   onChange={(e) => onSearchChange(e.target.value)}
                   className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-purple-800/40 bg-purple-950/40 text-white placeholder:text-purple-300/40 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"

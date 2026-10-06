@@ -1,11 +1,12 @@
 'use client';
 import React from 'react';
+import type { LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/ui/format';
 
 export interface TabItem<T extends string> {
   id: T;
   label: string;
-  icon?: React.ComponentType<{ className?: string; 'aria-hidden'?: boolean | 'true' }>;
+  icon?: LucideIcon;
   /** Número exibido ao lado do rótulo. */
   count?: number;
 }

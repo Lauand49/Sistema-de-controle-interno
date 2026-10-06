@@ -125,7 +125,7 @@ export default function ToolsHubPage() {
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
       <SciTecNavbar />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto p-6 space-y-8">
+      <main className="flex-1 min-w-0 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
         {/* Banner Informativo */}
         <div className="relative rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950/60 to-purple-950/70 border border-slate-800 p-8 shadow-2xl overflow-hidden">
           <div className="absolute top-0 right-0 transform translate-x-10 -translate-y-10 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />

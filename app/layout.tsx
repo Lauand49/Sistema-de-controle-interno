@@ -4,8 +4,8 @@ import { ClientToaster } from '@/components/ui/ClientToaster';
 import { ProfileProvider } from '@/contexts/ProfileContext';
 
 export const metadata: Metadata = {
-  title: 'Gestão de Processos & Vendas | Empresa Júnior',
-  description: 'Sistema interno de gerenciamento de processos e funil de vendas (Pipefy style)',
+  title: { default: 'Início · SciTec Jr. OS', template: '%s · SciTec Jr. OS' },
+  description: 'Sistema interno da SciTec Jr.: funis, tarefas, solicitações, painéis e ferramentas de Negócios.',
 };
 
 export default function RootLayout({

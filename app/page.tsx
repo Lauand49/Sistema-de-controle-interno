@@ -147,7 +147,7 @@ export default function HomeDashboard() {
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-purple-500 selection:text-white">
       <SciTecNavbar />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-8">
+      <main className="flex-1 min-w-0 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
         {/* Welcome Banner */}
         <div className="relative rounded-3xl bg-gradient-to-r from-purple-950/80 via-slate-900 to-indigo-950/80 border border-purple-800/40 px-6 py-4 md:px-8 md:py-5 shadow-2xl overflow-hidden flex items-center justify-between">
           <div className="absolute top-0 right-0 transform translate-x-10 -translate-y-10 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
@@ -219,7 +219,7 @@ export default function HomeDashboard() {
 
           <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 sm:p-5 shadow-lg flex flex-col gap-2 col-span-2 lg:col-span-1">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-slate-400">Demandas Cruzadas</span>
+              <span className="text-[11px] font-semibold text-slate-400">Solicitações entre setores</span>
               <div className="p-1.5 rounded-xl bg-rose-950/40 text-rose-400">
                 <Send className="w-4 h-4" />
               </div>

@@ -58,6 +58,9 @@ import {
 } from '@/lib/permissions';
 import { dashboardPages } from '@/lib/dashboards/client-api';
 import { formatDueDate } from '@/lib/dashboards/format';
+import { Tabs, type TabItem } from '@/components/ui/Tabs';
+import { Select } from '@/components/ui/Input';
+import { pluralize } from '@/lib/ui/format';
 
 export default function SectorWorkspacePage() {
   const params = useParams();
@@ -131,7 +134,8 @@ export default function SectorWorkspacePage() {
   const canAssign = canAssignLeads(currentProfile);
 
   // Tabs State
-  const [activeTab, setActiveTab] = useState<'KANBAN' | 'LEADS' | 'TOOLS' | 'REQUESTS'>('KANBAN');
+  type SectorTab = 'KANBAN' | 'LEADS' | 'TOOLS' | 'REQUESTS';
+  const [activeTab, setActiveTab] = useState<SectorTab>('KANBAN');
 
   // Support ?tab=TOOLS directly from URL or redirects
   useEffect(() => {
@@ -153,6 +157,13 @@ export default function SectorWorkspacePage() {
   const [leadAssigneeFilter, setLeadAssigneeFilter] = useState<string>('ALL');
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const sectorTabs: TabItem<SectorTab>[] = [
+    { id: 'KANBAN', label: 'Funis & Processos', icon: Kanban },
+    ...(currentSector.code === 'NEGOCIOS' ? [{ id: 'LEADS' as const, label: 'Leads Designados', icon: Target, count: negociosLeads.length }] : []),
+    { id: 'TOOLS', label: `Ferramentas de ${unitName(currentSector.code)}`, icon: Wrench },
+    { id: 'REQUESTS', label: 'Solicitações', icon: Send, count: requests.length },
+  ];
 
   // Eligible users for lead assignment (exclusive to Negócios and Presidência)
   const negociosUsers = users.filter((u) => canBeLeadAssignee(u) && u.departmentCode === 'NEGOCIOS');
@@ -363,24 +374,24 @@ export default function SectorWorkspacePage() {
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
         {/* Breadcrumb Navigation */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs text-purple-300/80">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <nav aria-label="Trilha de navegação" className="flex items-center gap-2 text-xs text-purple-300 min-w-0">
             <Link href="/" className="hover:text-purple-200 transition-colors">
               Início
             </Link>
             <ChevronRight className="w-3 h-3 text-slate-600" />
             <span className="text-slate-400">Setores</span>
             <ChevronRight className="w-3 h-3 text-slate-600" />
-            <span className="text-white font-semibold">{currentSector.title}</span>
-          </div>
+            <span className="text-white font-semibold truncate" title={currentSector.title}>{currentSector.title}</span>
+          </nav>
 
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsCreateRequestModalOpen(true)}
-              className="px-3.5 py-1.5 text-xs font-bold rounded-xl bg-purple-950/80 border border-purple-700/50 hover:bg-purple-900/60 text-purple-200 flex items-center gap-1.5 transition-all shadow-sm"
+              className="px-3.5 min-h-10 text-xs font-bold rounded-xl bg-purple-950/80 border border-purple-700/50 hover:bg-purple-900/60 text-purple-200 flex items-center gap-1.5 transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
             >
-              <Send className="w-3.5 h-3.5 text-purple-400" />
-              Solicitar Demanda
+              <Send className="w-3.5 h-3.5 text-purple-400" aria-hidden="true" />
+              Nova Solicitação
             </button>
           </div>
         </div>
@@ -396,7 +407,7 @@ export default function SectorWorkspacePage() {
               <div
                 className={`inline-flex items-center gap-2 px-3 py-0.5 rounded-full text-xs font-bold border ${currentSector.badgeColor}`}
               >
-                <SectorIcon className="w-3.5 h-3.5" /> Workspace {currentSector.code}
+                <SectorIcon className="w-3.5 h-3.5" aria-hidden="true" /> Workspace {unitName(currentSector.code)}
               </div>
               <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">
                 {currentSector.title}
@@ -417,17 +428,13 @@ export default function SectorWorkspacePage() {
             {/* Quick Stats Chips */}
             <div className="flex sm:flex-col gap-3 shrink-0">
               <div className="px-4 py-2 rounded-xl bg-slate-950/70 border border-slate-800 text-center sm:text-right">
-                <span className="text-[10px] text-slate-400 uppercase tracking-wider block">
-                  Funis Ativos
-                </span>
-                <span className="text-base font-bold text-white">{pipes.length}</span>
+                <span className="text-[11px] text-slate-400 uppercase tracking-wider block">Funis</span>
+                <span className="text-base font-bold text-white">{pluralize(pipes.length, 'funil', 'funis')}</span>
               </div>
               <div className="px-4 py-2 rounded-xl bg-slate-950/70 border border-slate-800 text-center sm:text-right">
-                <span className="text-[10px] text-slate-400 uppercase tracking-wider block">
-                  Solicitações
-                </span>
+                <span className="text-[11px] text-slate-400 uppercase tracking-wider block">Solicitações</span>
                 <span className="text-base font-bold text-amber-400">
-                  {requests.filter((r) => r.status === 'PENDING').length} pendentes
+                  {pluralize(requests.filter((r) => r.status === 'PENDING').length, 'pendente', 'pendentes')}
                 </span>
               </div>
             </div>
@@ -460,50 +467,14 @@ export default function SectorWorkspacePage() {
         )}
 
         {/* Navigation Tabs Header */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-3">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setActiveTab('KANBAN')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'KANBAN'
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
-                : 'text-slate-400 hover:text-white hover:bg-slate-900'
-                }`}
-            >
-              <Kanban className="w-3.5 h-3.5" /> Funis & Processos (Kanban)
-            </button>
-
-            {currentSector.code === 'NEGOCIOS' && (
-              <button
-                onClick={() => setActiveTab('LEADS')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'LEADS'
-                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
-                  }`}
-              >
-                <Target className="w-3.5 h-3.5 text-purple-400" /> Leads Designados ({negociosLeads.length})
-              </button>
-            )}
-
-            <button
-              onClick={() => setActiveTab('TOOLS')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'TOOLS'
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
-                : 'text-slate-400 hover:text-white hover:bg-slate-900'
-                }`}
-            >
-              <Wrench className="w-3.5 h-3.5 text-amber-400" /> Ferramentas de {currentSector.code === 'ADMJURFIN' ? 'AdmJurFin' : currentSector.code === 'MIDIAS' ? 'Mídias' : currentSector.code === 'GENTE' ? 'Gente' : 'Negócios'}
-            </button>
-
-            <button
-              onClick={() => setActiveTab('REQUESTS')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'REQUESTS'
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
-                : 'text-slate-400 hover:text-white hover:bg-slate-900'
-                }`}
-            >
-              <Send className="w-3.5 h-3.5" /> Demandas do Setor ({requests.length})
-            </button>
-          </div>
+        <div className="flex flex-wrap items-end justify-between gap-4 border-b border-slate-800 pb-3">
+          <Tabs<SectorTab>
+            ariaLabel="Seções do setor"
+            value={activeTab}
+            onChange={setActiveTab}
+            className="border-b-0 max-w-full"
+            tabs={sectorTabs}
+          />
 
           {/* Pipe Switcher (when in Kanban tab and there are multiple pipes) - For non-GENTE sectors */}
           {activeTab === 'KANBAN' && currentSector.code !== 'GENTE' && pipes.length > 1 && (
@@ -511,17 +482,18 @@ export default function SectorWorkspacePage() {
               <span className="text-xs text-slate-400 font-medium hidden sm:inline">
                 Funil Selecionado:
               </span>
-              <select
+              <Select
+                aria-label="Funil selecionado"
                 value={selectedPipeId}
                 onChange={(e) => setSelectedPipeId(e.target.value)}
-                className="px-3 py-1.5 rounded-xl bg-slate-900 border border-purple-800/40 text-xs font-semibold text-white focus:outline-none focus:border-purple-500"
+                className="w-auto"
               >
                 {pipes.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
           )}
         </div>
@@ -1647,7 +1619,7 @@ export default function SectorWorkspacePage() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <Send className="w-4 h-4 text-purple-400" /> Demandas Direcionadas a {currentSector.code}
+                  <Send className="w-4 h-4 text-purple-400" /> Solicitações recebidas por {unitName(currentSector.code)}
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
                   Solicitações que outros setores abriram para esta diretoria executar.
@@ -1667,7 +1639,7 @@ export default function SectorWorkspacePage() {
                 <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto" />
                 <h4 className="text-sm font-bold text-white">Nenhuma solicitação pendente</h4>
                 <p className="text-xs text-slate-400">
-                  Todas as demandas deste setor foram atendidas ou arquivadas.
+                  Todas as solicitações deste setor foram atendidas ou arquivadas.
                 </p>
               </div>
             ) : (
