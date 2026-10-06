@@ -43,7 +43,14 @@ Identidade: tema escuro, roxo/índigo como cor primária, cards `rounded-2xl`, �
 ```
 
 ## Modais
-Novo diálogo: `Modal` (cabeçalho, corpo rolável, rodapé). Os modais antigos ainda têm visual próprio, mas usam `ModalFrame` (mesmo comportamento: `role="dialog"`, Esc, foco preso, trava de rolagem); migrar para `Modal` quando forem mexidos.
+Todo diálogo de formulário usa `Modal` (cabeçalho, corpo rolável, rodapé). Formulário dentro do corpo com `id`; o botão de envio fica no rodapé com `type="submit" form="<id>"`. `closeOnBackdrop={false}` em formulários, para não perder o que foi digitado.
+`ModalFrame` (mesmo comportamento, visual próprio) só resta onde o desenho não é um diálogo central: `DiscardedLeadsDrawer` (painel lateral). `StopRunButton` mantém o próprio `alertdialog` (confirmação com foco no botão seguro, coberta por teste).
+
+## Estados padrão (`components/ui/Display.tsx`)
+`LoadingState` (`role="status"`), `EmptyState`, `ErrorState` (`role="alert"`, tom `danger` ou `warning`), `PageHeader` (único `h1`), `StatCard` (`tone`: default, success, warning, danger, info, primary). Painéis usam os mesmos via `DashboardStates`.
+
+## Controles
+`<input>`, `<select>` e `<textarea>` crus são proibidos fora de `components/ui` (teste de guarda). Exceções sem componente: `checkbox`, `radio`, `file`, `range`, `color`, `hidden`. Campo com rótulo: `Field` (ou `<label htmlFor>` + `id`); campo só com placeholder precisa de `aria-label`.
 
 ## Exceções documentadas (guarda em `tests/ui/design-guard.test.ts`)
 | Onde | Exceção | Motivo |

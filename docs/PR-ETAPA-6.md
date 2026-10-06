@@ -18,6 +18,13 @@ Só apresentação. Nenhuma rota de API, permissão, schema, migração ou forma
 - **Resto do site:** campos com estilo único, Esc/foco preso nos modais, rótulos ligados, emojis e azul primário removidos, contraste.
 - **Guarda:** `tests/ui/design-guard.test.ts`; regra no `AGENTS.md`.
 
+## Segunda rodada
+- **Menu:** rótulos a partir de 1280px; nome no chip a partir de 1024px.
+- **Padrão completo:** `PageHeader`, `StatCard`, `EmptyState`, `LoadingState` e `ErrorState` nas telas e nos painéis; `DashboardStates` reaproveita os mesmos.
+- **Modais:** 13 diálogos migrados de `ModalFrame`/markup próprio para `Modal`; os dados enviados não mudaram (mesmos `body`, mesmos ids). `ModalFrame` só no painel lateral de leads descartados.
+- **Controles:** ~90 controles crus trocados por `Input`/`Select`/`Textarea`/`DateInput` (inclui `MiningForm`, `Combobox` e filtros do minerador).
+- **Guarda:** agora falha também com `<input>`, `<select>` ou `<textarea>` crus (exceções: checkbox, radio, file, range, color, hidden).
+
 ## Como testar
 ```bash
 export PATH=$HOME/.local/bin:$PATH

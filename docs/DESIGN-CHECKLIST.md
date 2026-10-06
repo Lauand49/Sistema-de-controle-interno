@@ -20,3 +20,14 @@ Marque no navegador (tema escuro, zoom 100%). Larguras: **1280, 1024, 768, 390 p
 | `/rota-que-nao-existe` | 404 | botão "Ir para o Início" |
 | Erro de página | forçar erro | botão "Tentar novamente" |
 | Título da aba | cada rota acima | formato `<Página> · SciTec Jr. OS` |
+
+## Rodada 2 (conferir também)
+| O quê | Larguras | Esperado |
+|---|---|---|
+| Menu superior | 1512, 1366, 1280 | rótulos visíveis (Início, Setores, Solicitações, Tarefas, Equipe, Painéis) sem quebrar linha; em 1536+ aparece "Minhas Tarefas" completo; abaixo de 1280 só ícones com tooltip |
+| Chip do usuário | 1280, 1024 | nome truncado com tooltip a partir de 1024; só avatar abaixo disso |
+| Cabeçalhos de página | todas | título h1 + subtítulo + ações, sem banner colorido antigo (Início, Tarefas, Solicitações, Equipe, Setores, Ferramentas, Precificação, Minerador, Painéis) |
+| Cartões de número | todas | mesmo estilo em Início, Tarefas, Solicitações e Setores |
+| Estados vazio/carregando/erro | todas | mesmo visual (ícone, título, texto); erro de painel com "Tentar novamente" |
+| Modais (card, tarefa, solicitação, funil, campo, lançamento, importação, atribuição, CNPJ, membro, transição, conversão, fechamento) | 1280, 390 | cabeçalho e rodapé fixos, corpo rola; Esc fecha; Tab fica dentro; botão de envio no rodapé funciona; em 390px ocupa a tela toda por baixo |
+| Importar planilha (triagem) | 1280, 390 | área de soltar é botão focável; depois de escolher, o mapeamento aparece e "Iniciar Triagem" fica no rodapé |

@@ -408,8 +408,9 @@ Guia em `docs/DESIGN.md`, inventário em `docs/DESIGN-AUDITORIA.md`, roteiro de 
 - **Kanban:** colunas de mesma largura mínima e cabeçalho de altura fixa, tooltip nos títulos, aviso de rolagem horizontal. "campos configurados" (definidos na fase) × "campos preenchidos" (valores do card, inclui fases anteriores): eram rótulos enganosos, não bug.
 - **Modal do card:** `Modal` + `Field` + `Tabs`; todos os controles com caixa; calendário visível; valor em pt-BR (grava o mesmo texto); descrição que cresce; cor primária única; ícones lucide.
 - **Resto do site:** controles com estilo único, modais com Esc/foco preso, rótulos ligados por `htmlFor`, emojis trocados por lucide, botões azuis para primário, contraste (`text-slate-500` → `400`, fonte mínima 11px).
+- **Rodada 2:** menu com rótulos a partir de 1280px, padrão de página/estados em todas as telas, 13 modais em `Modal`, controles crus eliminados (guarda ampliada).
 - **Guarda:** `tests/ui/design-guard.test.ts`.
-- **Não verificado:** aparência no navegador (checklist para o dono); migração completa das telas para `PageHeader`/`StatCard`/`EmptyState` (ver HANDOFF).
+- **Não verificado:** aparência no navegador (checklist para o dono); migração dos botões soltos para `Button` e dos badges/abas restantes (ver HANDOFF).
 
 ---
 
