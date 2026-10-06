@@ -7,6 +7,10 @@ export interface TabItem<T extends string> {
   id: T;
   label: string;
   icon?: LucideIcon;
+  /** `id` do elemento (para `aria-labelledby` de painéis). */
+  domId?: string;
+  /** `aria-controls` do painel associado. */
+  controls?: string;
   /** Número exibido ao lado do rótulo. */
   count?: number;
 }
@@ -35,13 +39,15 @@ export function Tabs<T extends string>({ tabs, value, onChange, ariaLabel, class
   };
   return (
     <div role="tablist" aria-label={ariaLabel} onKeyDown={onKeyDown} className={cn('flex gap-1 border-b border-border overflow-x-auto', className)}>
-      {tabs.map(({ id, label, icon: Icon, count }) => {
+      {tabs.map(({ id, label, icon: Icon, count, domId, controls }) => {
         const active = id === value;
         return (
           <button
             key={id}
             type="button"
             role="tab"
+            id={domId}
+            aria-controls={controls}
             aria-selected={active}
             tabIndex={active ? 0 : -1}
             onClick={() => onChange(id)}
