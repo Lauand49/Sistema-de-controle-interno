@@ -45,6 +45,9 @@ export const CurrencyInput = React.forwardRef<HTMLInputElement, CurrencyInputPro
         }}
         onBlur={(e) => {
           setTyped(null);
+          // "4." ou "-" (digitação interrompida) viram "4" e "" — nunca gravar texto que não é número.
+          if (value.endsWith('.')) onChange(value.slice(0, -1));
+          else if (value === '-') onChange('');
           onBlur?.(e);
         }}
         className={cn(CONTROL_CLASS, 'pl-10', invalid && 'border-danger ring-1 ring-danger/40', className)}
