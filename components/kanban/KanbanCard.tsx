@@ -4,6 +4,7 @@ import React from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { Card as CardType } from '@/types';
+import { pluralize } from '@/lib/ui/format';
 import { DollarSign, Building2, User, Sparkles } from 'lucide-react';
 
 interface KanbanCardProps {
@@ -142,7 +143,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
                   {card.assignee.name.charAt(0)}
                 </div>
               )}
-              <span className="font-medium text-[11px] truncate max-w-[110px]">
+              <span className="font-medium text-[11px] truncate max-w-[110px]" title={card.assignee.name}>
                 {card.assignee.name}
               </span>
             </div>
@@ -151,8 +152,8 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
           )}
         </div>
 
-        <span className="text-[10px] font-bold text-purple-300/70 bg-purple-950/50 border border-purple-800/40 px-2 py-0.5 rounded-md">
-          {card.values?.length || 0} campos
+        <span className="text-[11px] font-bold text-purple-300 bg-purple-950/50 border border-purple-800/40 px-2 py-0.5 rounded-md">
+          {pluralize((card.values ?? []).filter((v) => v.value).length, 'campo preenchido', 'campos preenchidos')}
         </span>
       </div>
     </div>
