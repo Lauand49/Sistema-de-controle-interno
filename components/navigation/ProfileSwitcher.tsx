@@ -64,7 +64,7 @@ export const ProfileSwitcher: React.FC = () => {
               )}`
             }
             alt={currentProfile.name}
-            className="w-7 h-7 rounded-lg object-cover border border-purple-500/30"
+            className="w-8 h-8 rounded-lg object-cover border border-purple-500/30"
           />
           <div className="absolute -bottom-0.5 -right-0.5 w-2 h-2 rounded-full bg-emerald-400 ring-2 ring-slate-950" />
         </div>
@@ -103,7 +103,7 @@ export const ProfileSwitcher: React.FC = () => {
                   )}`
                 }
                 alt={currentProfile.name}
-                className="w-9 h-9 rounded-xl object-cover border border-purple-500/40"
+                className="w-10 h-10 shrink-0 rounded-xl object-cover border border-purple-500/40"
               />
               <div className="min-w-0">
                 <div className="font-bold text-xs text-white truncate">{currentProfile.name}</div>
@@ -122,17 +122,17 @@ export const ProfileSwitcher: React.FC = () => {
             <Link
               href="/tasks"
               onClick={() => setIsOpen(false)}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-slate-300 hover:text-white hover:bg-slate-800/80 transition-colors min-h-10"
+              className="w-full flex items-center gap-2.5 px-3 min-h-10 rounded-xl text-xs text-slate-300 hover:text-white hover:bg-slate-800/80 transition-colors min-h-10"
             >
-              <CheckSquare className="w-4 h-4 text-purple-400" /> Minhas Tarefas
+              <CheckSquare className="w-4 h-4 shrink-0 text-purple-400" aria-hidden="true" /> Minhas Tarefas
             </Link>
 
             <Link
               href="/team"
               onClick={() => setIsOpen(false)}
-              className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs text-slate-300 hover:text-white hover:bg-slate-800/80 transition-colors"
+              className="w-full flex items-center gap-2.5 px-3 min-h-10 rounded-xl text-xs text-slate-300 hover:text-white hover:bg-slate-800/80 transition-colors"
             >
-              <Users className="w-4 h-4 text-info" aria-hidden="true" /> Equipe & Membros
+              <Users className="w-4 h-4 shrink-0 text-info" aria-hidden="true" /> Equipe & Membros
             </Link>
           </div>
 
@@ -143,9 +143,9 @@ export const ProfileSwitcher: React.FC = () => {
                 toast.info('Encerrando sessão...');
                 logout();
               }}
-              className="flex items-center gap-2 w-full py-2 px-3 text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-950/40 rounded-xl transition-colors text-left"
+              className="flex items-center gap-2.5 w-full min-h-10 px-3 text-xs font-semibold text-rose-400 hover:text-rose-300 hover:bg-rose-950/40 rounded-xl transition-colors text-left"
             >
-              <LogOut className="w-3.5 h-3.5" /> Sair da conta
+              <LogOut className="w-4 h-4 shrink-0" aria-hidden="true" /> Sair da conta
             </button>
           </div>
         </div>
