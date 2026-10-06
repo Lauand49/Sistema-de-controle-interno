@@ -1,4 +1,5 @@
 'use client';
+import { ButtonLink } from '@/components/ui/Button';
 
 import React, { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
@@ -36,12 +37,9 @@ export const ProfileSwitcher: React.FC = () => {
 
   if (!currentProfile) {
     return (
-      <Link
-        href="/login"
-        className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-bold shadow-md shadow-purple-900/30 transition-all"
-      >
+      <ButtonLink size="sm" href="/login">
         <LogIn className="w-3.5 h-3.5" /> Entrar
-      </Link>
+      </ButtonLink>
     );
   }
 

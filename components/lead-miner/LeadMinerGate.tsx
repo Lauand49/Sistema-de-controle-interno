@@ -1,4 +1,5 @@
 'use client';
+import { ButtonLink } from '@/components/ui/Button';
 
 import React from 'react';
 import Link from 'next/link';
@@ -38,12 +39,9 @@ export const LeadMinerGate: React.FC<{ children: React.ReactNode }> = ({ childre
           <Lock className="h-7 w-7" aria-hidden="true" />
         </div>
         <p className="text-base font-bold text-white">{LEAD_MINER_ACCESS_DENIED}</p>
-        <Link
-          href="/tools"
-          className="rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-2.5 text-xs font-bold text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
-        >
+        <ButtonLink size="md" href="/tools">
           Voltar para Ferramentas
-        </Link>
+        </ButtonLink>
       </div>
     );
   }

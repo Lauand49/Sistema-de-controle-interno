@@ -1,4 +1,5 @@
 import React from 'react';
+import Link from 'next/link';
 import { Loader2, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/ui/format';
 
@@ -17,6 +18,17 @@ const SIZES: Record<ButtonSize, string> = {
   md: 'min-h-10 px-4 text-sm gap-2',
   lg: 'min-h-12 px-6 text-sm gap-2',
 };
+
+/** Classes do botão, para usar em <Link>/<a> (sem aninhar <button> dentro de <a>). */
+export function buttonVariants({ variant = 'primary', size = 'md', className }: { variant?: ButtonVariant; size?: ButtonSize; className?: string } = {}): string {
+  return cn(
+    'inline-flex items-center justify-center rounded-control font-bold transition-all',
+    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-surface',
+    VARIANTS[variant],
+    SIZES[size],
+    className,
+  );
+}
 
 export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
@@ -49,5 +61,18 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function 
       {loading ? <Loader2 className="w-4 h-4 animate-spin" aria-hidden="true" /> : Icon ? <Icon className="w-4 h-4" aria-hidden="true" /> : null}
       {children}
     </button>
+  );
+});
+
+/** Link com a cara de Button: mesmas variantes e tamanhos; mantém href, prefetch e demais props do Link. */
+export const ButtonLink = React.forwardRef<
+  HTMLAnchorElement,
+  React.ComponentProps<typeof Link> & { variant?: ButtonVariant; size?: ButtonSize; icon?: LucideIcon }
+>(function ButtonLink({ variant, size, icon: Icon, className, children, ...rest }, ref) {
+  return (
+    <Link ref={ref} className={buttonVariants({ variant, size, className })} {...rest}>
+      {Icon ? <Icon className="w-4 h-4" aria-hidden="true" /> : null}
+      {children}
+    </Link>
   );
 });

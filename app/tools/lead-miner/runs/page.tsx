@@ -1,4 +1,5 @@
 'use client';
+import { ButtonLink } from '@/components/ui/Button';
 /**
  * Tela_Mineracoes — `/tools/lead-miner/runs` (Req. 11.1–11.7, 11.9, 2.15, 7.11, 8.6, 8.15).
  * Histórico de minerações de todos os autores com busca, filtros (sincronizados com a query
@@ -153,13 +154,10 @@ function RunsScreen() {
           </Link>
           <PageHeader icon={History} title="Minerações" subtitle="Histórico de minerações de todos os autores." />
         </div>
-        <Link
-          href="/tools/lead-miner"
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-2.5 text-sm font-bold text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
-        >
+        <ButtonLink size="md" href="/tools/lead-miner">
           <Pickaxe className="h-4 w-4" aria-hidden="true" />
           Nova mineração
-        </Link>
+        </ButtonLink>
       </header>
 
       {drivers.length > 0 && (

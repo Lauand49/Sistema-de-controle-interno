@@ -61,7 +61,7 @@ import { formatDueDate } from '@/lib/dashboards/format';
 import { Modal } from '@/components/ui/Modal';
 import { Field } from '@/components/ui/Field';
 import { PageHeader, StatCard, EmptyState, LoadingState } from '@/components/ui/Display';
-import { Button } from '@/components/ui/Button';
+import { Button, ButtonLink } from '@/components/ui/Button';
 import { Tabs, type TabItem } from '@/components/ui/Tabs';
 import { pluralize } from '@/lib/ui/format';
 import { Input, Select } from '@/components/ui/Input';
@@ -607,12 +607,9 @@ export default function SectorWorkspacePage() {
                     >
                       <TrendingUp className="w-4 h-4 text-purple-300" /> Triagem Rápida
                     </Link>
-                    <Link
-                      href="/tools/lead-sheet"
-                      className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-purple-900/40 transition-all hover:scale-[1.02]"
-                    >
+                    <ButtonLink size="sm" href="/tools/lead-sheet">
                       <FileSpreadsheet className="w-4 h-4" /> Abrir Planilha Completa
-                    </Link>
+                    </ButtonLink>
                   </div>
                 </div>
 
@@ -1399,12 +1396,9 @@ export default function SectorWorkspacePage() {
 
                     <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between">
                       <span className="text-[11px] text-slate-400">Pronto para uso</span>
-                      <Link
-                        href="/tools/pricing"
-                        className="px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-md flex items-center gap-1.5 transition-all transform hover:-translate-y-0.5"
-                      >
+                      <ButtonLink size="sm" href="/tools/pricing">
                         Abrir Simulador <ArrowRight className="w-3.5 h-3.5" />
-                      </Link>
+                      </ButtonLink>
                     </div>
                   </div>
 
@@ -1434,12 +1428,9 @@ export default function SectorWorkspacePage() {
 
                     <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between">
                       <span className="text-[11px] text-slate-400">Pronto para uso</span>
-                      <Link
-                        href="/tools/lead-filter"
-                        className="px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-md flex items-center gap-1.5 transition-all transform hover:-translate-y-0.5"
-                      >
+                      <ButtonLink size="sm" href="/tools/lead-filter">
                         Abrir Decisão Ágil <ArrowRight className="w-3.5 h-3.5" />
-                      </Link>
+                      </ButtonLink>
                     </div>
                   </div>
 
@@ -1469,12 +1460,9 @@ export default function SectorWorkspacePage() {
 
                     <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between">
                       <span className="text-[11px] text-slate-400">Pronto para uso</span>
-                      <Link
-                        href="/tools/lead-sheet"
-                        className="px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-md flex items-center gap-1.5 transition-all transform hover:-translate-y-0.5"
-                      >
+                      <ButtonLink size="sm" href="/tools/lead-sheet">
                         Abrir Planilha <ArrowRight className="w-3.5 h-3.5" />
-                      </Link>
+                      </ButtonLink>
                     </div>
                   </div>
 
