@@ -16,6 +16,7 @@ import {
 } from '@/lib/permissions';
 import { PersonTypeBadge } from '@/components/ui/PersonTypeBadge';
 import { setManagerWithConfirm, teamApi } from './teamApi';
+import { ModalFrame } from '@/components/ui/Modal';
 
 interface Props {
   actor: User;
@@ -61,12 +62,7 @@ export const ManageMemberModal: React.FC<Props> = ({ actor, target, onClose, onC
   const showDeactivate = canDeactivate(actor, target) && target.status === 'ATIVO';
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm"
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="manage-member-title"
-    >
+    <ModalFrame onClose={onClose} label="Gerenciar membro" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
       <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl max-h-[90vh] overflow-y-auto">
         <div className="flex items-start justify-between gap-3 p-5 border-b border-slate-800">
           <div className="flex items-center gap-3 min-w-0">
@@ -127,7 +123,7 @@ export const ManageMemberModal: React.FC<Props> = ({ actor, target, onClose, onC
                   Transferir
                 </button>
               </div>
-              <p className="text-[11px] text-slate-500">Quem troca de departamento entra como Assessor(a).</p>
+              <p className="text-[11px] text-slate-400">Quem troca de departamento entra como Assessor(a).</p>
             </section>
           )}
 
@@ -182,7 +178,7 @@ export const ManageMemberModal: React.FC<Props> = ({ actor, target, onClose, onC
                       <span className="text-slate-200">
                         {s.name}
                         {link && (
-                          <span className="ml-2 text-[10px] font-bold uppercase text-emerald-300">
+                          <span className="ml-2 text-[11px] font-bold uppercase text-emerald-300">
                             {link.role === 'GERENTE' ? 'Gerente' : 'Membro'}
                           </span>
                         )}
@@ -319,6 +315,6 @@ export const ManageMemberModal: React.FC<Props> = ({ actor, target, onClose, onC
           )}
         </div>
       </div>
-    </div>
+    </ModalFrame>
   );
 };

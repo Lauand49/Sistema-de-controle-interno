@@ -58,7 +58,7 @@ export interface MiningFormProps {
 }
 
 const inputClass =
-  'w-full rounded-xl border bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:opacity-60';
+  'w-full rounded-xl border bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:opacity-60';
 
 export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
   const [values, setValues] = useState<MiningFormValues>(INITIAL_FORM_VALUES);
@@ -369,7 +369,7 @@ export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
             />
             <label
               htmlFor="mining-ia"
-              className={`flex items-center gap-1 text-sm ${iaAvailable ? 'text-slate-300' : 'text-slate-500'}`}
+              className={`flex items-center gap-1 text-sm ${iaAvailable ? 'text-slate-300' : 'text-slate-400'}`}
             >
               <Sparkles className="h-3.5 w-3.5 text-purple-400" aria-hidden="true" />
               Usar IA
@@ -396,7 +396,7 @@ export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
               aria-describedby="mining-pagespeed-hint"
               className="h-4 w-4 rounded border-slate-600 bg-slate-900 accent-purple-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
             />
-            <label htmlFor="mining-pagespeed" className={`text-sm ${pagespeedBlocked ? 'text-slate-500' : 'text-slate-300'}`}>
+            <label htmlFor="mining-pagespeed" className={`text-sm ${pagespeedBlocked ? 'text-slate-400' : 'text-slate-300'}`}>
               Analisar desempenho (PageSpeed)
             </label>
           </div>

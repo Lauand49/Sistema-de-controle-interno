@@ -5,6 +5,8 @@ import { Phase, User } from '@/types';
 import { DynamicField } from '../ui/DynamicField';
 import { X, PlusCircle } from 'lucide-react';
 import { toast } from 'sonner';
+import { ModalFrame } from '@/components/ui/Modal';
+import { CONTROL_CLASS } from '@/components/ui/Input';
 
 interface CreateCardModalProps {
   phaseId: string;
@@ -69,7 +71,7 @@ export const CreateCardModal: React.FC<CreateCardModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
+    <ModalFrame onClose={onClose} label="Novo card" className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
         <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
@@ -90,28 +92,28 @@ export const CreateCardModal: React.FC<CreateCardModalProps> = ({
         {/* Form Body */}
         <form onSubmit={handleSubmit} className="p-6 space-y-4 overflow-y-auto max-h-[75vh]">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            <label htmlFor="createcard-1" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
               Título do Projeto / Oportunidade <span className="text-red-500">*</span>
             </label>
-            <input
+            <input id="createcard-1"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Ex: Consultoria em Gestão - Empresa X"
               required
-              className="w-full px-3 py-2 text-sm rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500"
+              className={`${CONTROL_CLASS} w-full`}
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <label htmlFor="createcard-2" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 Fase Inicial
               </label>
-              <select
+              <select id="createcard-2"
                 value={selectedPhaseId}
                 onChange={(e) => setSelectedPhaseId(e.target.value)}
-                className="w-full px-3 py-2 text-sm rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                className={`${CONTROL_CLASS} w-full`}
               >
                 {phases.map((p) => (
                   <option key={p.id} value={p.id}>
@@ -128,7 +130,7 @@ export const CreateCardModal: React.FC<CreateCardModalProps> = ({
               <select
                 value={assigneeId}
                 onChange={(e) => setAssigneeId(e.target.value)}
-                className="w-full px-3 py-2 text-sm rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                className={`${CONTROL_CLASS} w-full`}
               >
                 <option value="">Selecione um consultor</option>
                 {users.map((u) => (
@@ -149,13 +151,13 @@ export const CreateCardModal: React.FC<CreateCardModalProps> = ({
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Resumo do escopo ou contexto do cliente..."
-              className="w-full px-3 py-2 text-sm rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100 focus:ring-2 focus:ring-blue-500"
+              className={`${CONTROL_CLASS} w-full`}
             />
           </div>
 
           {phaseFields.length > 0 && (
             <div className="border-t border-slate-200 dark:border-slate-800 pt-4 space-y-3">
-              <h4 className="text-xs font-bold text-slate-500 uppercase tracking-wider">
+              <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                 Campos da Fase {currentPhase?.name}
               </h4>
               {phaseFields.map((field) => (
@@ -180,13 +182,13 @@ export const CreateCardModal: React.FC<CreateCardModalProps> = ({
             <button
               type="submit"
               disabled={isLoading}
-              className="px-5 py-2 text-sm font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-lg transition-colors disabled:opacity-50"
+              className="px-5 py-2 text-sm font-semibold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-lg transition-colors disabled:opacity-50"
             >
               {isLoading ? 'Criando...' : 'Criar Card'}
             </button>
           </div>
         </form>
       </div>
-    </div>
+    </ModalFrame>
   );
 };

@@ -15,7 +15,7 @@ export const PersonTypeBadge: React.FC<{ type: PersonType; className?: string }>
   const { className: style, Icon } = STYLES[type] ?? STYLES.ASSESSOR;
   return (
     <span
-      className={`inline-flex items-center gap-1 text-[10px] font-bold uppercase px-2 py-0.5 rounded-full border ${style} ${className}`}
+      className={`inline-flex items-center gap-1 text-[11px] font-bold uppercase px-2 py-0.5 rounded-full border ${style} ${className}`}
     >
       <Icon className="w-3 h-3" aria-hidden="true" /> {PERSON_TYPE_LABEL[type]}
     </span>

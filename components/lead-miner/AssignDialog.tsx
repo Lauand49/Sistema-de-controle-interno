@@ -3,6 +3,7 @@
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { Loader2, UserPlus, X } from 'lucide-react';
 import type { Assignee } from '@/lib/leads/client-api';
+import { CONTROL_CLASS } from '@/components/ui/Input';
 
 interface AssignDialogProps {
   open: boolean;
@@ -117,7 +118,7 @@ export const AssignDialog: React.FC<AssignDialogProps> = ({
               value={assigneeId}
               onChange={(e) => setAssigneeId(e.target.value)}
               disabled={busy}
-              className="w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+              className={`${CONTROL_CLASS} w-full`}
             >
               <option value="">Selecione um responsável</option>
               {assignees.map((a) => (
@@ -132,7 +133,7 @@ export const AssignDialog: React.FC<AssignDialogProps> = ({
           </div>
         )}
 
-        <p className="text-xs text-slate-500">
+        <p className="text-xs text-slate-400">
           O responsável substitui o atual e também é aplicado aos leads de triagem vinculados.
         </p>
 

@@ -17,6 +17,8 @@ import {
   Users,
   Palette,
 } from 'lucide-react';
+import { ModalFrame } from '@/components/ui/Modal';
+import { CONTROL_CLASS } from '@/components/ui/Input';
 
 interface CreateRequestModalProps {
   isOpen: boolean;
@@ -139,7 +141,7 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+    <ModalFrame onClose={onClose} label="Nova solicitação" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
       <div className="relative w-full max-w-2xl bg-slate-900 border border-purple-800/50 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-gradient-to-r from-purple-950/60 to-slate-900">
@@ -149,7 +151,7 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
             </div>
             <div>
               <h2 className="text-base font-bold text-white flex items-center gap-2">
-                Nova Solicitação Intersetorial
+                Nova Solicitação
               </h2>
               <p className="text-xs text-slate-400">
                 Gera automaticamente uma tarefa no funil de entrada do setor responsável
@@ -203,7 +205,7 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
           {/* Quick Presets based on selected department */}
           {departmentPresets[toDept] && (
             <div>
-              <span className="text-[10px] font-semibold text-purple-300/80 uppercase tracking-wider block mb-1.5 flex items-center gap-1">
+              <span className="text-[11px] font-semibold text-purple-300/80 uppercase tracking-wider block mb-1.5 flex items-center gap-1">
                 <Sparkles className="w-3 h-3 text-purple-400" /> Modelos Rápidos para {toDept}:
               </span>
               <div className="flex flex-wrap gap-1.5">
@@ -212,7 +214,7 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
                     key={preset}
                     type="button"
                     onClick={() => handleApplyPreset(preset)}
-                    className="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 hover:border-purple-600 text-slate-300 hover:text-white transition-all text-[10px]"
+                    className="px-2.5 py-1 rounded-lg bg-slate-950 border border-slate-800 hover:border-purple-600 text-slate-300 hover:text-white transition-all text-[11px]"
                   >
                     + {preset}
                   </button>
@@ -223,15 +225,15 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
 
           {/* Title */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">
+            <label htmlFor="createrequ-1" className="block text-xs font-semibold text-slate-300 mb-1">
               Título da Solicitação
             </label>
-            <input
+            <input id="createrequ-1"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               placeholder="Ex: Elaborar minuta de contrato para cliente X"
-              className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500"
+              className={`${CONTROL_CLASS} w-full`}
               required
             />
           </div>
@@ -239,41 +241,41 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
           {/* Priority, SLA Due Date & From Department */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
+              <label htmlFor="createrequ-2" className="block text-xs font-semibold text-slate-300 mb-1">
                 Prioridade
               </label>
-              <select
+              <select id="createrequ-2"
                 value={priority}
                 onChange={(e) => setPriority(e.target.value as any)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-purple-500"
+                className={`${CONTROL_CLASS} w-full`}
               >
                 <option value="LOW">Baixa</option>
                 <option value="MEDIUM">Média</option>
                 <option value="HIGH">Alta</option>
-                <option value="URGENT">🚨 Urgente</option>
+                <option value="URGENT">Urgente</option>
               </select>
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1">
+              <label htmlFor="createrequ-3" className="block text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1">
                 <Calendar className="w-3 h-3 text-purple-400" /> Prazo Desejado (SLA)
               </label>
-              <input
+              <input id="createrequ-3"
                 type="date"
                 value={dueDate}
                 onChange={(e) => setDueDate(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-purple-500"
+                className={`${CONTROL_CLASS} w-full`}
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
+              <label htmlFor="createrequ-4" className="block text-xs font-semibold text-slate-300 mb-1">
                 Setor Solicitante
               </label>
-              <select
+              <select id="createrequ-4"
                 value={fromDept}
                 onChange={(e) => setFromDept(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-purple-500"
+                className={`${CONTROL_CLASS} w-full`}
               >
                 <option value="NEGOCIOS">Negócios</option>
                 <option value="ADMJURFIN">AdmJurFin</option>
@@ -285,30 +287,30 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
 
           {/* Description */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1">
+            <label htmlFor="createrequ-5" className="block text-xs font-semibold text-slate-300 mb-1">
               Descrição & Requisitos Detalhados
             </label>
-            <textarea
+            <textarea id="createrequ-5"
               rows={4}
               value={description}
               onChange={(e) => setDescription(e.target.value)}
               placeholder="Explique o que precisa ser feito, valores envolvidos, especificações e contexto para a equipe responsável..."
-              className="w-full px-3.5 py-2.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 resize-none"
+              className={`${CONTROL_CLASS} w-full resize-none`}
               required
             />
           </div>
 
           {/* Attachment Link */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1">
+            <label htmlFor="createrequ-6" className="block text-xs font-semibold text-slate-300 mb-1 flex items-center gap-1">
               <Link2 className="w-3.5 h-3.5 text-purple-400" /> Link de Apoio (Drive, Figma, Documento)
             </label>
-            <input
+            <input id="createrequ-6"
               type="url"
               value={attachmentLink}
               onChange={(e) => setAttachmentLink(e.target.value)}
               placeholder="https://drive.google.com/... ou link de briefing"
-              className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500"
+              className={`${CONTROL_CLASS} w-full`}
             />
           </div>
 
@@ -337,6 +339,6 @@ export const CreateRequestModal: React.FC<CreateRequestModalProps> = ({
           </div>
         </form>
       </div>
-    </div>
+    </ModalFrame>
   );
 };

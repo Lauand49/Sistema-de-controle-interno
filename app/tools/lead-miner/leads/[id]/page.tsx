@@ -102,7 +102,7 @@ function FichaContent({ id }: { id: string }) {
         role="alert"
         className="mx-auto flex max-w-lg flex-col items-center gap-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-8 text-center"
       >
-        <SearchX className="h-10 w-10 text-slate-500" aria-hidden="true" />
+        <SearchX className="h-10 w-10 text-slate-400" aria-hidden="true" />
         <h1 className="text-lg font-bold text-white">{COMPANY_NOT_FOUND}</h1>
         <p className="text-sm text-slate-400">A empresa solicitada não existe ou foi removida.</p>
       </div>

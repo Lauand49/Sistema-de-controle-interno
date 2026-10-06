@@ -25,7 +25,7 @@ export const Field: React.FC<FieldProps> = ({ label, required, hint, error, clas
           {label}
         </label>
         {required && (
-          <span className="text-[10px] font-bold uppercase tracking-wide text-danger-soft bg-danger-subtle px-1.5 py-0.5 rounded">
+          <span className="text-[11px] font-bold uppercase tracking-wide text-danger-soft bg-danger-subtle px-1.5 py-0.5 rounded">
             Obrigatório
           </span>
         )}

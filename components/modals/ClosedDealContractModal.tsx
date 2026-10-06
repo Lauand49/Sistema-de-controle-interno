@@ -13,6 +13,7 @@ import {
   FileCheck2,
   Sparkles,
 } from 'lucide-react';
+import { ModalFrame } from '@/components/ui/Modal';
 
 interface ClosedDealContractModalProps {
   card: Card | null;
@@ -90,7 +91,7 @@ Ações Solicitadas à AdmJurFin:
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+    <ModalFrame onClose={onClose} label="Parabéns pelo Fechamento!" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
       <div className="relative w-full max-w-md bg-slate-900 border border-emerald-500/50 rounded-2xl shadow-2xl shadow-emerald-950/40 overflow-hidden">
         {/* Confetti / Badge Header */}
         <div className="p-6 bg-gradient-to-b from-emerald-950/60 to-slate-900 text-center relative">
@@ -105,7 +106,7 @@ Ações Solicitadas à AdmJurFin:
             <PartyPopper className="w-7 h-7" />
           </div>
 
-          <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-300 bg-emerald-950 border border-emerald-800/60 px-3 py-0.5 rounded-full inline-flex items-center gap-1 mb-1.5">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-emerald-300 bg-emerald-950 border border-emerald-800/60 px-3 py-0.5 rounded-full inline-flex items-center gap-1 mb-1.5">
             <Sparkles className="w-3 h-3 text-emerald-400" /> Projeto Fechado!
           </span>
 
@@ -156,6 +157,6 @@ Ações Solicitadas à AdmJurFin:
           </div>
         </div>
       </div>
-    </div>
+    </ModalFrame>
   );
 };

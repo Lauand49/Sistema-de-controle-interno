@@ -23,12 +23,12 @@ export const Section: React.FC<{
 /** Par rótulo/valor para listas `<dl>`. */
 export const Field: React.FC<{ label: string; children: React.ReactNode }> = ({ label, children }) => (
   <div className="min-w-0">
-    <dt className="text-xs font-semibold uppercase tracking-wide text-slate-500">{label}</dt>
+    <dt className="text-xs font-semibold uppercase tracking-wide text-slate-400">{label}</dt>
     <dd className="mt-0.5 break-words text-sm text-slate-200">{children}</dd>
   </div>
 );
 
 /** Valor com estilo apagado quando é um marcador de ausência ("não informado" etc.). */
 export const Muted: React.FC<{ children: React.ReactNode }> = ({ children }) => (
-  <span className="italic text-slate-500">{children}</span>
+  <span className="italic text-slate-400">{children}</span>
 );

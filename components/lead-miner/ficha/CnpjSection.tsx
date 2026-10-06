@@ -11,6 +11,7 @@ import {
 import { Field, Muted, Section } from './Section';
 import { cnpjOriginLabel } from '@/components/lead-miner/enrichment-helpers';
 import { formatDateTime } from './ficha-helpers';
+import { CONTROL_CLASS } from '@/components/ui/Input';
 
 /**
  * Seção "CNPJ" (Req. 17.3, 11.5–11.8, 11.10, 12.4): CNPJ formatado, origem, Dados_CNPJ e data;
@@ -142,7 +143,7 @@ export const CnpjSection: React.FC<CnpjSectionProps> = ({ company, onUpdated }) 
 
       {company.cnpjCandidatos.length > 0 && (
         <div className="mt-4">
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Candidatos encontrados</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">Candidatos encontrados</h3>
           <ul className="mt-2 space-y-2">
             {company.cnpjCandidatos.map((c) => (
               <li
@@ -151,7 +152,7 @@ export const CnpjSection: React.FC<CnpjSectionProps> = ({ company, onUpdated }) 
               >
                 <span className="text-slate-200">
                   {c.formatado}
-                  <span className="ml-2 text-xs text-slate-500">{candidateReason(c.motivo)}</span>
+                  <span className="ml-2 text-xs text-slate-400">{candidateReason(c.motivo)}</span>
                   {c.conflito && (
                     <a
                       href={`/tools/lead-miner/leads/${encodeURIComponent(c.conflito.id)}`}
@@ -199,7 +200,7 @@ export const CnpjSection: React.FC<CnpjSectionProps> = ({ company, onUpdated }) 
               aria-invalid={!!fieldError}
               aria-describedby={fieldError ? 'cnpj-input-error' : undefined}
               placeholder="00.000.000/0000-00"
-              className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 aria-[invalid=true]:border-red-500"
+              className={`${CONTROL_CLASS} mt-1 w-full`}
             />
             {fieldError && (
               <p id="cnpj-input-error" role="alert" className="mt-1 text-xs text-red-400">

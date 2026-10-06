@@ -107,10 +107,10 @@ export const ProfileSwitcher: React.FC = () => {
               />
               <div className="min-w-0">
                 <div className="font-bold text-xs text-white truncate">{currentProfile.name}</div>
-                <div className="text-[10px] text-slate-400 truncate">{currentProfile.email}</div>
+                <div className="text-[11px] text-slate-400 truncate">{currentProfile.email}</div>
                 <div className="mt-1 flex items-center gap-1.5 flex-wrap">
                   <PersonTypeBadge type={currentProfile.personType} />
-                  <span className="text-[10px] font-semibold text-slate-300">
+                  <span className="text-[11px] font-semibold text-slate-300">
                     {getUserCargoTitle(currentProfile)}
                   </span>
                 </div>

@@ -12,6 +12,7 @@ import {
   Cpu,
 } from 'lucide-react';
 import { toast } from 'sonner';
+import { ModalFrame } from '@/components/ui/Modal';
 
 interface PhaseTransitionModalProps {
   card: Card;
@@ -110,7 +111,7 @@ export const PhaseTransitionModal: React.FC<PhaseTransitionModalProps> = ({
     targetPhase.name.toLowerCase().includes('proposta');
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
+    <ModalFrame onClose={onClose} label="Transição de fase" className="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
       <div className="bg-slate-900 border border-purple-800/50 rounded-2xl w-full max-w-xl shadow-2xl overflow-hidden flex flex-col">
         {/* Header */}
         <div className="p-6 border-b border-slate-800 bg-gradient-to-r from-purple-950/80 via-slate-900 to-indigo-950/80 flex items-start justify-between">
@@ -221,6 +222,6 @@ export const PhaseTransitionModal: React.FC<PhaseTransitionModalProps> = ({
           </button>
         </div>
       </div>
-    </div>
+    </ModalFrame>
   );
 };

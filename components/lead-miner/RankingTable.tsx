@@ -40,7 +40,7 @@ const ContactCell: React.FC<{ row: CompanyRow }> = ({ row }) => {
   if (row.contatoWhatsapp) badges.push({ key: 'wa', label: 'WhatsApp', Icon: MessageCircle });
   if (row.contatoInstagram) badges.push({ key: 'ig', label: 'Instagram', Icon: AtSign });
   if (row.contatoEmail) badges.push({ key: 'em', label: 'E-mail', Icon: Mail });
-  if (!row.telefone && badges.length === 0) return <span className="text-slate-500">—</span>;
+  if (!row.telefone && badges.length === 0) return <span className="text-slate-400">—</span>;
   return (
     <div className="space-y-1">
       {row.telefone && <p className="whitespace-nowrap text-slate-200">{row.telefone}</p>}
@@ -140,7 +140,7 @@ export const RankingTable: React.FC<RankingTableProps> = ({ rows, selected, onTo
                     aria-label={`Selecionar ${r.nome}`}
                   />
                 </td>
-                <td className="px-2 py-3 text-xs text-slate-500">{offset + i + 1}</td>
+                <td className="px-2 py-3 text-xs text-slate-400">{offset + i + 1}</td>
                 <td className="px-3 py-3">
                   <Link
                     href={`/tools/lead-miner/leads/${encodeURIComponent(r.id)}`}
@@ -148,7 +148,7 @@ export const RankingTable: React.FC<RankingTableProps> = ({ rows, selected, onTo
                   >
                     {r.nome}
                   </Link>
-                  <p className="text-xs text-slate-500">{NICHE_LABEL.get(r.nicho) ?? r.nicho}</p>
+                  <p className="text-xs text-slate-400">{NICHE_LABEL.get(r.nicho) ?? r.nicho}</p>
                   {(() => {
                     const sit = situacaoAlert(r.situacaoCadastral);
                     return sit && sit.alerta ? (
@@ -164,7 +164,7 @@ export const RankingTable: React.FC<RankingTableProps> = ({ rows, selected, onTo
                 </td>
                 <td className="px-3 py-3 text-xs text-slate-300">
                   {r.hasSite === false || (!r.website && r.hasSite !== true) ? (
-                    <span className="text-slate-500">Sem site</span>
+                    <span className="text-slate-400">Sem site</span>
                   ) : (
                     <span className="inline-flex items-center gap-1">
                       <Globe className="h-3.5 w-3.5" aria-hidden="true" />
@@ -202,12 +202,12 @@ export const RankingTable: React.FC<RankingTableProps> = ({ rows, selected, onTo
                   <PriorityBadge prioridade={r.prioridade} />
                 </td>
                 <td className="px-3 py-3 text-xs text-slate-300">
-                  {r.assignedUser?.name ?? <span className="text-slate-500">Sem responsável</span>}
+                  {r.assignedUser?.name ?? <span className="text-slate-400">Sem responsável</span>}
                 </td>
                 <td className="px-3 py-3 text-xs text-slate-300">
                   {LEAD_STATUS_LABEL[r.prospectLead?.status ?? 'NONE'] ?? r.prospectLead?.status}
                   {r.lastAnalyzedAt && (
-                    <p className="text-[11px] text-slate-500">Analisada em {formatDate(r.lastAnalyzedAt)}</p>
+                    <p className="text-[11px] text-slate-400">Analisada em {formatDate(r.lastAnalyzedAt)}</p>
                   )}
                 </td>
               </tr>

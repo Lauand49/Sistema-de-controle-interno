@@ -20,9 +20,10 @@ import {
   X,
   Sparkles,
   Layers,
-  ChevronRight,
-} from 'lucide-react';
+  ChevronRight, Lock } from 'lucide-react';
 import { formatDueDate } from '@/lib/dashboards/format';
+import { ModalFrame } from '@/components/ui/Modal';
+import { CONTROL_CLASS } from '@/components/ui/Input';
 
 interface SectorTaskBoardProps {
   department: string;
@@ -257,13 +258,13 @@ export const SectorTaskBoard: React.FC<SectorTaskBoardProps> = ({
         <div className="flex flex-wrap items-center gap-2.5">
           {/* Search */}
           <div className="relative">
-            <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
+            <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar tarefa..."
-              className="pl-8 pr-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 w-44"
+              className={`${CONTROL_CLASS} pl-8 pr-3 w-44`}
             />
           </div>
 
@@ -271,7 +272,7 @@ export const SectorTaskBoard: React.FC<SectorTaskBoardProps> = ({
           <select
             value={selectedAssignee}
             onChange={(e) => setSelectedAssignee(e.target.value)}
-            className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-purple-500"
+            className={`${CONTROL_CLASS}`}
           >
             <option value="ALL">Todos os Responsáveis</option>
             {users.map((u) => (
@@ -284,7 +285,7 @@ export const SectorTaskBoard: React.FC<SectorTaskBoardProps> = ({
           {/* New Task Button */}
           {readOnly ? (
             <span className="text-[11px] font-bold px-3 py-1.5 rounded-xl bg-amber-500/20 border border-amber-500/40 text-amber-300">
-              🔒 Somente Leitura
+              <Lock className="w-3.5 h-3.5 inline mr-1 -mt-0.5" aria-hidden="true" />Somente Leitura
             </span>
           ) : (
             <button
@@ -316,7 +317,7 @@ export const SectorTaskBoard: React.FC<SectorTaskBoardProps> = ({
                     <span className="font-bold text-xs text-white">{col.title}</span>
                   </div>
 
-                  <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${col.badgeBg}`}>
+                  <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${col.badgeBg}`}>
                     {colTasks.length}
                   </span>
                 </div>
@@ -324,7 +325,7 @@ export const SectorTaskBoard: React.FC<SectorTaskBoardProps> = ({
                 {/* Cards List in this column */}
                 <div className="space-y-3">
                   {colTasks.length === 0 ? (
-                    <div className="p-8 rounded-xl bg-slate-950/40 border border-dashed border-slate-800/80 text-center space-y-1 text-slate-500 text-xs">
+                    <div className="p-8 rounded-xl bg-slate-950/40 border border-dashed border-slate-800/80 text-center space-y-1 text-slate-400 text-xs">
                       <span>Nenhuma tarefa aqui</span>
                     </div>
                   ) : (
@@ -344,7 +345,7 @@ export const SectorTaskBoard: React.FC<SectorTaskBoardProps> = ({
                                 : 'bg-slate-800 text-slate-300 border-slate-700'
                             }`}
                           >
-                            {task.priority === 'URGENT' ? '🚨 URGENTE' : task.priority}
+                            {task.priority === 'URGENT' ? 'URGENTE' : task.priority}
                           </span>
 
                           {!readOnly && (
@@ -397,12 +398,12 @@ export const SectorTaskBoard: React.FC<SectorTaskBoardProps> = ({
                                 <span className="truncate text-slate-300">{task.assignee.name}</span>
                               </>
                             ) : (
-                              <span className="text-slate-500 italic">Sem responsável</span>
+                              <span className="text-slate-400 italic">Sem responsável</span>
                             )}
                           </div>
 
                           {task.dueDate && (
-                            <span className="flex items-center gap-1 text-slate-400 text-[10px]">
+                            <span className="flex items-center gap-1 text-slate-400 text-[11px]">
                               <Calendar className="w-3.5 h-3.5 text-purple-400" />
                               {formatDueDate(task.dueDate)}
                             </span>
@@ -420,7 +421,7 @@ export const SectorTaskBoard: React.FC<SectorTaskBoardProps> = ({
                                     col.id === 'DONE' ? 'IN_PROGRESS' : 'TODO'
                                   )
                                 }
-                                className="px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 text-[10px] text-slate-400 hover:text-white flex items-center gap-1 transition-colors"
+                                className="px-2 py-1 rounded bg-slate-900 hover:bg-slate-800 text-[11px] text-slate-400 hover:text-white flex items-center gap-1 transition-colors"
                                 title="Voltar etapa"
                               >
                                 <ArrowLeft className="w-3 h-3" /> Voltar
@@ -437,7 +438,7 @@ export const SectorTaskBoard: React.FC<SectorTaskBoardProps> = ({
                                     col.id === 'TODO' ? 'IN_PROGRESS' : 'DONE'
                                   )
                                 }
-                                className="px-2 py-1 rounded bg-purple-950/60 border border-purple-800/50 hover:bg-purple-900/80 text-[10px] text-purple-300 hover:text-white flex items-center gap-1 transition-all ml-auto"
+                                className="px-2 py-1 rounded bg-purple-950/60 border border-purple-800/50 hover:bg-purple-900/80 text-[11px] text-purple-300 hover:text-white flex items-center gap-1 transition-all ml-auto"
                                 title="Avançar etapa"
                               >
                                 Avançar <ArrowRight className="w-3 h-3" />
@@ -467,7 +468,7 @@ export const SectorTaskBoard: React.FC<SectorTaskBoardProps> = ({
 
       {/* Modal Nova / Editar Tarefa */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+        <ModalFrame onClose={() => setIsModalOpen(false)} label="Tarefa" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
           <div className="relative w-full max-w-lg bg-slate-900 border border-purple-800/50 rounded-2xl shadow-2xl overflow-hidden p-6 space-y-4">
             <div className="flex items-center justify-between border-b border-slate-800 pb-3">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
@@ -484,39 +485,39 @@ export const SectorTaskBoard: React.FC<SectorTaskBoardProps> = ({
 
             <form onSubmit={handleSaveTask} className="space-y-3.5 text-xs">
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">
+                <label htmlFor="sectortask-1" className="block text-slate-300 font-semibold mb-1">
                   Título da Tarefa <span className="text-rose-400">*</span>
                 </label>
-                <input
+                <input id="sectortask-1"
                   type="text"
                   value={formTitle}
                   onChange={(e) => setFormTitle(e.target.value)}
                   placeholder="Ex: Elaborar dinâmica de grupo para Trainees"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-purple-500"
+                  className={`${CONTROL_CLASS} w-full`}
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-slate-300 font-semibold mb-1">
+                <label htmlFor="sectortask-2" className="block text-slate-300 font-semibold mb-1">
                   Descrição & Detalhes
                 </label>
-                <textarea
+                <textarea id="sectortask-2"
                   rows={3}
                   value={formDescription}
                   onChange={(e) => setFormDescription(e.target.value)}
                   placeholder="Descreva o objetivo, critérios e instruções..."
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-purple-500 resize-none"
+                  className={`${CONTROL_CLASS} w-full resize-none`}
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Coluna / Status</label>
-                  <select
+                  <label htmlFor="sectortask-3" className="block text-slate-300 font-semibold mb-1">Coluna / Status</label>
+                  <select id="sectortask-3"
                     value={formStatus}
                     onChange={(e) => setFormStatus(e.target.value as TaskStatus)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-purple-500"
+                    className={`${CONTROL_CLASS} w-full`}
                   >
                     <option value="TODO">A Fazer / Backlog</option>
                     <option value="IN_PROGRESS">Em Andamento</option>
@@ -525,27 +526,27 @@ export const SectorTaskBoard: React.FC<SectorTaskBoardProps> = ({
                 </div>
 
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Prioridade</label>
-                  <select
+                  <label htmlFor="sectortask-4" className="block text-slate-300 font-semibold mb-1">Prioridade</label>
+                  <select id="sectortask-4"
                     value={formPriority}
                     onChange={(e) => setFormPriority(e.target.value as TaskPriority)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-purple-500"
+                    className={`${CONTROL_CLASS} w-full`}
                   >
                     <option value="LOW">Baixa</option>
                     <option value="MEDIUM">Média</option>
                     <option value="HIGH">Alta</option>
-                    <option value="URGENT">🚨 Urgente</option>
+                    <option value="URGENT">Urgente</option>
                   </select>
                 </div>
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Responsável</label>
-                  <select
+                  <label htmlFor="sectortask-5" className="block text-slate-300 font-semibold mb-1">Responsável</label>
+                  <select id="sectortask-5"
                     value={formAssigneeId}
                     onChange={(e) => setFormAssigneeId(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-purple-500"
+                    className={`${CONTROL_CLASS} w-full`}
                   >
                     <option value="">Sem responsável</option>
                     {users.map((u) => (
@@ -562,7 +563,7 @@ export const SectorTaskBoard: React.FC<SectorTaskBoardProps> = ({
                     type="date"
                     value={formDueDate}
                     onChange={(e) => setFormDueDate(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-purple-500"
+                    className={`${CONTROL_CLASS} w-full`}
                   />
                 </div>
               </div>
@@ -585,7 +586,7 @@ export const SectorTaskBoard: React.FC<SectorTaskBoardProps> = ({
               </div>
             </form>
           </div>
-        </div>
+        </ModalFrame>
       )}
     </div>
   );

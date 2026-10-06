@@ -176,7 +176,7 @@ function DashboardContent() {
               <strong>Modo Somente Leitura:</strong> Você está visualizando o funil de {pipeDepartment} como membro de {unitName(currentProfile?.departmentCode)}. Edições e movimentações de cards estão desabilitadas.
             </span>
           </div>
-          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 uppercase shrink-0">
+          <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300 uppercase shrink-0">
             Consulta
           </span>
         </div>

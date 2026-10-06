@@ -14,7 +14,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="pt-BR" className="overflow-x-hidden max-w-full">
+    <html lang="pt-BR" className="dark overflow-x-hidden max-w-full">
       <body className="antialiased bg-slate-50 text-slate-900 dark:bg-slate-950 dark:text-slate-100 min-h-screen overflow-x-hidden max-w-full w-full">
         <ClientToaster />
         <ProfileProvider>{children}</ProfileProvider>

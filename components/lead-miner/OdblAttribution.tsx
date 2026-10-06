@@ -3,7 +3,7 @@ import { ODBL_TEXT, ODBL_URL } from '@/lib/leads/config';
 
 /** Atribuição ODbL dos dados do OpenStreetMap (Req. 12.6, 14.8). */
 export const OdblAttribution: React.FC<{ className?: string }> = ({ className = '' }) => (
-  <p className={`text-xs text-slate-500 ${className}`}>
+  <p className={`text-xs text-slate-400 ${className}`}>
     Dados de empresas:{' '}
     <a
       href={ODBL_URL}

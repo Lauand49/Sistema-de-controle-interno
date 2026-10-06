@@ -55,7 +55,7 @@ export const SiteDiagnosis: React.FC<{ analysis: CompanyAnalysis; companyHasWebs
         </Field>
       </dl>
       <div className="mt-4">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Motivos do classificador</h3>
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">Motivos do classificador</h3>
         {a.motivos.length > 0 ? (
           <ul className="mt-1 list-disc space-y-0.5 pl-5 text-sm text-slate-200">
             {a.motivos.map((m, i) => (

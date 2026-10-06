@@ -29,7 +29,7 @@ export function MemberSearchList({ members }: { members: (PersonBrief & { title:
           Buscar membro
         </label>
         <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" aria-hidden="true" />
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
           <input
             id={inputId}
             type="search"
@@ -37,7 +37,7 @@ export function MemberSearchList({ members }: { members: (PersonBrief & { title:
             onChange={(e) => setQuery(e.target.value)}
             placeholder="Digite um nome"
             autoComplete="off"
-            className={`w-full rounded-xl border border-slate-800 bg-slate-950 py-2 pl-9 pr-3 text-sm text-slate-100 placeholder:text-slate-500 focus:border-purple-500 ${FOCUS_RING}`}
+            className={`w-full rounded-xl border border-slate-800 bg-slate-950 py-2 pl-9 pr-3 text-sm text-slate-100 placeholder:text-slate-400 focus:border-purple-500 ${FOCUS_RING}`}
           />
         </div>
       </div>
@@ -61,7 +61,7 @@ export function MemberSearchList({ members }: { members: (PersonBrief & { title:
                   <span className="block truncate text-sm font-medium text-slate-100">{m.name}</span>
                   {m.title ? <span className="block truncate text-xs text-slate-400">{m.title}</span> : null}
                 </span>
-                <ChevronRight className="h-4 w-4 shrink-0 text-slate-500" aria-hidden="true" />
+                <ChevronRight className="h-4 w-4 shrink-0 text-slate-400" aria-hidden="true" />
               </Link>
             </li>
           ))}

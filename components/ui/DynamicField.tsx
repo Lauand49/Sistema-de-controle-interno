@@ -44,7 +44,7 @@ export const DynamicField: React.FC<DynamicFieldProps> = ({
         <label htmlFor={inputId} className="flex items-center gap-2 text-xs font-semibold text-fg">
           {field.label}
           {field.required && (
-            <span className="text-[10px] font-bold uppercase tracking-wide text-danger-soft bg-danger-subtle px-1.5 py-0.5 rounded">
+            <span className="text-[11px] font-bold uppercase tracking-wide text-danger-soft bg-danger-subtle px-1.5 py-0.5 rounded">
               Obrigatório
             </span>
           )}

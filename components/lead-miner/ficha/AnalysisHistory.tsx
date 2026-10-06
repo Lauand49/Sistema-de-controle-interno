@@ -13,7 +13,7 @@ export const AnalysisHistory: React.FC<{ analyses: readonly CompanyAnalysis[] }>
       <div className="overflow-x-auto">
         <table className="w-full text-left text-sm">
           <caption className="sr-only">Análises da empresa, da mais recente para a mais antiga</caption>
-          <thead className="text-xs uppercase tracking-wide text-slate-500">
+          <thead className="text-xs uppercase tracking-wide text-slate-400">
             <tr>
               <th scope="col" className="py-2 pr-4 font-semibold">Data</th>
               <th scope="col" className="py-2 pr-4 font-semibold">Score final</th>

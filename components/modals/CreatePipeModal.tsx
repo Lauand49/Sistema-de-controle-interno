@@ -18,6 +18,8 @@ import {
   Folder,
   Palette,
 } from 'lucide-react';
+import { ModalFrame } from '@/components/ui/Modal';
+import { CONTROL_CLASS } from '@/components/ui/Input';
 
 interface CreatePipeModalProps {
   isOpen: boolean;
@@ -150,7 +152,7 @@ export const CreatePipeModal: React.FC<CreatePipeModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
+    <ModalFrame onClose={onClose} label="Criar Novo Funil Personalizado" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
       <div className="relative w-full max-w-2xl bg-slate-900 border border-purple-800/50 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
         {/* Header */}
         <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-gradient-to-r from-purple-950/60 via-slate-900 to-indigo-950/40">
@@ -181,29 +183,29 @@ export const CreatePipeModal: React.FC<CreatePipeModalProps> = ({
           {/* Funnel Name & Description */}
           <div className="space-y-3">
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
+              <label htmlFor="createpipe-1" className="block text-xs font-semibold text-slate-300 mb-1">
                 Nome do Funil <span className="text-rose-400">*</span>
               </label>
-              <input
+              <input id="createpipe-1"
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Ex: Acompanhamento de Trainees 2026.2 ou Ciclo de Feedback"
-                className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500"
+                className={`${CONTROL_CLASS} w-full`}
                 required
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
+              <label htmlFor="createpipe-2" className="block text-xs font-semibold text-slate-300 mb-1">
                 Descrição & Objetivo (Opcional)
               </label>
-              <input
+              <input id="createpipe-2"
                 type="text"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Ex: Processo de capacitação e avaliação contínua dos membros ingressantes"
-                className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500"
+                className={`${CONTROL_CLASS} w-full`}
               />
             </div>
           </div>
@@ -230,7 +232,7 @@ export const CreatePipeModal: React.FC<CreatePipeModalProps> = ({
                     title={item.label}
                   >
                     <IconComponent className="w-4 h-4" />
-                    <span className="text-[10px] truncate max-w-full">{item.label}</span>
+                    <span className="text-[11px] truncate max-w-full">{item.label}</span>
                   </button>
                 );
               })}
@@ -273,7 +275,7 @@ export const CreatePipeModal: React.FC<CreatePipeModalProps> = ({
                     value={phase.name}
                     onChange={(e) => handleUpdatePhase(idx, 'name', e.target.value)}
                     placeholder={`Nome da Fase ${idx + 1}`}
-                    className="flex-1 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-purple-500"
+                    className={`${CONTROL_CLASS} flex-1`}
                     required
                   />
 
@@ -309,7 +311,7 @@ export const CreatePipeModal: React.FC<CreatePipeModalProps> = ({
                   <button
                     type="button"
                     onClick={() => handleRemovePhase(idx)}
-                    className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors shrink-0"
+                    className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors shrink-0"
                     title="Remover fase"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -344,6 +346,6 @@ export const CreatePipeModal: React.FC<CreatePipeModalProps> = ({
           </div>
         </form>
       </div>
-    </div>
+    </ModalFrame>
   );
 };

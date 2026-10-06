@@ -29,6 +29,8 @@ import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { useProfile } from '@/contexts/ProfileContext';
 import { canUseNegociosTools } from '@/lib/permissions';
+import { ModalFrame } from '@/components/ui/Modal';
+import { CONTROL_CLASS } from '@/components/ui/Input';
 
 interface HistoryItem {
   lead: TriageLead;
@@ -413,7 +415,7 @@ export default function LeadFilterPage() {
               >
                 <Eye className="w-3.5 h-3.5 text-rose-400" />
                 <span>Ver Descartados</span>
-                <span className="px-1.5 py-0.5 rounded-full bg-rose-950 border border-rose-800/60 text-[10px] font-bold">
+                <span className="px-1.5 py-0.5 rounded-full bg-rose-950 border border-rose-800/60 text-[11px] font-bold">
                   {discardedLeads.length}
                 </span>
               </button>
@@ -536,8 +538,8 @@ export default function LeadFilterPage() {
                     <Upload className="w-4 h-4" /> Importar Planilha de Leads
                   </button>
                 ) : (
-                  <div className="w-full py-3 px-4 rounded-xl text-xs font-medium bg-slate-950/80 border border-slate-800 text-slate-500 text-center">
-                    🔒 Importação de leads restrita a Negócios
+                  <div className="w-full py-3 px-4 rounded-xl text-xs font-medium bg-slate-950/80 border border-slate-800 text-slate-400 text-center">
+                    <Lock className="w-3.5 h-3.5 inline mr-1 -mt-0.5" aria-hidden="true" />Importação de leads restrita a Negócios
                   </div>
                 )}
                 <Link
@@ -603,29 +605,29 @@ export default function LeadFilterPage() {
 
               {/* Keyboard Shortcuts Hint */}
               {canManageLeads && (
-                <div className="flex items-center justify-center gap-6 text-[11px] text-slate-500 pt-2 font-medium">
+                <div className="flex items-center justify-center gap-6 text-[11px] text-slate-400 pt-2 font-medium">
                   <span className="flex items-center gap-1.5">
-                    <kbd className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono text-[10px]">
+                    <kbd className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono text-[11px]">
                       ←
                     </kbd>{' '}
                     ou{' '}
-                    <kbd className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono text-[10px]">
+                    <kbd className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono text-[11px]">
                       N
                     </kbd>{' '}
                     Descartar
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <kbd className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono text-[10px]">
+                    <kbd className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono text-[11px]">
                       →
                     </kbd>{' '}
                     ou{' '}
-                    <kbd className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono text-[10px]">
+                    <kbd className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono text-[11px]">
                       S
                     </kbd>{' '}
                     Aprovar
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <kbd className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono text-[10px]">
+                    <kbd className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono text-[11px]">
                       Ctrl+Z
                     </kbd>{' '}
                     Desfazer
@@ -652,7 +654,10 @@ export default function LeadFilterPage() {
 
       {/* Upload Spreadsheet Modal */}
       {isUploadModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
+        <ModalFrame onClose={() => {
+                  setIsUploadModalOpen(false);
+                  setParsedPreview(null);
+                }} label="Importar Planilha para Triagem" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
           <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-xl overflow-hidden shadow-2xl p-6 space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-slate-800">
               <div className="flex items-center gap-2.5">
@@ -694,7 +699,7 @@ export default function LeadFilterPage() {
                 </div>
                 <div className="space-y-1">
                   <p className="text-sm font-semibold text-white">Clique para selecionar a planilha</p>
-                  <p className="text-xs text-slate-500">Formatos aceitos: Excel (.xlsx, .xls) ou CSV</p>
+                  <p className="text-xs text-slate-400">Formatos aceitos: Excel (.xlsx, .xls) ou CSV</p>
                 </div>
               </div>
             ) : (
@@ -718,13 +723,13 @@ export default function LeadFilterPage() {
 
                   <div className="grid grid-cols-2 gap-3 text-xs">
                     <div>
-                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">
+                      <label htmlFor="page-1" className="block text-[11px] font-semibold text-slate-300 mb-1">
                         Nome da Empresa *
                       </label>
-                      <select
+                      <select id="page-1"
                         value={mapping.companyName}
                         onChange={(e) => setMapping({ ...mapping, companyName: e.target.value })}
-                        className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-slate-200"
+                        className={`${CONTROL_CLASS} w-full`}
                       >
                         {columns.map((c) => (
                           <option key={c} value={c}>
@@ -741,7 +746,7 @@ export default function LeadFilterPage() {
                       <select
                         value={mapping.contactName}
                         onChange={(e) => setMapping({ ...mapping, contactName: e.target.value })}
-                        className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-slate-200"
+                        className={`${CONTROL_CLASS} w-full`}
                       >
                         <option value="">-- Não mapear --</option>
                         {columns.map((c) => (
@@ -759,7 +764,7 @@ export default function LeadFilterPage() {
                       <select
                         value={mapping.contactInfo}
                         onChange={(e) => setMapping({ ...mapping, contactInfo: e.target.value })}
-                        className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-slate-200"
+                        className={`${CONTROL_CLASS} w-full`}
                       >
                         <option value="">-- Não mapear --</option>
                         {columns.map((c) => (
@@ -777,7 +782,7 @@ export default function LeadFilterPage() {
                       <select
                         value={mapping.segment}
                         onChange={(e) => setMapping({ ...mapping, segment: e.target.value })}
-                        className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-slate-200"
+                        className={`${CONTROL_CLASS} w-full`}
                       >
                         <option value="">-- Não mapear --</option>
                         {columns.map((c) => (
@@ -804,13 +809,13 @@ export default function LeadFilterPage() {
                     onClick={handleSaveBatchToTriage}
                     className="px-5 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white transition-colors"
                   >
-                    Iniciar Triagem ➔
+                    Iniciar Triagem
                   </button>
                 </div>
               </div>
             )}
           </div>
-        </div>
+        </ModalFrame>
       )}
     </div>
   );

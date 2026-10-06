@@ -236,7 +236,7 @@ export default function HomeDashboard() {
             <h3 className="text-sm font-bold uppercase tracking-wider text-purple-300/80 flex items-center gap-2">
               <Zap className="w-4 h-4 text-purple-400" /> Diretorias & Workspaces Especializados
             </h3>
-            <span className="text-xs text-slate-500 font-medium">4 Setores Ativos</span>
+            <span className="text-xs text-slate-400 font-medium">4 Setores Ativos</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -252,7 +252,7 @@ export default function HomeDashboard() {
                         <div className={`p-3 rounded-xl border ${sec.iconColor}`}>
                           <Icon className="w-6 h-6" />
                         </div>
-                        <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-950/80 border border-slate-700 text-slate-300">
+                        <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-950/80 border border-slate-700 text-slate-300">
                           {sec.badge}
                         </span>
                       </div>
@@ -294,7 +294,7 @@ export default function HomeDashboard() {
 
           <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 space-y-3">
             {recentRequests.length === 0 ? (
-              <div className="p-6 text-center text-xs text-slate-500">
+              <div className="p-6 text-center text-xs text-slate-400">
                 Nenhuma solicitação pendente no momento.
               </div>
             ) : (
@@ -306,8 +306,8 @@ export default function HomeDashboard() {
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-white">{req.title}</span>
-                      <span className="text-[10px] text-purple-400 font-semibold">
-                        {req.fromDept} ➔ {req.toDept}
+                      <span className="text-[11px] text-purple-400 font-semibold">
+                        {req.fromDept} <ArrowRight className="inline w-3 h-3" aria-label="para" /> {req.toDept}
                       </span>
                     </div>
                     <p className="text-slate-400 text-[11px] line-clamp-1">{req.description}</p>
@@ -336,7 +336,7 @@ export default function HomeDashboard() {
             </div>
             <div>
               <h5 className="text-xs font-bold text-white">Minhas Tarefas</h5>
-              <p className="text-[10px] text-slate-400">Tarefas atribuídas nominalmente</p>
+              <p className="text-[11px] text-slate-400">Tarefas atribuídas nominalmente</p>
             </div>
           </Link>
 
@@ -367,7 +367,7 @@ export default function HomeDashboard() {
                   <h5 className="text-xs font-bold text-white">
                     {sectorName ? `Ferramentas de ${sectorName}` : 'Ferramentas dos Setores'}
                   </h5>
-                  <p className="text-[10px] text-slate-400">
+                  <p className="text-[11px] text-slate-400">
                     {sectorName ? 'Utilitários exclusivos do seu setor' : 'Módulos operacionais de cada diretoria'}
                   </p>
                 </div>
@@ -384,7 +384,7 @@ export default function HomeDashboard() {
             </div>
             <div>
               <h5 className="text-xs font-bold text-white">Equipe & Membros</h5>
-              <p className="text-[10px] text-slate-400">Perfis internos e diretoria</p>
+              <p className="text-[11px] text-slate-400">Perfis internos e diretoria</p>
             </div>
           </Link>
         </div>

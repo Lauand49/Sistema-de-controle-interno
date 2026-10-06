@@ -65,7 +65,7 @@ function PipeCard({ pipe }: { pipe: PipePhasesItem }) {
               <div className="flex items-center justify-between gap-3 text-xs">
                 <span className="truncate text-slate-300">
                   {phase.name}
-                  {phase.isFinal ? <span className="ml-1.5 text-slate-500">(fase final)</span> : null}
+                  {phase.isFinal ? <span className="ml-1.5 text-slate-400">(fase final)</span> : null}
                 </span>
                 <span className="shrink-0 font-semibold text-white">{formatInt(phase.cards)}</span>
               </div>

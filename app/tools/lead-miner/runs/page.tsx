@@ -222,7 +222,7 @@ function RunsScreen() {
 
       {empty && (
         <div className="flex flex-col items-center gap-3 rounded-2xl border border-slate-800 bg-slate-900/60 p-10 text-center">
-          <SearchX className="h-8 w-8 text-slate-500" aria-hidden="true" />
+          <SearchX className="h-8 w-8 text-slate-400" aria-hidden="true" />
           <p className="text-sm font-semibold text-slate-300">{NO_RUNS_FOUND}</p>
         </div>
       )}

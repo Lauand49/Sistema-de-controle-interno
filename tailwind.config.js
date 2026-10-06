@@ -2,6 +2,8 @@
 // Tokens semânticos: valores extraídos do que o site já usava (slate-950/900/800, purple-600/indigo-600),
 // para que trocar classes soltas por tokens não mude a aparência. Ver docs/DESIGN.md.
 module.exports = {
+  // O site é escuro em qualquer sistema: a classe `dark` fica fixa no <html> (app/layout.tsx).
+  darkMode: 'class',
   content: [
     './app/**/*.{js,ts,jsx,tsx,mdx}',
     './components/**/*.{js,ts,jsx,tsx,mdx}',

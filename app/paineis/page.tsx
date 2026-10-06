@@ -87,7 +87,7 @@ function UnitSection({
               >
                 <span className="truncate text-sm font-semibold text-slate-100">{unit.name}</span>
                 <ChevronRight
-                  className="h-4 w-4 shrink-0 text-slate-500 transition-colors group-hover:text-purple-300"
+                  className="h-4 w-4 shrink-0 text-slate-400 transition-colors group-hover:text-purple-300"
                   aria-hidden="true"
                 />
               </Link>

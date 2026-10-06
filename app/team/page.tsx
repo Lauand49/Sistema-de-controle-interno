@@ -39,6 +39,7 @@ import {
 import { PersonTypeBadge } from '@/components/ui/PersonTypeBadge';
 import { ManageMemberModal } from '@/components/team/ManageMemberModal';
 import { teamApi } from '@/components/team/teamApi';
+import { CONTROL_CLASS } from '@/components/ui/Input';
 
 type Tab = 'MEMBROS' | 'PENDENTES' | 'INATIVOS' | 'UNIDADES' | 'AUDITORIA';
 
@@ -271,7 +272,7 @@ export default function TeamPage() {
                   placeholder="Buscar por nome, e-mail, cargo ou setor..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 text-xs rounded-2xl border border-slate-800 bg-slate-900/90 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className={`${CONTROL_CLASS} w-full pl-10 pr-4 placeholder:text-slate-400`}
                 />
               </div>
               <label htmlFor="type-filter" className="sr-only">
@@ -281,7 +282,7 @@ export default function TeamPage() {
                 id="type-filter"
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value as any)}
-                className="px-3 py-2 text-xs rounded-2xl border border-slate-800 bg-slate-900/90 text-white"
+                className={`${CONTROL_CLASS}`}
               >
                 <option value="ALL">Todos os tipos</option>
                 {(Object.keys(PERSON_TYPE_LABEL) as PersonType[]).map((t) => (
@@ -297,7 +298,7 @@ export default function TeamPage() {
                 id="dept-filter"
                 value={deptFilter}
                 onChange={(e) => setDeptFilter(e.target.value)}
-                className="px-3 py-2 text-xs rounded-2xl border border-slate-800 bg-slate-900/90 text-white"
+                className={`${CONTROL_CLASS}`}
               >
                 <option value="ALL">Todos os departamentos</option>
                 <option value="PRESIDENCIA">Presidência</option>
@@ -337,10 +338,10 @@ export default function TeamPage() {
                         <img src={avatarOf(u)} alt="" className="w-12 h-12 rounded-xl object-cover border border-purple-500/30" />
                         <div className="min-w-0 flex-1">
                           <h3 className="font-bold text-white truncate">
-                            {u.name} {isMe && <span className="text-[10px] text-purple-300">(você)</span>}
+                            {u.name} {isMe && <span className="text-[11px] text-purple-300">(você)</span>}
                           </h3>
                           <p className="text-[11px] text-purple-300 truncate">{u.title}</p>
-                          <p className="text-[11px] text-slate-500 truncate">{u.email}</p>
+                          <p className="text-[11px] text-slate-400 truncate">{u.email}</p>
                         </div>
                         {hasActionsFor(u) && (
                           <button
@@ -357,14 +358,14 @@ export default function TeamPage() {
                       <div className="flex flex-wrap gap-1.5">
                         <PersonTypeBadge type={u.personType} />
                         {u.departmentCode && (
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-950/80 text-purple-300 border border-purple-800/40">
+                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-purple-950/80 text-purple-300 border border-purple-800/40">
                             {unitName(u.departmentCode)}
                           </span>
                         )}
                         {u.sectors.map((s) => (
                           <span
                             key={s.code}
-                            className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-900 text-slate-300 border border-slate-700"
+                            className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-900 text-slate-300 border border-slate-700"
                           >
                             {s.name}
                             {s.role === 'GERENTE' ? ' • Gerente' : ''}
@@ -423,7 +424,7 @@ export default function TeamPage() {
                       id={`approve-${u.id}`}
                       value={approveDept[u.id] || approvalDepartments[0]?.code || ''}
                       onChange={(e) => setApproveDept((prev) => ({ ...prev, [u.id]: e.target.value }))}
-                      className="px-3 py-2 text-xs rounded-xl border border-slate-800 bg-slate-950 text-white"
+                      className={`${CONTROL_CLASS}`}
                     >
                       {approvalDepartments.map((d) => (
                         <option key={d.code} value={d.code}>
@@ -480,7 +481,7 @@ export default function TeamPage() {
                         aria-label={`Departamento para reativar ${u.name}`}
                         value={approveDept[u.id] || approvalDepartments[0]?.code || ''}
                         onChange={(e) => setApproveDept((prev) => ({ ...prev, [u.id]: e.target.value }))}
-                        className="px-3 py-2 text-xs rounded-xl border border-slate-800 bg-slate-950 text-white"
+                        className={`${CONTROL_CLASS}`}
                       >
                         {approvalDepartments.map((d) => (
                           <option key={d.code} value={d.code}>
@@ -524,7 +525,7 @@ export default function TeamPage() {
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-[10px] uppercase font-bold text-slate-500">Gerente</p>
+                          <p className="text-[11px] uppercase font-bold text-slate-400">Gerente</p>
                           {u.manager ? (
                             <p className="text-xs font-semibold text-purple-300">{u.manager.name}</p>
                           ) : (
@@ -536,7 +537,7 @@ export default function TeamPage() {
                 </ul>
               </div>
             ))}
-            <p className="lg:col-span-2 text-[11px] text-slate-500">
+            <p className="lg:col-span-2 text-[11px] text-slate-400">
               Para nomear gerentes ou mover pessoas entre setores, abra o membro na aba Membros (ícone de engrenagem).
             </p>
           </section>

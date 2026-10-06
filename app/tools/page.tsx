@@ -167,7 +167,7 @@ export default function ToolsHubPage() {
                     <h4 className="text-lg font-black text-white group-hover:text-purple-300 transition-colors">
                       Minerador de Leads
                     </h4>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                       ● Ativo
                     </span>
                   </div>
@@ -188,7 +188,7 @@ export default function ToolsHubPage() {
             <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-purple-400" /> Diretórios Operacionais Setoriais
             </h3>
-            <span className="text-xs text-slate-500 font-medium">
+            <span className="text-xs text-slate-400 font-medium">
               4 Diretorias com ferramentas dedicadas
             </span>
           </div>
@@ -218,7 +218,7 @@ export default function ToolsHubPage() {
                               {sector.name}
                             </h4>
                             {isUserSector && (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                                 Seu Setor
                               </span>
                             )}
@@ -240,7 +240,7 @@ export default function ToolsHubPage() {
 
                     {/* Lista de Recursos */}
                     <div className="space-y-1.5 pt-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                         Recursos & Módulos Inclusos:
                       </span>
                       <ul className="space-y-1">
@@ -258,7 +258,7 @@ export default function ToolsHubPage() {
                   </div>
 
                   <div className="mt-6 pt-4 border-t border-slate-800/80 flex items-center justify-between">
-                    <span className="text-xs text-slate-500 font-medium">
+                    <span className="text-xs text-slate-400 font-medium">
                       {hasAccess ? 'Exclusivo no espaço do setor' : 'Apenas membros do departamento e Presidência'}
                     </span>
 

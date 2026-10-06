@@ -96,7 +96,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
       {/* Lead Sheet Origin Badge */}
       {isFromLeadSheet && (
         <div className="mb-2">
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-950/80 text-indigo-300 border border-indigo-700/60 shadow-sm">
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold bg-indigo-950/80 text-indigo-300 border border-indigo-700/60 shadow-sm">
             <Sparkles className="w-3 h-3 text-indigo-400" /> Lead Triado na Planilha
           </span>
         </div>
@@ -139,7 +139,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
                   className="w-5 h-5 rounded-full object-cover ring-1 ring-purple-500/50"
                 />
               ) : (
-                <div className="w-5 h-5 rounded-full bg-purple-950 border border-purple-700 flex items-center justify-center text-[10px] font-bold text-purple-300">
+                <div className="w-5 h-5 rounded-full bg-purple-950 border border-purple-700 flex items-center justify-center text-[11px] font-bold text-purple-300">
                   {card.assignee.name.charAt(0)}
                 </div>
               )}
@@ -148,7 +148,7 @@ export const KanbanCard: React.FC<KanbanCardProps> = ({
               </span>
             </div>
           ) : (
-            <span className="text-[11px] text-slate-500 italic">Sem responsável</span>
+            <span className="text-[11px] text-slate-400 italic">Sem responsável</span>
           )}
         </div>
 

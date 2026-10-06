@@ -17,6 +17,75 @@ function unlockScroll() {
   }
 }
 
+
+/**
+ * Comportamento comum de diálogos: trava a rolagem da página, foca o primeiro campo, prende o Tab,
+ * fecha com Esc e devolve o foco a quem abriu.
+ */
+export function useDialogBehavior<T extends HTMLElement>(open: boolean, onClose: () => void) {
+  const ref = useRef<T>(null);
+  const onCloseRef = useRef(onClose);
+  onCloseRef.current = onClose;
+
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.activeElement as HTMLElement | null;
+    lockScroll();
+    const dialog = ref.current;
+    const first =
+      dialog?.querySelector<HTMLElement>('[data-autofocus],input:not([type="hidden"]),select,textarea') ??
+      dialog?.querySelector<HTMLElement>(FOCUSABLE);
+    (first ?? dialog)?.focus();
+    return () => {
+      unlockScroll();
+      previous?.focus?.();
+    };
+  }, [open]);
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Escape') {
+      e.stopPropagation();
+      onCloseRef.current();
+      return;
+    }
+    if (e.key !== 'Tab') return;
+    const items = Array.from(ref.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []).filter((el) => el.tabIndex >= 0);
+    if (items.length === 0) {
+      e.preventDefault();
+      return;
+    }
+    const firstEl = items[0];
+    const lastEl = items[items.length - 1];
+    const active = document.activeElement;
+    if (e.shiftKey && (active === firstEl || active === ref.current)) {
+      e.preventDefault();
+      lastEl.focus();
+    } else if (!e.shiftKey && active === lastEl) {
+      e.preventDefault();
+      firstEl.focus();
+    }
+  };
+  return { ref, onKeyDown };
+}
+
+/**
+ * Moldura para diálogos com visual próprio (migração gradual para `Modal`): mantém as classes do
+ * overlay original e acrescenta role="dialog", aria-modal, Esc, foco preso e trava de rolagem.
+ */
+export const ModalFrame: React.FC<{
+  onClose: () => void;
+  label: string;
+  className?: string;
+  children: React.ReactNode;
+}> = ({ onClose, label, className, children }) => {
+  const { ref, onKeyDown } = useDialogBehavior<HTMLDivElement>(true, onClose);
+  return (
+    <div ref={ref} role="dialog" aria-modal="true" aria-label={label} tabIndex={-1} onKeyDown={onKeyDown} className={cn(className, 'focus:outline-none')}>
+      {children}
+    </div>
+  );
+};
+
 const WIDTHS = { sm: 'max-w-md', md: 'max-w-xl', lg: 'max-w-3xl', xl: 'max-w-5xl' } as const;
 
 export interface ModalProps {
@@ -50,50 +119,9 @@ export const Modal: React.FC<ModalProps> = ({
   const uid = useId().replace(/:/g, '');
   const titleId = `m${uid}-t`;
   const descId = `m${uid}-d`;
-  const dialogRef = useRef<HTMLDivElement>(null);
-  const onCloseRef = useRef(onClose);
-  onCloseRef.current = onClose;
-
-  useEffect(() => {
-    if (!open) return;
-    const previous = document.activeElement as HTMLElement | null;
-    lockScroll();
-    const dialog = dialogRef.current;
-    const first = dialog?.querySelector<HTMLElement>('[data-autofocus],input,select,textarea') ?? dialog?.querySelector<HTMLElement>(FOCUSABLE);
-    (first ?? dialog)?.focus();
-    return () => {
-      unlockScroll();
-      previous?.focus?.();
-    };
-  }, [open]);
+  const { ref: dialogRef, onKeyDown } = useDialogBehavior<HTMLDivElement>(open, onClose);
 
   if (!open) return null;
-
-  const onKeyDown = (e: React.KeyboardEvent) => {
-    if (e.key === 'Escape') {
-      e.stopPropagation();
-      onCloseRef.current();
-      return;
-    }
-    if (e.key !== 'Tab') return;
-    const items = Array.from(dialogRef.current?.querySelectorAll<HTMLElement>(FOCUSABLE) ?? []).filter(
-      (el) => el.tabIndex >= 0,
-    );
-    if (items.length === 0) {
-      e.preventDefault();
-      return;
-    }
-    const firstEl = items[0];
-    const lastEl = items[items.length - 1];
-    const active = document.activeElement;
-    if (e.shiftKey && (active === firstEl || active === dialogRef.current)) {
-      e.preventDefault();
-      lastEl.focus();
-    } else if (!e.shiftKey && active === lastEl) {
-      e.preventDefault();
-      firstEl.focus();
-    }
-  };
 
   return (
     <div

@@ -32,7 +32,7 @@ export function DashboardDenied() {
 export function DashboardNotFound() {
   return (
     <div role="alert" className={CARD}>
-      <SearchX className="mx-auto mb-3 h-10 w-10 text-slate-500" aria-hidden="true" />
+      <SearchX className="mx-auto mb-3 h-10 w-10 text-slate-400" aria-hidden="true" />
       <p className="text-lg font-semibold text-slate-100">Painel não encontrado</p>
       <p className="mt-1 text-sm text-slate-400">O painel que você procura não existe ou foi removido.</p>
       <BackToHub />

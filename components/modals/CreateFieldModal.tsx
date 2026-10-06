@@ -4,6 +4,8 @@ import React, { useState } from 'react';
 import { Phase, FieldType } from '@/types';
 import { X, Settings2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { ModalFrame } from '@/components/ui/Modal';
+import { CONTROL_CLASS } from '@/components/ui/Input';
 
 interface CreateFieldModalProps {
   phaseId: string;
@@ -77,7 +79,7 @@ export const CreateFieldModal: React.FC<CreateFieldModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
+    <ModalFrame onClose={onClose} label="Novo campo configurável" className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
       <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col">
         <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
           <div className="flex items-center gap-2">
@@ -96,13 +98,13 @@ export const CreateFieldModal: React.FC<CreateFieldModalProps> = ({
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4">
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            <label htmlFor="createfiel-1" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
               Fase Alvo
             </label>
-            <select
+            <select id="createfiel-1"
               value={selectedPhaseId}
               onChange={(e) => setSelectedPhaseId(e.target.value)}
-              className="w-full px-3 py-2 text-sm rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+              className={`${CONTROL_CLASS} w-full`}
             >
               {phases.map((p) => (
                 <option key={p.id} value={p.id}>
@@ -122,18 +124,18 @@ export const CreateFieldModal: React.FC<CreateFieldModalProps> = ({
               onChange={(e) => setLabel(e.target.value)}
               placeholder="Ex: Valor Estimado, Contato Principal, Motivo de Perda"
               required
-              className="w-full px-3 py-2 text-sm rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+              className={`${CONTROL_CLASS} w-full`}
             />
           </div>
 
           <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
+            <label htmlFor="createfiel-2" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
               Tipo do Campo
             </label>
-            <select
+            <select id="createfiel-2"
               value={type}
               onChange={(e) => setType(e.target.value as FieldType)}
-              className="w-full px-3 py-2 text-sm rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+              className={`${CONTROL_CLASS} w-full`}
             >
               <option value="TEXT">Texto Curto (TEXT)</option>
               <option value="NUMBER">Número (NUMBER)</option>
@@ -146,15 +148,15 @@ export const CreateFieldModal: React.FC<CreateFieldModalProps> = ({
 
           {type === 'SELECT' && (
             <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
+              <label htmlFor="createfiel-3" className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
                 Opções da Lista (separadas por vírgula)
               </label>
-              <input
+              <input id="createfiel-3"
                 type="text"
                 value={optionsStr}
                 onChange={(e) => setOptionsStr(e.target.value)}
                 placeholder="Opção A, Opção B, Opção C"
-                className="w-full px-3 py-2 text-sm rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
+                className={`${CONTROL_CLASS} w-full`}
               />
             </div>
           )}
@@ -165,7 +167,7 @@ export const CreateFieldModal: React.FC<CreateFieldModalProps> = ({
               id="req-check"
               checked={required}
               onChange={(e) => setRequired(e.target.checked)}
-              className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
+              className="w-4 h-4 text-purple-600 rounded border-slate-300 focus:ring-purple-400"
             />
             <label htmlFor="req-check" className="text-sm font-semibold text-slate-800 dark:text-slate-200">
               Campo Obrigatório na Fase Gate (Required)
@@ -190,6 +192,6 @@ export const CreateFieldModal: React.FC<CreateFieldModalProps> = ({
           </div>
         </form>
       </div>
-    </div>
+    </ModalFrame>
   );
 };

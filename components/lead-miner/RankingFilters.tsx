@@ -13,11 +13,11 @@ import {
   type RankingInvalidField,
   type RankingUiKey,
 } from './ranking-helpers';
+import { CONTROL_CLASS } from '@/components/ui/Input';
 
 const TEXT_DEBOUNCE_MS = 400;
 
-const FIELD =
-  'w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 aria-[invalid=true]:border-red-500';
+const FIELD = `${CONTROL_CLASS} aria-[invalid=true]:border-red-500`;
 const LABEL = 'mb-1 block text-xs font-semibold text-slate-400';
 
 interface RankingFiltersProps {
@@ -130,7 +130,7 @@ export const RankingFilters: React.FC<RankingFiltersProps> = ({
             Buscar por nome, endereço ou telefone
           </label>
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-500" aria-hidden="true" />
+            <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" aria-hidden="true" />
             <DebouncedInput
               id={id('q')}
               type="search"
@@ -219,7 +219,7 @@ export const RankingFilters: React.FC<RankingFiltersProps> = ({
               aria-invalid={scoreInvalid}
               aria-describedby={scoreInvalid ? scoreErrId : undefined}
             />
-            <span className="text-slate-500" aria-hidden="true">
+            <span className="text-slate-400" aria-hidden="true">
               –
             </span>
             <label htmlFor={id('scoreMax')} className="sr-only">
@@ -333,7 +333,7 @@ export const RankingFilters: React.FC<RankingFiltersProps> = ({
               aria-invalid={datesInvalid}
               aria-describedby={datesInvalid ? datesErrId : undefined}
             />
-            <span className="text-xs text-slate-500">até</span>
+            <span className="text-xs text-slate-400">até</span>
             <label htmlFor={id('analyzedTo')} className="sr-only">
               Analisadas até
             </label>

@@ -17,14 +17,14 @@ export const BasicEvaluation: React.FC<{ avaliacao: CompanyDetail['avaliacao'] }
     >
       <div className="space-y-3 text-sm text-slate-200">
         <div>
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Resumo</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">Resumo</h3>
           <p className="mt-0.5 whitespace-pre-line">{avaliacao.resumo}</p>
         </div>
         <div>
-          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Ação sugerida</h3>
+          <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">Ação sugerida</h3>
           <p className="mt-0.5 whitespace-pre-line">{avaliacao.sugestao}</p>
         </div>
-        <p className="text-xs text-slate-500">Avaliado em {formatDate(avaliacao.avaliadoEm)}</p>
+        <p className="text-xs text-slate-400">Avaliado em {formatDate(avaliacao.avaliadoEm)}</p>
       </div>
     </Section>
   );

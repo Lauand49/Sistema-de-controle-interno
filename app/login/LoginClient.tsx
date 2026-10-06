@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { AlertTriangle, ArrowRight, Code2, LogIn, ShieldCheck, Sparkles } from 'lucide-react';
+import { CONTROL_CLASS } from '@/components/ui/Input';
 
 interface Props {
   callbackUrl: string;
@@ -97,7 +98,7 @@ export function LoginClient({ callbackUrl, error, domain, devLoginEnabled, googl
               Login Google ainda não configurado (AUTH_GOOGLE_ID / AUTH_GOOGLE_SECRET).
             </p>
           )}
-          <p className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
+          <p className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" aria-hidden="true" />
             Novos acessos ficam pendentes até a aprovação de um gerente.
           </p>
@@ -136,7 +137,7 @@ export function LoginClient({ callbackUrl, error, domain, devLoginEnabled, googl
                 placeholder={`nome@${domain}`}
                 value={devEmail}
                 onChange={(e) => setDevEmail(e.target.value)}
-                className="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-800 bg-slate-950 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className={`${CONTROL_CLASS} flex-1 placeholder:text-slate-400`}
               />
               <button
                 type="submit"
@@ -159,7 +160,7 @@ export function LoginClient({ callbackUrl, error, domain, devLoginEnabled, googl
                     >
                       <span className="min-w-0">
                         <span className="block text-xs font-bold text-white truncate">{u.name}</span>
-                        <span className="block text-[10px] text-slate-400 truncate">
+                        <span className="block text-[11px] text-slate-400 truncate">
                           {u.status === 'ATIVO' ? u.title : u.status} • {u.email}
                         </span>
                       </span>

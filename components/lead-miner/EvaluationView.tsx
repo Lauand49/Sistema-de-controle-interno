@@ -22,7 +22,7 @@ export const EvaluationView: React.FC<{ avaliacao: EvaluationDto | null; classNa
   avaliacao,
   className = '',
 }) => {
-  if (!avaliacao) return <span className="text-xs text-slate-500">Ainda não avaliado</span>;
+  if (!avaliacao) return <span className="text-xs text-slate-400">Ainda não avaliado</span>;
   return (
     <div className={`space-y-1 ${className}`}>
       <p className="text-xs text-slate-200">{avaliacao.resumo}</p>

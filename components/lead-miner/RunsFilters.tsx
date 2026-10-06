@@ -16,6 +16,7 @@ import {
   type DateRangeCheck,
   type RunsUiState,
 } from './runs-helpers';
+import { CONTROL_CLASS } from '@/components/ui/Input';
 
 export interface RunsFiltersProps {
   value: RunsUiState;
@@ -25,8 +26,7 @@ export interface RunsFiltersProps {
 }
 
 const LABEL = 'mb-1 block text-xs font-semibold text-slate-300';
-const FIELD =
-  'w-full rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500';
+const FIELD = `${CONTROL_CLASS} aria-[invalid=true]:border-red-500`;
 const FIELD_INVALID = 'border-red-600/70';
 
 export const RunsFilters: React.FC<RunsFiltersProps> = ({ value, dateCheck, onChange, onClear }) => {
@@ -66,7 +66,7 @@ export const RunsFilters: React.FC<RunsFiltersProps> = ({ value, dateCheck, onCh
             Buscar por bairro, cidade ou autor
           </label>
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-500" aria-hidden="true" />
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
             <input
               id="runs-q"
               type="search"

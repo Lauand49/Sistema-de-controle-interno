@@ -37,7 +37,7 @@ export const AccountStatusScreen: React.FC<Props> = ({ user, onLogout, onRefresh
               ? 'Seu acesso foi registrado. Um Gerente de Departamento ou a Presidência precisa aprovar sua conta e definir seu departamento.'
               : 'Sua conta foi desativada. Fale com o gerente do seu departamento ou com a Presidência.'}
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-400">
             Conectado como <span className="font-semibold text-slate-300">{user.email}</span>
           </p>
         </div>

@@ -11,8 +11,8 @@ import {
   FileText,
   AlertTriangle,
   ChevronDown,
-  Sparkles,
-} from 'lucide-react';
+  Sparkles, Lock } from 'lucide-react';
+import { CONTROL_CLASS } from '@/components/ui/Input';
 
 export interface TriageLead {
   id: string;
@@ -88,7 +88,7 @@ export const LeadDecisionCard: React.FC<LeadDecisionCardProps> = ({
           <div className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-800/80 border border-slate-700/60 text-xs font-semibold text-slate-300">
             <span>Lead</span>
             <strong className="text-white">{currentIndex + 1}</strong>
-            <span className="text-slate-500">/</span>
+            <span className="text-slate-400">/</span>
             <span>{totalCount}</span>
           </div>
         </div>
@@ -109,7 +109,7 @@ export const LeadDecisionCard: React.FC<LeadDecisionCardProps> = ({
                     <Tag className="w-3 h-3" /> {lead.segment}
                   </span>
                 ) : (
-                  <span className="text-xs text-slate-500 italic">Segmento não informado</span>
+                  <span className="text-xs text-slate-400 italic">Segmento não informado</span>
                 )}
               </div>
             </div>
@@ -119,7 +119,7 @@ export const LeadDecisionCard: React.FC<LeadDecisionCardProps> = ({
         {/* Contact Info Section */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 p-4 rounded-2xl bg-slate-950/70 border border-slate-800/60">
           <div className="space-y-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
               <User className="w-3 h-3 text-purple-400" /> Contato / Decisor
             </span>
             <p className="text-sm font-medium text-slate-200 truncate">
@@ -128,7 +128,7 @@ export const LeadDecisionCard: React.FC<LeadDecisionCardProps> = ({
           </div>
 
           <div className="space-y-1">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
               <Phone className="w-3 h-3 text-purple-400" /> Telefone / E-mail
             </span>
             <p className="text-sm font-medium text-slate-200 truncate">
@@ -140,7 +140,7 @@ export const LeadDecisionCard: React.FC<LeadDecisionCardProps> = ({
         {/* Context / Initial Notes */}
         {(lead.actionPlan || lead.notes) && (
           <div className="p-4 rounded-2xl bg-slate-950/40 border border-slate-800/50 space-y-2">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1">
               <FileText className="w-3 h-3 text-purple-400" /> Contexto / Anotações Iniciais
             </span>
             <p className="text-xs text-slate-300 leading-relaxed">
@@ -182,7 +182,7 @@ export const LeadDecisionCard: React.FC<LeadDecisionCardProps> = ({
                 value={discardReason}
                 onChange={(e) => setDiscardReason(e.target.value)}
                 placeholder="Ou digite uma justificativa personalizada..."
-                className="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-rose-500"
+                className={`${CONTROL_CLASS} flex-1`}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();
@@ -205,7 +205,7 @@ export const LeadDecisionCard: React.FC<LeadDecisionCardProps> = ({
           <div className="pt-2">
             <div className="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 text-center space-y-1">
               <span className="text-xs font-bold text-amber-300 flex items-center justify-center gap-1.5">
-                🔒 Triagem em Modo Somente Leitura
+                <Lock className="w-3.5 h-3.5 inline mr-1 -mt-0.5" aria-hidden="true" />Triagem em Modo Somente Leitura
               </span>
               <p className="text-[11px] text-slate-400">
                 Aprovação e descarte de leads são restritos à equipe de <strong>Negócios</strong> e Presidência.
@@ -214,7 +214,7 @@ export const LeadDecisionCard: React.FC<LeadDecisionCardProps> = ({
           </div>
         ) : (
           <div className="pt-2 grid grid-cols-2 gap-4">
-            {/* Discard Button (Left / ❌) */}
+            {/* Discard Button (esquerda) */}
             <button
               onClick={() => {
                 if (!isDiscardOpen) {
@@ -229,12 +229,12 @@ export const LeadDecisionCard: React.FC<LeadDecisionCardProps> = ({
                 <X className="w-4 h-4" />
               </div>
               <span>Descartar</span>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-rose-950/80 text-rose-400 border border-rose-800/50">
+              <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-rose-950/80 text-rose-400 border border-rose-800/50">
                 ←
               </span>
             </button>
 
-            {/* Approve Button (Right / 💚) */}
+            {/* Approve Button (direita) */}
             <button
               onClick={handleApproveClick}
               className="group relative flex items-center justify-center gap-3 py-3.5 px-5 rounded-2xl font-bold text-sm bg-emerald-950/40 hover:bg-emerald-900/60 text-emerald-300 border border-emerald-800/40 hover:border-emerald-500/60 shadow-lg shadow-emerald-950/30 transition-all hover:scale-[1.02] active:scale-[0.98]"
@@ -243,7 +243,7 @@ export const LeadDecisionCard: React.FC<LeadDecisionCardProps> = ({
                 <Check className="w-4 h-4" />
               </div>
               <span>Manter & Aprovar</span>
-              <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800/50">
+              <span className="text-[11px] font-mono px-1.5 py-0.5 rounded bg-emerald-950/80 text-emerald-400 border border-emerald-800/50">
                 →
               </span>
             </button>

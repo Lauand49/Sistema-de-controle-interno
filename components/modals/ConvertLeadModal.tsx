@@ -6,6 +6,8 @@ import { Zap, X, Calendar, UserCheck, Building2, CheckCircle2 } from 'lucide-rea
 import { toast } from 'sonner';
 import { useProfile } from '@/contexts/ProfileContext';
 import { canAssignLeads, canBeLeadAssignee } from '@/lib/permissions';
+import { ModalFrame } from '@/components/ui/Modal';
+import { CONTROL_CLASS } from '@/components/ui/Input';
 
 interface ConvertLeadModalProps {
   lead: ProspectLead;
@@ -64,7 +66,7 @@ export const ConvertLeadModal: React.FC<ConvertLeadModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
+    <ModalFrame onClose={onClose} label="Converter Lead em Card" className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
       <div className="bg-slate-900 border border-purple-500/40 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col">
         {/* Modal Header */}
         <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-gradient-to-r from-purple-950/60 to-slate-950">
@@ -116,13 +118,13 @@ export const ConvertLeadModal: React.FC<ConvertLeadModalProps> = ({
 
           {/* Consultant Assignee Picker */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
+            <label htmlFor="convertlea-1" className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
               <UserCheck className="w-3.5 h-3.5 text-purple-400" /> Consultor SciTec Responsável
             </label>
-            <select
+            <select id="convertlea-1"
               value={assigneeId}
               onChange={(e) => setAssigneeId(e.target.value)}
-              className="w-full px-3 py-2 text-xs rounded-xl border border-slate-800 bg-slate-950 text-white focus:ring-2 focus:ring-purple-500"
+              className={`${CONTROL_CLASS} w-full`}
             >
               <option value="">Selecione um consultor de Negócios</option>
               <optgroup label="Equipe de Negócios">
@@ -154,7 +156,7 @@ export const ConvertLeadModal: React.FC<ConvertLeadModalProps> = ({
               value={meetingDate}
               onChange={(e) => setMeetingDate(e.target.value)}
               required
-              className="w-full px-3 py-2 text-xs rounded-xl border border-slate-800 bg-slate-950 text-white focus:ring-2 focus:ring-purple-500"
+              className={`${CONTROL_CLASS} w-full`}
             />
           </div>
 
@@ -178,6 +180,6 @@ export const ConvertLeadModal: React.FC<ConvertLeadModalProps> = ({
           </div>
         </form>
       </div>
-    </div>
+    </ModalFrame>
   );
 };

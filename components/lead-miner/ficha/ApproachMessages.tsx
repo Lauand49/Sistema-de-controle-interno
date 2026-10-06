@@ -11,6 +11,7 @@ import {
 import { Muted, Section } from './Section';
 import { fallbackLabel } from '@/components/lead-miner/enrichment-helpers';
 import { formatDateTime } from './ficha-helpers';
+import { CONTROL_CLASS } from '@/components/ui/Input';
 
 /**
  * Seção "Mensagens de abordagem" (Req. 15). Visível quando há Analise. Seletor de canal, botão
@@ -77,7 +78,7 @@ export const ApproachMessages: React.FC<ApproachMessagesProps> = ({ companyId, i
             id="approach-canal"
             value={canal}
             onChange={(e) => setCanal(e.target.value as ApproachChannel)}
-            className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+            className={`${CONTROL_CLASS}`}
           >
             <option value="WHATSAPP">WhatsApp</option>
             <option value="EMAIL">E-mail</option>

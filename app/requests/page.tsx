@@ -26,6 +26,7 @@ import {
   Layers,
 } from 'lucide-react';
 import { formatDueDate } from '@/lib/dashboards/format';
+import { CONTROL_CLASS } from '@/components/ui/Input';
 
 export default function CrossDeptRequestsPage() {
   const { currentProfile } = useProfile();
@@ -159,7 +160,7 @@ export default function CrossDeptRequestsPage() {
               Total de Solicitações
             </span>
             <h3 className="text-2xl font-black text-white">{totalCount}</h3>
-            <span className="text-[10px] text-slate-500">Histórico geral da EJ</span>
+            <span className="text-[11px] text-slate-400">Histórico geral da EJ</span>
           </div>
 
           <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
@@ -167,7 +168,7 @@ export default function CrossDeptRequestsPage() {
               Pendentes de Início
             </span>
             <h3 className="text-2xl font-black text-amber-400">{pendingCount}</h3>
-            <span className="text-[10px] text-slate-500">Aguardando atendimento do setor</span>
+            <span className="text-[11px] text-slate-400">Aguardando atendimento do setor</span>
           </div>
 
           <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
@@ -175,7 +176,7 @@ export default function CrossDeptRequestsPage() {
               Em Execução
             </span>
             <h3 className="text-2xl font-black text-blue-400">{inProgressCount}</h3>
-            <span className="text-[10px] text-slate-500">Com responsável alocado</span>
+            <span className="text-[11px] text-slate-400">Com responsável alocado</span>
           </div>
 
           <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
@@ -183,7 +184,7 @@ export default function CrossDeptRequestsPage() {
               Concluídas
             </span>
             <h3 className="text-2xl font-black text-emerald-400">{completedCount}</h3>
-            <span className="text-[10px] text-slate-500">Entregues com sucesso</span>
+            <span className="text-[11px] text-slate-400">Entregues com sucesso</span>
           </div>
         </div>
 
@@ -195,26 +196,26 @@ export default function CrossDeptRequestsPage() {
             </span>
 
             <div className="relative w-64">
-              <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Buscar por título, escopo ou solicitante..."
-                className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500"
+                className={`${CONTROL_CLASS} w-full pl-8 pr-3`}
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
             <div>
-              <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+              <label htmlFor="page-1" className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
                 Setor de Destino
               </label>
-              <select
+              <select id="page-1"
                 value={filterToDept}
                 onChange={(e) => setFilterToDept(e.target.value)}
-                className="w-full px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-purple-500"
+                className={`${CONTROL_CLASS} w-full`}
               >
                 <option value="ALL">Todos os Destinos</option>
                 <option value="ADMJURFIN">AdmJurFin</option>
@@ -225,13 +226,13 @@ export default function CrossDeptRequestsPage() {
             </div>
 
             <div>
-              <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+              <label htmlFor="page-2" className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
                 Setor de Origem
               </label>
-              <select
+              <select id="page-2"
                 value={filterFromDept}
                 onChange={(e) => setFilterFromDept(e.target.value)}
-                className="w-full px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-purple-500"
+                className={`${CONTROL_CLASS} w-full`}
               >
                 <option value="ALL">Todas as Origens</option>
                 <option value="NEGOCIOS">Negócios</option>
@@ -242,13 +243,13 @@ export default function CrossDeptRequestsPage() {
             </div>
 
             <div>
-              <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+              <label htmlFor="page-3" className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
                 Status
               </label>
-              <select
+              <select id="page-3"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-purple-500"
+                className={`${CONTROL_CLASS} w-full`}
               >
                 <option value="ALL">Todos os Status</option>
                 <option value="PENDING">Pendente</option>
@@ -259,13 +260,13 @@ export default function CrossDeptRequestsPage() {
             </div>
 
             <div>
-              <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+              <label htmlFor="page-4" className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
                 Prioridade
               </label>
-              <select
+              <select id="page-4"
                 value={filterPriority}
                 onChange={(e) => setFilterPriority(e.target.value)}
-                className="w-full px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-purple-500"
+                className={`${CONTROL_CLASS} w-full`}
               >
                 <option value="ALL">Todas as Prioridades</option>
                 <option value="LOW">Baixa</option>
@@ -297,7 +298,7 @@ export default function CrossDeptRequestsPage() {
                   <div className="flex flex-wrap items-center gap-2">
                     {/* Priority Badge */}
                     <span
-                      className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
+                      className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
                         req.priority === 'URGENT'
                           ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
                           : req.priority === 'HIGH'
@@ -305,7 +306,7 @@ export default function CrossDeptRequestsPage() {
                           : 'bg-slate-800 text-slate-300 border-slate-700'
                       }`}
                     >
-                      {req.priority === 'URGENT' ? '🚨 URGENTE' : req.priority}
+                      {req.priority === 'URGENT' ? 'URGENTE' : req.priority}
                     </span>
 
                     {/* Department Flow Badge */}
@@ -316,7 +317,7 @@ export default function CrossDeptRequestsPage() {
                     >
                       {req.fromDept}
                     </span>
-                    <ArrowRight className="w-3 h-3 text-slate-500" />
+                    <ArrowRight className="w-3 h-3 text-slate-400" />
                     <span
                       className={`text-[11px] font-bold px-2 py-0.5 rounded-lg border ${getDeptColor(
                         req.toDept
@@ -344,7 +345,7 @@ export default function CrossDeptRequestsPage() {
                     {req.description}
                   </p>
 
-                  <div className="flex flex-wrap items-center gap-4 text-[11px] text-slate-500 pt-1">
+                  <div className="flex flex-wrap items-center gap-4 text-[11px] text-slate-400 pt-1">
                     <span>
                       Solicitante: <strong className="text-slate-300">{req.requester?.name || 'Membro'}</strong>
                     </span>
@@ -367,7 +368,7 @@ export default function CrossDeptRequestsPage() {
                   {req.status === 'PENDING' && (
                     <button
                       onClick={() => handleUpdateStatus(req.id, 'IN_PROGRESS')}
-                      className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition-colors"
+                      className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs transition-colors"
                     >
                       Iniciar Atendimento
                     </button>

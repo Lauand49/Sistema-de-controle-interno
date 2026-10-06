@@ -28,6 +28,8 @@ import {
 import { toast } from 'sonner';
 import { isDepartmentManager, isGlobal, isSectorManager } from '@/lib/permissions';
 import { formatDueDate } from '@/lib/dashboards/format';
+import { ModalFrame } from '@/components/ui/Modal';
+import { CONTROL_CLASS } from '@/components/ui/Input';
 
 type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE' | 'CANCELLED';
 type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
@@ -242,7 +244,7 @@ export default function MyTasksPage() {
       setTasks((prev) => prev.map((t) => (t.id === taskId ? updated : t)));
 
       if (newStatus === 'DONE') {
-        toast.success('Tarefa marcada como concluída! 🎉');
+        toast.success('Tarefa marcada como concluída!');
       } else {
         toast.success(`Tarefa movida para ${newStatus === 'IN_PROGRESS' ? 'Em Andamento' : 'A Fazer'}`);
       }
@@ -270,26 +272,26 @@ export default function MyTasksPage() {
     switch (p) {
       case 'URGENT':
         return (
-          <span className="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-rose-500/20 text-rose-300 border border-rose-500/40">
+          <span className="px-2 py-0.5 rounded text-[11px] font-extrabold uppercase bg-rose-500/20 text-rose-300 border border-rose-500/40">
             Urgente
           </span>
         );
       case 'HIGH':
         return (
-          <span className="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40">
+          <span className="px-2 py-0.5 rounded text-[11px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40">
             Alta
           </span>
         );
       case 'MEDIUM':
         return (
-          <span className="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-blue-500/20 text-blue-300 border border-blue-500/40">
+          <span className="px-2 py-0.5 rounded text-[11px] font-extrabold uppercase bg-blue-500/20 text-blue-300 border border-blue-500/40">
             Média
           </span>
         );
       case 'LOW':
       default:
         return (
-          <span className="px-2 py-0.5 rounded text-[10px] font-extrabold uppercase bg-slate-800 text-slate-400 border border-slate-700">
+          <span className="px-2 py-0.5 rounded text-[11px] font-extrabold uppercase bg-slate-800 text-slate-400 border border-slate-700">
             Baixa
           </span>
         );
@@ -399,7 +401,7 @@ export default function MyTasksPage() {
               <select
                 value={selectedMemberId}
                 onChange={(e) => setSelectedMemberId(e.target.value)}
-                className="px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900/90 text-xs text-purple-300 font-semibold focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className={`${CONTROL_CLASS}`}
               >
                 <option value="ALL">Todos os Membros</option>
                 {profiles.map((p) => (
@@ -414,7 +416,7 @@ export default function MyTasksPage() {
             <select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value as any)}
-              className="px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900/90 text-xs text-slate-300 font-semibold focus:outline-none focus:ring-2 focus:ring-purple-500"
+              className={`${CONTROL_CLASS}`}
             >
               <option value="ALL">Todas Prioridades</option>
               <option value="URGENT">Urgente</option>
@@ -431,7 +433,7 @@ export default function MyTasksPage() {
                 placeholder="Buscar tarefa..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-1.5 text-xs rounded-xl border border-slate-800 bg-slate-900/90 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+                className={`${CONTROL_CLASS} w-full pl-9 pr-4 placeholder:text-slate-400`}
               />
             </div>
           </div>
@@ -445,7 +447,7 @@ export default function MyTasksPage() {
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-purple-500" />
                 <h3 className="font-bold text-white text-sm">A Fazer</h3>
-                <span className="px-2 py-0.5 rounded-full bg-slate-800 text-purple-300 text-[10px] font-extrabold">
+                <span className="px-2 py-0.5 rounded-full bg-slate-800 text-purple-300 text-[11px] font-extrabold">
                   {todoTasks.length}
                 </span>
               </div>
@@ -460,9 +462,9 @@ export default function MyTasksPage() {
 
             <div className="space-y-3 overflow-y-auto max-h-[600px] pr-1">
               {loading ? (
-                <div className="p-8 text-center text-xs text-slate-500">Carregando...</div>
+                <div className="p-8 text-center text-xs text-slate-400">Carregando...</div>
               ) : todoTasks.length === 0 ? (
-                <div className="p-8 text-center border border-dashed border-slate-800 rounded-2xl text-xs text-slate-500">
+                <div className="p-8 text-center border border-dashed border-slate-800 rounded-2xl text-xs text-slate-400">
                   Nenhuma tarefa pendente nesta coluna.
                 </div>
               ) : (
@@ -486,7 +488,7 @@ export default function MyTasksPage() {
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-blue-500 animate-pulse" />
                 <h3 className="font-bold text-white text-sm">Em Andamento</h3>
-                <span className="px-2 py-0.5 rounded-full bg-slate-800 text-blue-300 text-[10px] font-extrabold">
+                <span className="px-2 py-0.5 rounded-full bg-slate-800 text-blue-300 text-[11px] font-extrabold">
                   {inProgressTasks.length}
                 </span>
               </div>
@@ -501,9 +503,9 @@ export default function MyTasksPage() {
 
             <div className="space-y-3 overflow-y-auto max-h-[600px] pr-1">
               {loading ? (
-                <div className="p-8 text-center text-xs text-slate-500">Carregando...</div>
+                <div className="p-8 text-center text-xs text-slate-400">Carregando...</div>
               ) : inProgressTasks.length === 0 ? (
-                <div className="p-8 text-center border border-dashed border-slate-800 rounded-2xl text-xs text-slate-500">
+                <div className="p-8 text-center border border-dashed border-slate-800 rounded-2xl text-xs text-slate-400">
                   Nenhuma tarefa em andamento.
                 </div>
               ) : (
@@ -527,7 +529,7 @@ export default function MyTasksPage() {
               <div className="flex items-center gap-2">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
                 <h3 className="font-bold text-white text-sm">Concluídas</h3>
-                <span className="px-2 py-0.5 rounded-full bg-slate-800 text-emerald-300 text-[10px] font-extrabold">
+                <span className="px-2 py-0.5 rounded-full bg-slate-800 text-emerald-300 text-[11px] font-extrabold">
                   {doneTasks.length}
                 </span>
               </div>
@@ -535,9 +537,9 @@ export default function MyTasksPage() {
 
             <div className="space-y-3 overflow-y-auto max-h-[600px] pr-1">
               {loading ? (
-                <div className="p-8 text-center text-xs text-slate-500">Carregando...</div>
+                <div className="p-8 text-center text-xs text-slate-400">Carregando...</div>
               ) : doneTasks.length === 0 ? (
-                <div className="p-8 text-center border border-dashed border-slate-800 rounded-2xl text-xs text-slate-500">
+                <div className="p-8 text-center border border-dashed border-slate-800 rounded-2xl text-xs text-slate-400">
                   Nenhuma tarefa concluída ainda.
                 </div>
               ) : (
@@ -573,7 +575,7 @@ export default function MyTasksPage() {
                     </div>
                     <div>
                       <h4 className="font-bold text-white text-sm">Cards Ativos no Funil</h4>
-                      <p className="text-[10px] text-slate-400">Atividades, projetos ou demandas com você</p>
+                      <p className="text-[11px] text-slate-400">Atividades, projetos ou demandas com você</p>
                     </div>
                   </div>
                   <Link
@@ -585,7 +587,7 @@ export default function MyTasksPage() {
                 </div>
 
                 {myCards.length === 0 ? (
-                  <p className="text-xs text-slate-500 py-4 text-center">
+                  <p className="text-xs text-slate-400 py-4 text-center">
                     Você ainda não possui cards ativos no funil.
                   </p>
                 ) : (
@@ -597,11 +599,11 @@ export default function MyTasksPage() {
                       >
                         <div className="max-w-[200px] truncate">
                           <div className="font-bold text-white truncate">{card.title}</div>
-                          <div className="text-[10px] text-slate-400">Fase: {card.phaseName}</div>
+                          <div className="text-[11px] text-slate-400">Fase: {card.phaseName}</div>
                         </div>
                         <Link
                           href={`/pipe?openCard=${card.id}`}
-                          className="px-2.5 py-1 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 font-bold text-[10px] border border-purple-500/30 transition-colors"
+                          className="px-2.5 py-1 rounded-xl bg-purple-600/30 hover:bg-purple-600/50 text-purple-300 font-bold text-[11px] border border-purple-500/30 transition-colors"
                         >
                           Ver Card
                         </Link>
@@ -616,7 +618,7 @@ export default function MyTasksPage() {
 
         {/* Modal: Create / Edit Task */}
         {isModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
+          <ModalFrame onClose={() => setIsModalOpen(false)} label="Tarefa" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
             <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl p-6 space-y-5 animate-in fade-in duration-150">
               <div className="flex items-center justify-between pb-3 border-b border-slate-800">
                 <div className="flex items-center gap-2.5">
@@ -641,28 +643,28 @@ export default function MyTasksPage() {
               <form onSubmit={handleSubmitTask} className="space-y-4">
                 {/* Título */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300">
+                  <label htmlFor="page-1" className="text-xs font-semibold text-slate-300">
                     Título da Tarefa <span className="text-rose-400">*</span>
                   </label>
-                  <input
+                  <input id="page-1"
                     type="text"
                     required
                     placeholder="Ex: Entrar em contato com o cliente X para diagnóstico..."
                     value={formTitle}
                     onChange={(e) => setFormTitle(e.target.value)}
-                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-800 bg-slate-950 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className={`${CONTROL_CLASS} w-full placeholder:text-slate-600`}
                   />
                 </div>
 
                 {/* Descrição */}
                 <div className="space-y-1.5">
-                  <label className="text-xs font-semibold text-slate-300">Descrição / Orientações</label>
-                  <textarea
+                  <label htmlFor="page-2" className="text-xs font-semibold text-slate-300">Descrição / Orientações</label>
+                  <textarea id="page-2"
                     rows={3}
                     placeholder="Detalhes sobre o que deve ser feito, links ou anotações..."
                     value={formDescription}
                     onChange={(e) => setFormDescription(e.target.value)}
-                    className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-800 bg-slate-950 text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    className={`${CONTROL_CLASS} w-full placeholder:text-slate-600`}
                   />
                 </div>
 
@@ -670,11 +672,11 @@ export default function MyTasksPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {/* Responsável */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-300">Responsável Nominal</label>
-                    <select
+                    <label htmlFor="page-3" className="text-xs font-semibold text-slate-300">Responsável Nominal</label>
+                    <select id="page-3"
                       value={formAssigneeId}
                       onChange={(e) => setFormAssigneeId(e.target.value)}
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-800 bg-slate-950 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className={`${CONTROL_CLASS} w-full`}
                     >
                       <option value="">Não atribuído</option>
                       {profiles.map((u) => (
@@ -691,7 +693,7 @@ export default function MyTasksPage() {
                     <select
                       value={formPriority}
                       onChange={(e) => setFormPriority(e.target.value as TaskPriority)}
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-800 bg-slate-950 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className={`${CONTROL_CLASS} w-full`}
                     >
                       <option value="LOW">Baixa</option>
                       <option value="MEDIUM">Média</option>
@@ -705,11 +707,11 @@ export default function MyTasksPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {/* Status */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-300">Status</label>
-                    <select
+                    <label htmlFor="page-4" className="text-xs font-semibold text-slate-300">Status</label>
+                    <select id="page-4"
                       value={formStatus}
                       onChange={(e) => setFormStatus(e.target.value as TaskStatus)}
-                      className="w-full px-3 py-2 text-xs rounded-xl border border-slate-800 bg-slate-950 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className={`${CONTROL_CLASS} w-full`}
                     >
                       <option value="TODO">A Fazer</option>
                       <option value="IN_PROGRESS">Em Andamento</option>
@@ -719,12 +721,12 @@ export default function MyTasksPage() {
 
                   {/* Prazo */}
                   <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-300">Prazo de Entrega</label>
-                    <input
+                    <label htmlFor="page-5" className="text-xs font-semibold text-slate-300">Prazo de Entrega</label>
+                    <input id="page-5"
                       type="date"
                       value={formDueDate}
                       onChange={(e) => setFormDueDate(e.target.value)}
-                      className="w-full px-3.5 py-2 text-xs rounded-xl border border-slate-800 bg-slate-950 text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      className={`${CONTROL_CLASS} w-full`}
                     />
                   </div>
                 </div>
@@ -748,7 +750,7 @@ export default function MyTasksPage() {
                 </div>
               </form>
             </div>
-          </div>
+          </ModalFrame>
         )}
       </main>
     </div>
@@ -783,7 +785,7 @@ function TaskCard({
         <div className="flex items-center gap-2">
           {getPriorityBadge(task.priority)}
           {task.dueDate && (
-            <span className="text-[10px] text-slate-400 flex items-center gap-1">
+            <span className="text-[11px] text-slate-400 flex items-center gap-1">
               <Calendar className="w-3 h-3 text-purple-400" />
               {formatDueDate(task.dueDate)}
             </span>
@@ -837,19 +839,19 @@ function TaskCard({
               alt={task.assignee.name}
               className="w-4 h-4 rounded-full object-cover shrink-0"
             />
-            <span className="text-[10px] font-semibold text-slate-300 truncate">
+            <span className="text-[11px] font-semibold text-slate-300 truncate">
               {task.assignee.name.split(' ')[0]}
             </span>
           </div>
         ) : (
-          <span className="text-[10px] text-slate-500">Sem responsável</span>
+          <span className="text-[11px] text-slate-400">Sem responsável</span>
         )}
 
         <div className="flex items-center gap-1">
           {task.status === 'TODO' && (
             <button
               onClick={() => onStatusChange(task.id, 'IN_PROGRESS')}
-              className="px-2 py-0.5 rounded-lg bg-blue-950 text-blue-300 border border-blue-800 text-[10px] font-bold hover:bg-blue-900 transition-colors flex items-center gap-1"
+              className="px-2 py-0.5 rounded-lg bg-blue-950 text-blue-300 border border-blue-800 text-[11px] font-bold hover:bg-blue-900 transition-colors flex items-center gap-1"
             >
               Iniciar <ChevronRight className="w-3 h-3" />
             </button>
@@ -859,14 +861,14 @@ function TaskCard({
             <>
               <button
                 onClick={() => onStatusChange(task.id, 'TODO')}
-                className="px-2 py-0.5 rounded-lg bg-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-colors"
+                className="px-2 py-0.5 rounded-lg bg-slate-800 text-slate-400 text-[11px] font-bold hover:text-white transition-colors"
                 title="Voltar para A Fazer"
               >
                 Voltar
               </button>
               <button
                 onClick={() => onStatusChange(task.id, 'DONE')}
-                className="px-2 py-0.5 rounded-lg bg-emerald-950 text-emerald-300 border border-emerald-800 text-[10px] font-bold hover:bg-emerald-900 transition-colors flex items-center gap-1"
+                className="px-2 py-0.5 rounded-lg bg-emerald-950 text-emerald-300 border border-emerald-800 text-[11px] font-bold hover:bg-emerald-900 transition-colors flex items-center gap-1"
               >
                 Concluir <Check className="w-3 h-3" />
               </button>
@@ -876,7 +878,7 @@ function TaskCard({
           {task.status === 'DONE' && (
             <button
               onClick={() => onStatusChange(task.id, 'TODO')}
-              className="px-2 py-0.5 rounded-lg bg-slate-800 text-slate-400 text-[10px] font-bold hover:text-white transition-colors"
+              className="px-2 py-0.5 rounded-lg bg-slate-800 text-slate-400 text-[11px] font-bold hover:text-white transition-colors"
             >
               Reabrir
             </button>

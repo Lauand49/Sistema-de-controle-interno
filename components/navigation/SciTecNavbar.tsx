@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { ProfileSwitcher } from './ProfileSwitcher';
 import { CreateRequestModal } from '../modals/CreateRequestModal';
+import { CONTROL_CLASS } from '@/components/ui/Input';
 
 interface SciTecNavbarProps {
   onRefresh?: () => void;
@@ -137,7 +138,7 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
 
               <div>
                 <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold tracking-wider uppercase text-purple-300 bg-purple-950/80 border border-purple-700/50 px-2 py-0.2 rounded-full flex items-center gap-1">
+                  <span className="text-[11px] font-bold tracking-wider uppercase text-purple-300 bg-purple-950/80 border border-purple-700/50 px-2 py-0.2 rounded-full flex items-center gap-1">
                     <Sparkles className="w-3 h-3 text-purple-400" /> SciTec jr. OS
                   </span>
                 </div>
@@ -188,7 +189,7 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
                     onMouseLeave={() => setIsSectorDropdownOpen(false)}
                     className="absolute left-0 mt-2 w-72 bg-slate-900 border border-purple-800/60 rounded-2xl shadow-2xl p-2 z-50 animate-fadeIn"
                   >
-                    <div className="px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-purple-400 border-b border-slate-800 mb-1">
+                    <div className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-purple-400 border-b border-slate-800 mb-1">
                       Diretorias & Áreas de Trabalho
                     </div>
 
@@ -215,7 +216,7 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
                           </div>
                           <div>
                             <div className="font-semibold text-xs text-white">{sec.name}</div>
-                            <div className="text-[10px] text-slate-400 leading-tight mt-0.5">
+                            <div className="text-[11px] text-slate-400 leading-tight mt-0.5">
                               {sec.desc}
                             </div>
                           </div>
@@ -238,7 +239,7 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
               >
                 <Send className="w-3.5 h-3.5" aria-hidden="true" /> <span className="hidden 2xl:inline">Solicitações</span>
                 {pendingRequestsCount > 0 && (
-                  <span className="bg-amber-500/20 text-amber-300 text-[10px] px-1.5 py-0.2 rounded-full border border-amber-500/40">
+                  <span className="bg-amber-500/20 text-amber-300 text-[11px] px-1.5 py-0.2 rounded-full border border-amber-500/40">
                     {pendingRequestsCount}
                   </span>
                 )}
@@ -292,7 +293,7 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
                   aria-label="Buscar no funil" placeholder="Buscar no funil..."
                   value={searchQuery}
                   onChange={(e) => onSearchChange(e.target.value)}
-                  className="pl-8 pr-3 min-h-10 py-1.5 text-xs rounded-xl border border-purple-800/40 bg-purple-950/30 text-white placeholder:text-purple-300/40 focus:outline-none focus:ring-2 focus:ring-purple-500 w-32 lg:w-44 transition-all"
+                  className={`${CONTROL_CLASS} pl-8 pr-3 placeholder:text-purple-300/40 w-32 lg:w-44`}
                 />
               </div>
             )}
@@ -366,7 +367,7 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
                   aria-label="Buscar no funil" placeholder="Buscar no funil..."
                   value={searchQuery}
                   onChange={(e) => onSearchChange(e.target.value)}
-                  className="w-full pl-8 pr-3 py-1.5 text-xs rounded-xl border border-purple-800/40 bg-purple-950/40 text-white placeholder:text-purple-300/40 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+                  className={`${CONTROL_CLASS} w-full pl-8 pr-3 placeholder:text-purple-300/40`}
                 />
               </div>
             )}
@@ -395,7 +396,7 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
                   <Send className="w-3.5 h-3.5 text-purple-400" /> Solicitações
                 </div>
                 {pendingRequestsCount > 0 && (
-                  <span className="bg-amber-500/20 text-amber-300 text-[10px] px-1.5 py-0.2 rounded-full border border-amber-500/40">
+                  <span className="bg-amber-500/20 text-amber-300 text-[11px] px-1.5 py-0.2 rounded-full border border-amber-500/40">
                     {pendingRequestsCount}
                   </span>
                 )}
@@ -448,7 +449,7 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
 
             {/* Mobile Workspaces list */}
             <div className="pt-2 border-t border-slate-800/80">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-purple-400 mb-1.5 px-1">
+              <div className="text-[11px] font-bold uppercase tracking-wider text-purple-400 mb-1.5 px-1">
                 Workspaces por Diretoria
               </div>
               <div className="grid grid-cols-2 gap-1.5">

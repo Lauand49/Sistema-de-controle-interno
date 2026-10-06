@@ -27,7 +27,7 @@ export const SourcePicker: React.FC<SourcePickerProps> = ({ value, onChange, ser
             <div key={opt.id} className="flex flex-col gap-0.5">
               <label
                 htmlFor={inputId}
-                className={`flex items-center gap-2 text-sm ${blocked ? 'text-slate-500' : 'text-slate-300'}`}
+                className={`flex items-center gap-2 text-sm ${blocked ? 'text-slate-400' : 'text-slate-300'}`}
               >
                 <input
                   id={inputId}
