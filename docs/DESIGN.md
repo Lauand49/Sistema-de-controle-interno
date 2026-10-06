@@ -60,3 +60,10 @@ Todo diálogo de formulário usa `Modal` (cabeçalho, corpo rolável, rodapé). 
 | `app/tools/page.tsx` | gradiente azul do cartão de uma ferramenta | cor de identidade da categoria |
 | `app/tasks/page.tsx` | ponto azul de "em andamento" | cor semântica de status |
 | Azul/ciano/âmbar/rosa translúcidos (`bg-blue-500/20`...) | badges e cores de departamento | identidade de departamento e status, não ação primária |
+
+## Links e botões
+`Button` para ações; `ButtonLink` / `buttonVariants()` para navegação com cara de botão (nunca `<button>` dentro de `<a>`).
+
+## Exceções intencionais e melhorias futuras
+- **Intencional:** cores de identidade dos departamentos (azul AdmJurFin, rosa Mídias, âmbar Gente, roxo Negócios) e o gradiente azul do cartão de uma ferramenta em `/tools`.
+- **Melhoria futura:** estados ativo/inativo da navbar (abas e botões), `ContatoTabs`, kanban do Gente, badges de prioridade/status, botões ghost/danger escritos à mão sem variante equivalente.

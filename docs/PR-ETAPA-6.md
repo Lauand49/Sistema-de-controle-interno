@@ -32,6 +32,8 @@ Só apresentação. Nenhuma rota de API, permissão, schema, migração ou forma
 - Rótulos ligados com `htmlFor`/`id` na planilha de leads e na precificação (inclui linhas de `.map()`).
 - Acesso restrito e fila vazia de lead-filter/lead-sheet com `ErrorState`/`EmptyState`.
 
+- Rodada 4: `ButtonLink`, 12 botões secundários em `Button`, "Triagem concluída" em `EmptyState`.
+
 ## Como testar
 ```bash
 export PATH=$HOME/.local/bin:$PATH
