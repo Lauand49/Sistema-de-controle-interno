@@ -21,6 +21,7 @@ import {
   Menu,
   X,
   Home,
+  MoreHorizontal,
 } from 'lucide-react';
 import { ProfileSwitcher } from './ProfileSwitcher';
 import { CreateRequestModal } from '../modals/CreateRequestModal';
@@ -48,11 +49,13 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
   const [isCreateRequestOpen, setIsCreateRequestOpen] = useState(false);
   const [pendingRequestsCount, setPendingRequestsCount] = useState<number>(0);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isMoreOpen, setIsMoreOpen] = useState(false);
 
   // Close mobile menu on route change
   useEffect(() => {
     setIsMobileMenuOpen(false);
     setIsSectorDropdownOpen(false);
+    setIsMoreOpen(false);
   }, [pathname]);
 
   const isHomeActive = pathname === '/';
@@ -261,7 +264,7 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
                 href="/team"
                 aria-label="Equipe"
                 title="Equipe"
-                className={`px-2 2xl:px-3 min-h-10 text-xs font-bold rounded-lg flex items-center gap-1.5 whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${isTeamActive
+                className={`px-2 2xl:px-3 min-h-10 text-xs font-bold rounded-lg hidden 2xl:flex items-center gap-1.5 whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${isTeamActive
                   ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
                   : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
                   }`}
@@ -273,13 +276,40 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
                 href="/paineis"
                 aria-label="Painéis"
                 title="Painéis"
-                className={`px-2 2xl:px-3 min-h-10 text-xs font-bold rounded-lg flex items-center gap-1.5 whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${isPaineisActive
+                className={`px-2 2xl:px-3 min-h-10 text-xs font-bold rounded-lg hidden 2xl:flex items-center gap-1.5 whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${isPaineisActive
                   ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
                   : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
                   }`}
               >
                 <LayoutDashboard className="w-3.5 h-3.5" aria-hidden="true" /> <span className="hidden xl:inline">Painéis</span>
               </Link>
+
+              {/* Itens de menor uso: só abaixo de 2xl */}
+              <div className="relative 2xl:hidden">
+                <button
+                  type="button"
+                  aria-label="Mais"
+                  title="Mais"
+                  aria-expanded={isMoreOpen}
+                  onClick={() => setIsMoreOpen(!isMoreOpen)}
+                  className={`px-2 min-h-10 text-xs font-bold rounded-lg flex items-center gap-1.5 whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${
+                    isTeamActive || isPaineisActive ? 'bg-purple-900/80 text-white' : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
+                  }`}
+                >
+                  <MoreHorizontal className="w-3.5 h-3.5" aria-hidden="true" />
+                  <span>Mais</span>
+                </button>
+                {isMoreOpen && (
+                  <div className="absolute right-0 mt-2 w-44 bg-slate-900 border border-purple-800/60 rounded-2xl shadow-2xl p-1.5 z-50">
+                    <Link href="/team" onClick={() => setIsMoreOpen(false)} className="flex items-center gap-2.5 px-3 min-h-10 rounded-xl text-xs font-semibold text-slate-200 hover:bg-slate-800">
+                      <Users className="w-4 h-4" aria-hidden="true" /> Equipe
+                    </Link>
+                    <Link href="/paineis" onClick={() => setIsMoreOpen(false)} className="flex items-center gap-2.5 px-3 min-h-10 rounded-xl text-xs font-semibold text-slate-200 hover:bg-slate-800">
+                      <LayoutDashboard className="w-4 h-4" aria-hidden="true" /> Painéis
+                    </Link>
+                  </div>
+                )}
+              </div>
             </nav>
           </div>
 
@@ -317,7 +347,7 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
               aria-label="Nova solicitação"
             >
               <Send className="w-3.5 h-3.5 text-purple-400" />
-              <span className="hidden 2xl:inline">Nova solicitação</span>
+              <span className="hidden lg:inline">Nova solicitação</span>
             </button>
 
             {/* Optional New Card Button */}
@@ -329,7 +359,7 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
                 className="min-h-10 px-3 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-lg shadow-purple-900/40 flex items-center gap-1.5 transition-all"
               >
                 <Plus className="w-3.5 h-3.5" />
-                <span className="hidden 2xl:inline">Novo Card</span>
+                <span className="hidden lg:inline">Novo Card</span>
               </button>
             )}
 
