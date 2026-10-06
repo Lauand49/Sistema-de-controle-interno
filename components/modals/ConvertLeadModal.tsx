@@ -6,8 +6,10 @@ import { Zap, X, Calendar, UserCheck, Building2, CheckCircle2 } from 'lucide-rea
 import { toast } from 'sonner';
 import { useProfile } from '@/contexts/ProfileContext';
 import { canAssignLeads, canBeLeadAssignee } from '@/lib/permissions';
-import { ModalFrame } from '@/components/ui/Modal';
-import { CONTROL_CLASS } from '@/components/ui/Input';
+import { Modal } from '@/components/ui/Modal';
+import { Button } from '@/components/ui/Button';
+import { Field } from '@/components/ui/Field';
+import { DateInput, Select } from '@/components/ui/Input';
 
 interface ConvertLeadModalProps {
   lead: ProspectLead;
@@ -66,120 +68,68 @@ export const ConvertLeadModal: React.FC<ConvertLeadModalProps> = ({
   };
 
   return (
-    <ModalFrame onClose={onClose} label="Converter Lead em Card" className="fixed inset-0 z-50 bg-slate-900/70 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-200">
-      <div className="bg-slate-900 border border-purple-500/40 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col">
-        {/* Modal Header */}
-        <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-gradient-to-r from-purple-950/60 to-slate-950">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-purple-900/80 border border-purple-500/50 text-purple-300">
-              <Zap className="w-5 h-5 text-yellow-400" />
-            </div>
-            <div>
-              <h3 className="font-bold text-base text-white">Converter Lead em Card</h3>
-              <p className="text-xs text-purple-300/80">Funil de Vendas • Fase: Reunião marcada</p>
-            </div>
+    <Modal
+      title="Converter Lead em Card"
+      description="Funil de Vendas • Fase: Reunião marcada"
+      onClose={onClose}
+      size="md"
+      closeOnBackdrop={false}
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button type="submit" form="convert-lead-form" icon={CheckCircle2} loading={isSubmitting}>
+            {isSubmitting ? 'Criando Card...' : 'Confirmar & Criar Card no Funil'}
+          </Button>
+        </>
+      }
+    >
+      <form id="convert-lead-form" onSubmit={handleConvert} className="space-y-5">
+        <div className="p-4 rounded-control bg-primary-subtle border border-primary/30 space-y-2 text-xs">
+          <div className="flex items-center gap-2 font-bold text-fg text-sm">
+            <Building2 className="w-4 h-4 text-primary-soft" aria-hidden="true" />
+            {lead.companyName}
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          {lead.contactName && (
+            <div className="text-fg">
+              <span className="text-fg-muted">Decisor:</span> {lead.contactName} {lead.contactInfo ? `(${lead.contactInfo})` : ''}
+            </div>
+          )}
+          {lead.segment && (
+            <div className="text-fg">
+              <span className="text-fg-muted">Segmento:</span> <span className="text-primary-soft font-medium">{lead.segment}</span>
+            </div>
+          )}
+          <div className="text-fg">
+            <span className="text-fg-muted">Plano de Ação:</span> <span className="italic">{lead.actionPlan}</span>
+          </div>
         </div>
-
-        {/* Modal Body */}
-        <form onSubmit={handleConvert} className="p-6 space-y-5">
-          {/* Lead Summary Card */}
-          <div className="p-4 rounded-xl bg-purple-950/20 border border-purple-900/40 space-y-2 text-xs">
-            <div className="flex items-center gap-2 font-bold text-white text-sm">
-              <Building2 className="w-4 h-4 text-purple-400" />
-              {lead.companyName}
-            </div>
-
-            {lead.contactName && (
-              <div className="text-slate-300">
-                <span className="text-slate-400">Decisor:</span> {lead.contactName}{' '}
-                {lead.contactInfo ? `(${lead.contactInfo})` : ''}
-              </div>
-            )}
-
-            {lead.segment && (
-              <div className="text-slate-300">
-                <span className="text-slate-400">Segmento:</span>{' '}
-                <span className="text-purple-300 font-medium">{lead.segment}</span>
-              </div>
-            )}
-
-            <div className="text-slate-300">
-              <span className="text-slate-400">Plano de Ação:</span>{' '}
-              <span className="italic">{lead.actionPlan}</span>
-            </div>
-          </div>
-
-          {/* Consultant Assignee Picker */}
-          <div>
-            <label htmlFor="convertlea-1" className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
-              <UserCheck className="w-3.5 h-3.5 text-purple-400" /> Consultor SciTec Responsável
-            </label>
-            <select id="convertlea-1"
-              value={assigneeId}
-              onChange={(e) => setAssigneeId(e.target.value)}
-              className={`${CONTROL_CLASS} w-full`}
-            >
-              <option value="">Selecione um consultor de Negócios</option>
-              <optgroup label="Equipe de Negócios">
-                {negociosUsers.map((u) => (
+        <Field label="Consultor SciTec Responsável">
+          <Select value={assigneeId} onChange={(e) => setAssigneeId(e.target.value)}>
+            <option value="">Selecione um consultor de Negócios</option>
+            <optgroup label="Equipe de Negócios">
+              {negociosUsers.map((u) => (
+                <option key={u.id} value={u.id}>
+                  {u.name} ({getUserCargoTitle(u)})
+                </option>
+              ))}
+            </optgroup>
+            {presidenciaUsers.length > 0 && (
+              <optgroup label="Presidência">
+                {presidenciaUsers.map((u) => (
                   <option key={u.id} value={u.id}>
                     {u.name} ({getUserCargoTitle(u)})
                   </option>
                 ))}
               </optgroup>
-              {presidenciaUsers.length > 0 && (
-                <optgroup label="Presidência">
-                  {presidenciaUsers.map((u) => (
-                    <option key={u.id} value={u.id}>
-                      {u.name} ({getUserCargoTitle(u)})
-                    </option>
-                  ))}
-                </optgroup>
-              )}
-            </select>
-          </div>
-
-          {/* Meeting Date */}
-          <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-1.5 flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5 text-purple-400" /> Data da Reunião Marcada
-            </label>
-            <input
-              type="date"
-              value={meetingDate}
-              onChange={(e) => setMeetingDate(e.target.value)}
-              required
-              className={`${CONTROL_CLASS} w-full`}
-            />
-          </div>
-
-          {/* Modal Actions */}
-          <div className="pt-4 border-t border-slate-800 flex items-center justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white rounded-lg"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-5 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-lg shadow-purple-900/40 flex items-center gap-2 transition-all disabled:opacity-50"
-            >
-              <CheckCircle2 className="w-4 h-4" />
-              {isSubmitting ? 'Criando Card...' : 'Confirmar & Criar Card no Funil'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </ModalFrame>
+            )}
+          </Select>
+        </Field>
+        <Field label="Data da Reunião Marcada" required>
+          <DateInput value={meetingDate} onChange={(e) => setMeetingDate(e.target.value)} required />
+        </Field>
+      </form>
+    </Modal>
   );
 };
