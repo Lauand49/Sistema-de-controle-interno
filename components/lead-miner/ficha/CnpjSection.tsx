@@ -99,14 +99,9 @@ export const CnpjSection: React.FC<CnpjSectionProps> = ({ company, onUpdated }) 
             {cnpj ? 'Alterar' : 'Informar CNPJ'}
           </Button>
           {cnpj && (
-            <button
-              type="button"
-              onClick={() => void remove()}
-              disabled={busy}
-              className="rounded-xl border border-rose-800/60 bg-rose-950/40 px-3 py-1.5 text-xs font-semibold text-rose-300 hover:bg-rose-900/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 disabled:opacity-60"
-            >
+            <Button variant="danger" size="sm" type="button"  onClick={() => void remove()}  disabled={busy}>
               Remover
-            </button>
+            </Button>
           )}
         </div>
       }

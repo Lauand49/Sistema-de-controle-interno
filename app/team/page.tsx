@@ -414,14 +414,9 @@ export default function TeamPage() {
                       <UserCheck className="w-4 h-4" aria-hidden="true" /> Aprovar
                     </Button>
                     {actor && canDeactivate(actor, u) && (
-                      <button
-                        type="button"
-                        disabled={busyId === u.id}
-                        onClick={() => handleReject(u)}
-                        className="px-3 py-2 text-xs font-bold rounded-xl bg-rose-950/60 border border-rose-800/60 text-rose-300 disabled:opacity-50"
-                      >
+                      <Button variant="danger" size="sm" type="button"  disabled={busyId === u.id}  onClick={() => handleReject(u)}>
                         Recusar
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </div>

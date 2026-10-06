@@ -1,5 +1,5 @@
 'use client';
-import { Button } from '@/components/ui/Button';
+import { Button, IconButton } from '@/components/ui/Button';
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
@@ -695,13 +695,7 @@ SciTec jr. - Consultoria & Engenharia em Computação
                           </span>
                         </div>
 
-                        <button
-                          onClick={() => removeServiceRow(index)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
-                          title="Remover linha"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <IconButton variant="danger-ghost" icon={Trash2} onClick={() => removeServiceRow(index)} aria-label="Remover linha" />
                       </div>
                     </div>
                   );
@@ -776,13 +770,7 @@ SciTec jr. - Consultoria & Engenharia em Computação
                       </div>
 
                       <div className="pt-2 md:pt-4">
-                        <button
-                          onClick={() => removeExtraCostRow(idx)}
-                          className="p-1.5 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
-                          title="Remover despesa"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <IconButton variant="danger-ghost" icon={Trash2} onClick={() => removeExtraCostRow(idx)} aria-label="Remover despesa" />
                       </div>
                     </div>
                   ))}

@@ -44,7 +44,7 @@ import { canAssignLeads, canBeLeadAssignee, canUseNegociosTools } from '@/lib/pe
 import { LoadingState } from '@/components/ui/Display';
 import { PageHeader } from '@/components/ui/Display';
 import { Input, Select, Textarea } from '@/components/ui/Input';
-import { Button } from '@/components/ui/Button';
+import { Button, IconButton } from '@/components/ui/Button';
 import { ErrorState } from '@/components/ui/Display';
 
 type TabType = 'TRIAGE' | 'MEETING';
@@ -961,21 +961,9 @@ export default function LeadSheetPage() {
                                   <Zap className="w-3.5 h-3.5 text-yellow-300" /> Converter p/ Card
                                 </Button>
 
-                                <button
-                                  onClick={() => handleDiscardLead(lead.id)}
-                                  title="Descartar lead (mover para lista escondida)"
-                                  className="p-1.5 text-slate-400 hover:text-rose-400 rounded-lg hover:bg-slate-800 transition-colors flex items-center gap-1"
-                                >
-                                  <Ban className="w-4 h-4" />
-                                </button>
+                                <IconButton variant="danger-ghost" icon={Ban} onClick={() => handleDiscardLead(lead.id)} aria-label="Descartar lead (mover para lista escondida)" />
 
-                                <button
-                                  onClick={() => handleDeleteLead(lead.id)}
-                                  title="Excluir permanentemente"
-                                  className="p-1.5 text-slate-400 hover:text-red-400 rounded-lg hover:bg-slate-800 transition-colors"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
+                                <IconButton variant="danger-ghost" icon={Trash2} onClick={() => handleDeleteLead(lead.id)} aria-label="Excluir permanentemente" />
                               </div>
                             )}
                           </td>
@@ -1188,13 +1176,7 @@ export default function LeadSheetPage() {
                             <RotateCcw className="w-3.5 h-3.5 text-purple-400" />
                             Restaurar Lead
                           </button>
-                          <button
-                            onClick={() => handleDeleteLead(lead.id)}
-                            className="p-1.5 rounded-lg text-slate-400 hover:text-red-400 hover:bg-slate-800 transition-colors"
-                            title="Excluir definitivamente"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <IconButton variant="danger-ghost" icon={Trash2} onClick={() => handleDeleteLead(lead.id)} aria-label="Excluir definitivamente" />
                         </div>
                       ) : (
                         <span className="text-[11px] text-slate-400 italic shrink-0">Descartado</span>

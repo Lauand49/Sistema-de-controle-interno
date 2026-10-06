@@ -3,13 +3,14 @@ import Link from 'next/link';
 import { Loader2, type LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/ui/format';
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'danger-ghost';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 const VARIANTS: Record<ButtonVariant, string> = {
   primary: 'bg-gradient-to-r from-primary-from to-primary-to text-white hover:brightness-110 shadow-glow',
   secondary: 'bg-surface-overlay text-fg border border-border-strong hover:bg-border-strong',
   ghost: 'bg-transparent text-fg-muted hover:bg-surface-overlay hover:text-fg',
+  'danger-ghost': 'bg-transparent text-fg-muted hover:bg-danger-subtle hover:text-danger-soft',
   danger: 'bg-danger-subtle text-danger-soft border border-danger/40 hover:bg-danger/25',
 };
 // Alvo de toque mínimo de 40px em todos os tamanhos.
@@ -74,5 +75,30 @@ export const ButtonLink = React.forwardRef<
       {Icon ? <Icon className="w-4 h-4" aria-hidden="true" /> : null}
       {children}
     </Link>
+  );
+});
+
+export interface IconButtonProps extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'aria-label'> {
+  /** Obrigatório: botão só com ícone precisa de nome acessível. */
+  'aria-label': string;
+  variant?: Exclude<ButtonVariant, 'primary'>;
+  icon: LucideIcon;
+}
+
+/** Botão quadrado de 40px só com ícone (tooltip = aria-label). */
+export const IconButton = React.forwardRef<HTMLButtonElement, IconButtonProps>(function IconButton(
+  { variant = 'ghost', icon: Icon, className, title, type = 'button', ...rest },
+  ref,
+) {
+  return (
+    <button
+      ref={ref}
+      type={type}
+      title={title ?? rest['aria-label']}
+      className={buttonVariants({ variant, size: 'sm', className: cn('w-10 min-w-10 px-0 shrink-0', className) })}
+      {...rest}
+    >
+      <Icon className="w-4 h-4" aria-hidden="true" />
+    </button>
   );
 });

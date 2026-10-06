@@ -23,7 +23,7 @@ import {
   ChevronRight, Lock } from 'lucide-react';
 import { formatDueDate } from '@/lib/dashboards/format';
 import { Modal } from '@/components/ui/Modal';
-import { Button } from '@/components/ui/Button';
+import { Button, IconButton } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
 import { CONTROL_CLASS } from '@/components/ui/Input';
 import { EmptyState } from '@/components/ui/Display';
@@ -349,20 +349,8 @@ export const SectorTaskBoard: React.FC<SectorTaskBoardProps> = ({
 
                           {!readOnly && (
                             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <button
-                                onClick={() => openEditTaskModal(task)}
-                                className="p-1 rounded text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-                                title="Editar tarefa"
-                              >
-                                <CheckSquare className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                onClick={() => handleDeleteTask(task.id)}
-                                className="p-1 rounded text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
-                                title="Excluir tarefa"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
+                              <IconButton variant="ghost" icon={CheckSquare} onClick={() => openEditTaskModal(task)} aria-label="Editar tarefa" />
+                              <IconButton variant="danger-ghost" icon={Trash2} onClick={() => handleDeleteTask(task.id)} aria-label="Excluir tarefa" />
                             </div>
                           )}
                         </div>

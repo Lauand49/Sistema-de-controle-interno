@@ -1,5 +1,5 @@
 'use client';
-import { ButtonLink } from '@/components/ui/Button';
+import { ButtonLink, Button } from '@/components/ui/Button';
 /**
  * Tela_Mineracoes — `/tools/lead-miner/runs` (Req. 11.1–11.7, 11.9, 2.15, 7.11, 8.6, 8.15).
  * Histórico de minerações de todos os autores com busca, filtros (sincronizados com a query
@@ -198,13 +198,9 @@ function RunsScreen() {
         <div role="alert" className="flex items-center gap-2 rounded-2xl border border-red-800/60 bg-red-950/40 p-4 text-sm text-red-300">
           <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
           <span>{error}</span>
-          <button
-            type="button"
-            onClick={() => setReloadNonce((n) => n + 1)}
-            className="ml-auto rounded-xl border border-red-800/60 px-3 py-1.5 text-xs font-semibold hover:bg-red-900/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
-          >
+          <Button variant="danger" size="sm" type="button"  onClick={() => setReloadNonce((n) => n + 1)} className="ml-auto">
             Tentar novamente
-          </button>
+          </Button>
         </div>
       )}
 

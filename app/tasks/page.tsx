@@ -32,7 +32,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Field } from '@/components/ui/Field';
 import { CONTROL_CLASS } from '@/components/ui/Input';
 import { LoadingState, EmptyState, PageHeader, StatCard } from '@/components/ui/Display';
-import { Button } from '@/components/ui/Button';
+import { Button, IconButton } from '@/components/ui/Button';
 import { DateInput, Input, Select, Textarea } from '@/components/ui/Input';
 
 type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE' | 'CANCELLED';
@@ -417,13 +417,7 @@ export default function MyTasksPage() {
                   {todoTasks.length}
                 </span>
               </div>
-              <button
-                onClick={() => handleOpenCreate('TODO')}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
-                title="Adicionar tarefa em A Fazer"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
+              <IconButton variant="ghost" icon={Plus} onClick={() => handleOpenCreate('TODO')} aria-label="Adicionar tarefa em A Fazer" />
             </div>
 
             <div className="space-y-3 overflow-y-auto max-h-[600px] pr-1">
@@ -456,13 +450,7 @@ export default function MyTasksPage() {
                   {inProgressTasks.length}
                 </span>
               </div>
-              <button
-                onClick={() => handleOpenCreate('IN_PROGRESS')}
-                className="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800"
-                title="Adicionar tarefa em Em Andamento"
-              >
-                <Plus className="w-4 h-4" />
-              </button>
+              <IconButton variant="ghost" icon={Plus} onClick={() => handleOpenCreate('IN_PROGRESS')} aria-label="Adicionar tarefa em Em Andamento" />
             </div>
 
             <div className="space-y-3 overflow-y-auto max-h-[600px] pr-1">
@@ -687,20 +675,8 @@ function TaskCard({
         </div>
 
         <div className="flex items-center gap-1">
-          <button
-            onClick={() => onEdit(task)}
-            className="p-1 text-slate-400 hover:text-white rounded hover:bg-slate-800 transition-colors"
-            title="Editar Tarefa"
-          >
-            <Edit3 className="w-3.5 h-3.5" />
-          </button>
-          <button
-            onClick={() => onDelete(task.id)}
-            className="p-1 text-slate-400 hover:text-rose-400 rounded hover:bg-slate-800 transition-colors"
-            title="Excluir Tarefa"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </button>
+          <IconButton variant="ghost" icon={Edit3} onClick={() => onEdit(task)} aria-label="Editar Tarefa" />
+          <IconButton variant="danger-ghost" icon={Trash2} onClick={() => onDelete(task.id)} aria-label="Excluir Tarefa" />
         </div>
       </div>
 
