@@ -44,7 +44,7 @@ export const PresetPicker: React.FC<PresetPickerProps> = ({ active, onPick, disa
         );
       })}
     </div>
-    <p className="text-xs text-slate-500">
+    <p className="text-xs text-slate-400">
       {active ? 'Os nichos do preset foram marcados; ajuste-os abaixo se quiser.' : 'Seleção personalizada de nichos.'}
     </p>
   </fieldset>

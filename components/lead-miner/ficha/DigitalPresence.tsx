@@ -71,20 +71,20 @@ export const DigitalPresence: React.FC<DigitalPresenceProps> = ({ sinais }) => {
             ) : (
               <Muted>não encontrado</Muted>
             )}
-            {instagram && <span className="text-xs text-slate-500">{originNote(sinais?.instagramOrigem)}</span>}
+            {instagram && <span className="text-xs text-slate-400">{originNote(sinais?.instagramOrigem)}</span>}
           </span>
         </Field>
         <Field label="WhatsApp">
           <span className="inline-flex items-center gap-1.5">
             <MessageCircle className="h-4 w-4 text-emerald-400" aria-hidden="true" />
             {whats ? <span>{whats}</span> : <Muted>não encontrado</Muted>}
-            {whats && <span className="text-xs text-slate-500">{originNote(sinais?.whatsappOrigem)}</span>}
+            {whats && <span className="text-xs text-slate-400">{originNote(sinais?.whatsappOrigem)}</span>}
           </span>
         </Field>
       </dl>
 
       <div className="mt-4">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Tecnologias</h3>
+        <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">Tecnologias</h3>
         {grupos.size === 0 ? (
           <p className="mt-1 text-sm">
             <Muted>Nenhuma tecnologia detectada</Muted>
@@ -108,7 +108,7 @@ export const DigitalPresence: React.FC<DigitalPresenceProps> = ({ sinais }) => {
             ))}
           </ul>
         )}
-        <p className="mt-2 text-xs text-slate-500">Tecnologias detectadas no site da empresa.</p>
+        <p className="mt-2 text-xs text-slate-400">Tecnologias detectadas no site da empresa.</p>
       </div>
     </Section>
   );

@@ -1,4 +1,5 @@
 'use client';
+import { Button } from '@/components/ui/Button';
 
 /**
  * Tela_Ranking — `/tools/lead-miner/leads` (Req. 12, 13.9, 15.5, 15.7, 15.10, 16.6, 16.8, 16.9,
@@ -61,6 +62,7 @@ import {
   type RankingView,
 } from '@/components/lead-miner/ranking-helpers';
 import type { RankingUiState } from '@/lib/leads/filters';
+import { PageHeader } from '@/components/ui/Display';
 
 /** Mapa só no cliente: fora do HTML do servidor e sem tocar APIs de navegador no SSR (Req. 13.9). */
 const CompanyMap = dynamic(() => import('@/components/lead-miner/CompanyMap'), {
@@ -316,13 +318,7 @@ function RankingScreen() {
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             Minerador de Leads
           </Link>
-          <h1 className="flex items-center gap-3 text-2xl font-extrabold text-white">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600">
-              <Trophy className="h-5 w-5 text-white" aria-hidden="true" />
-            </span>
-            Ranking de empresas
-          </h1>
-          <p className="text-sm text-slate-400">Toda a base minerada, ordenada por score.</p>
+          <PageHeader icon={Trophy} title="Ranking de empresas" subtitle="Toda a base minerada, ordenada por score." />
         </div>
         <div className="flex flex-wrap gap-2">
           <Link
@@ -377,12 +373,7 @@ function RankingScreen() {
           )}
         </p>
         {tab === 'sem' && (
-          <button
-            type="button"
-            onClick={onEvaluate}
-            disabled={evaluating || list.loading || evalIds.length === 0}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-bold text-slate-200 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
-          >
+          <Button variant="secondary" size="sm" type="button" onClick={onEvaluate} disabled={evaluating || list.loading || evalIds.length === 0}>
             {evaluating ? (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
             ) : (
@@ -393,7 +384,7 @@ function RankingScreen() {
               : evalIds.length > 0
                 ? `Avaliar (${evalIds.length})`
                 : 'Avaliar (nada pendente)'}
-          </button>
+          </Button>
         )}
         <div role="group" aria-label="Modo de visualização" className="inline-flex gap-1 rounded-xl border border-slate-800 bg-slate-900 p-1">
           <button type="button" aria-pressed={view === 'lista'} onClick={() => setView('lista')} className={tabClass(view === 'lista')}>
@@ -439,13 +430,9 @@ function RankingScreen() {
         {list.error ? (
           <div role="alert" className="rounded-2xl border border-red-900/60 bg-red-950/40 p-6 text-sm text-red-300">
             <p>{list.error}</p>
-            <button
-              type="button"
-              onClick={() => setReloadToken((n) => n + 1)}
-              className="mt-3 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-bold text-slate-200 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
-            >
+            <Button variant="secondary" size="sm" type="button" onClick={() => setReloadToken((n) => n + 1)} className="mt-3">
               Tentar novamente
-            </button>
+            </Button>
           </div>
         ) : list.loading && list.rows.length === 0 ? (
           <div role="status" className="flex items-center justify-center gap-2 rounded-2xl border border-slate-800 bg-slate-900/60 p-10 text-sm text-slate-400">
@@ -501,7 +488,7 @@ export default function LeadMinerRankingPage() {
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
       <SciTecNavbar />
-      <main className="flex-1 max-w-7xl w-full mx-auto p-6">
+      <main className="flex-1 min-w-0 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
         <LeadMinerGate>
           <Suspense
             fallback={

@@ -22,6 +22,7 @@ import { ApproachMessages } from '@/components/lead-miner/ficha/ApproachMessages
 import { ReanalyzeButton } from '@/components/lead-miner/ficha/ReanalyzeButton';
 import { COMPANY_NOT_FOUND, NOT_ANALYZED, sortByDateDesc } from '@/components/lead-miner/ficha/ficha-helpers';
 import { isLeadMinerApiError, leadMinerApi, type CompanyDetail, type UserRef } from '@/lib/leads/client-api';
+import { Button } from '@/components/ui/Button';
 
 type LoadState =
   | { kind: 'loading' }
@@ -102,7 +103,7 @@ function FichaContent({ id }: { id: string }) {
         role="alert"
         className="mx-auto flex max-w-lg flex-col items-center gap-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-8 text-center"
       >
-        <SearchX className="h-10 w-10 text-slate-500" aria-hidden="true" />
+        <SearchX className="h-10 w-10 text-slate-400" aria-hidden="true" />
         <h1 className="text-lg font-bold text-white">{COMPANY_NOT_FOUND}</h1>
         <p className="text-sm text-slate-400">A empresa solicitada não existe ou foi removida.</p>
       </div>
@@ -125,13 +126,9 @@ function FichaContent({ id }: { id: string }) {
       >
         <AlertTriangle className="h-8 w-8 text-red-400" aria-hidden="true" />
         <p className="text-sm text-red-200">{state.message}</p>
-        <button
-          type="button"
-          onClick={() => setReloadKey((k) => k + 1)}
-          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-2 text-xs font-bold text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
-        >
+        <Button size="sm" type="button" onClick={() => setReloadKey((k) => k + 1)}>
           <RefreshCw className="h-4 w-4" aria-hidden="true" /> Tentar novamente
-        </button>
+        </Button>
       </div>
     );
   }
@@ -198,7 +195,7 @@ export default function CompanyFichaPage() {
   return (
     <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100">
       <SciTecNavbar />
-      <main className="mx-auto w-full max-w-6xl flex-1 space-y-6 p-6">
+      <main className="flex-1 min-w-0 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
         <Link
           href={BACK_HREF}
           className="inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-purple-300 hover:text-purple-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"

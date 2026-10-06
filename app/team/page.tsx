@@ -39,6 +39,10 @@ import {
 import { PersonTypeBadge } from '@/components/ui/PersonTypeBadge';
 import { ManageMemberModal } from '@/components/team/ManageMemberModal';
 import { teamApi } from '@/components/team/teamApi';
+import { PageHeader, EmptyState } from '@/components/ui/Display';
+import { Tabs } from '@/components/ui/Tabs';
+import { Input, Select } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
 
 type Tab = 'MEMBROS' | 'PENDENTES' | 'INATIVOS' | 'UNIDADES' | 'AUDITORIA';
 
@@ -218,45 +222,24 @@ export default function TeamPage() {
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-purple-500 selection:text-white">
       <SciTecNavbar />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
-        <header className="p-6 md:p-8 rounded-2xl bg-gradient-to-r from-purple-950/80 via-slate-900 to-indigo-950/80 border border-purple-800/40 shadow-2xl space-y-2">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-purple-950/80 text-purple-300 border border-purple-700/50">
-            <Sparkles className="w-3.5 h-3.5 text-purple-400" aria-hidden="true" /> Gestão de Pessoas
-          </div>
-          <h1 className="text-2xl md:text-3xl font-black text-white tracking-tight">
-            Equipe da{' '}
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-indigo-400">SciTec jr.</span>
-          </h1>
-          <p className="text-xs md:text-sm text-purple-200/80 max-w-3xl">
-            Cada pessoa pertence a um departamento e pode participar de vários setores. Novos acessos pelo Google
-            ficam pendentes até um gerente aprovar. Toda mudança de cargo ou vínculo fica registrada na auditoria.
-          </p>
-        </header>
-
-        <nav aria-label="Seções da equipe" className="flex items-center gap-1.5 p-1 rounded-2xl bg-slate-900/80 border border-slate-800 overflow-x-auto">
-          <button type="button" className={tabBtn(tab === 'MEMBROS')} onClick={() => setTab('MEMBROS')}>
-            <Users className="w-3.5 h-3.5" aria-hidden="true" /> Membros ({profiles.length})
-          </button>
-          {canSeePending && (
-            <button type="button" className={tabBtn(tab === 'PENDENTES')} onClick={() => setTab('PENDENTES')}>
-              <Clock className="w-3.5 h-3.5" aria-hidden="true" /> Pendentes ({pending.length})
-            </button>
-          )}
-          {canSeeInactive && (
-            <button type="button" className={tabBtn(tab === 'INATIVOS')} onClick={() => setTab('INATIVOS')}>
-              <UserX className="w-3.5 h-3.5" aria-hidden="true" /> Inativos ({inactive.length})
-            </button>
-          )}
-          <button type="button" className={tabBtn(tab === 'UNIDADES')} onClick={() => setTab('UNIDADES')}>
-            <Network className="w-3.5 h-3.5" aria-hidden="true" /> Departamentos e setores
-          </button>
-          {canSeeAudit && (
-            <button type="button" className={tabBtn(tab === 'AUDITORIA')} onClick={() => setTab('AUDITORIA')}>
-              <History className="w-3.5 h-3.5" aria-hidden="true" /> Auditoria
-            </button>
-          )}
-        </nav>
-
+      <main className="flex-1 min-w-0 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
+        <PageHeader
+          icon={Users}
+          title="Equipe da SciTec jr."
+          subtitle="Cada pessoa pertence a um departamento e pode participar de vários setores. Novos acessos pelo Google ficam pendentes até um gerente aprovar. Toda mudança de cargo ou vínculo fica registrada na auditoria."
+        />
+        <Tabs
+          ariaLabel="Seções da equipe"
+          value={tab}
+          onChange={setTab}
+          tabs={[
+            { id: 'MEMBROS' as const, label: 'Membros', icon: Users, count: profiles.length },
+            ...(canSeePending ? [{ id: 'PENDENTES' as const, label: 'Pendentes', icon: Clock, count: pending.length }] : []),
+            ...(canSeeInactive ? [{ id: 'INATIVOS' as const, label: 'Inativos', icon: UserX, count: inactive.length }] : []),
+            { id: 'UNIDADES' as const, label: 'Departamentos e setores', icon: Network },
+            ...(canSeeAudit ? [{ id: 'AUDITORIA' as const, label: 'Auditoria', icon: History }] : []),
+          ]}
+        />
         {tab === 'MEMBROS' && (
           <section aria-label="Membros ativos" className="space-y-4">
             <div className="flex flex-col lg:flex-row gap-3">
@@ -265,23 +248,23 @@ export default function TeamPage() {
                 <label htmlFor="team-search" className="sr-only">
                   Buscar membros
                 </label>
-                <input
+                <Input
                   id="team-search"
                   type="search"
                   placeholder="Buscar por nome, e-mail, cargo ou setor..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 text-xs rounded-2xl border border-slate-800 bg-slate-900/90 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  className="w-full pl-10 pr-4 placeholder:text-slate-400"
                 />
               </div>
               <label htmlFor="type-filter" className="sr-only">
                 Filtrar por tipo
               </label>
-              <select
+              <Select
                 id="type-filter"
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value as any)}
-                className="px-3 py-2 text-xs rounded-2xl border border-slate-800 bg-slate-900/90 text-white"
+                
               >
                 <option value="ALL">Todos os tipos</option>
                 {(Object.keys(PERSON_TYPE_LABEL) as PersonType[]).map((t) => (
@@ -289,15 +272,15 @@ export default function TeamPage() {
                     {PERSON_TYPE_LABEL[t]} ({typeCounts[t] || 0})
                   </option>
                 ))}
-              </select>
+              </Select>
               <label htmlFor="dept-filter" className="sr-only">
                 Filtrar por departamento
               </label>
-              <select
+              <Select
                 id="dept-filter"
                 value={deptFilter}
                 onChange={(e) => setDeptFilter(e.target.value)}
-                className="px-3 py-2 text-xs rounded-2xl border border-slate-800 bg-slate-900/90 text-white"
+                
               >
                 <option value="ALL">Todos os departamentos</option>
                 <option value="PRESIDENCIA">Presidência</option>
@@ -306,7 +289,7 @@ export default function TeamPage() {
                     {d.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             {loading ? (
@@ -316,9 +299,7 @@ export default function TeamPage() {
                 ))}
               </div>
             ) : filtered.length === 0 ? (
-              <p className="text-center py-12 rounded-2xl bg-slate-900/30 border border-slate-800 text-xs text-slate-400">
-                Nenhum membro encontrado com os filtros atuais.
-              </p>
+              <EmptyState title="Nenhum membro encontrado com os filtros atuais." />
             ) : (
               <ul className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filtered.map((u) => {
@@ -337,10 +318,10 @@ export default function TeamPage() {
                         <img src={avatarOf(u)} alt="" className="w-12 h-12 rounded-xl object-cover border border-purple-500/30" />
                         <div className="min-w-0 flex-1">
                           <h3 className="font-bold text-white truncate">
-                            {u.name} {isMe && <span className="text-[10px] text-purple-300">(você)</span>}
+                            {u.name} {isMe && <span className="text-[11px] text-purple-300">(você)</span>}
                           </h3>
                           <p className="text-[11px] text-purple-300 truncate">{u.title}</p>
-                          <p className="text-[11px] text-slate-500 truncate">{u.email}</p>
+                          <p className="text-[11px] text-slate-400 truncate">{u.email}</p>
                         </div>
                         {hasActionsFor(u) && (
                           <button
@@ -357,14 +338,14 @@ export default function TeamPage() {
                       <div className="flex flex-wrap gap-1.5">
                         <PersonTypeBadge type={u.personType} />
                         {u.departmentCode && (
-                          <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-purple-950/80 text-purple-300 border border-purple-800/40">
+                          <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-purple-950/80 text-purple-300 border border-purple-800/40">
                             {unitName(u.departmentCode)}
                           </span>
                         )}
                         {u.sectors.map((s) => (
                           <span
                             key={s.code}
-                            className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-900 text-slate-300 border border-slate-700"
+                            className="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-slate-900 text-slate-300 border border-slate-700"
                           >
                             {s.name}
                             {s.role === 'GERENTE' ? ' • Gerente' : ''}
@@ -397,9 +378,7 @@ export default function TeamPage() {
         {tab === 'PENDENTES' && canSeePending && (
           <section aria-label="Aguardando aprovação" className="space-y-3">
             {pending.length === 0 ? (
-              <p className="text-center py-12 rounded-2xl bg-slate-900/30 border border-slate-800 text-xs text-slate-400">
-                Nenhum acesso aguardando aprovação.
-              </p>
+              <EmptyState title="Nenhum acesso aguardando aprovação." />
             ) : (
               pending.map((u) => (
                 <div
@@ -419,35 +398,25 @@ export default function TeamPage() {
                     <label htmlFor={`approve-${u.id}`} className="sr-only">
                       Departamento de {u.name}
                     </label>
-                    <select
+                    <Select
                       id={`approve-${u.id}`}
                       value={approveDept[u.id] || approvalDepartments[0]?.code || ''}
                       onChange={(e) => setApproveDept((prev) => ({ ...prev, [u.id]: e.target.value }))}
-                      className="px-3 py-2 text-xs rounded-xl border border-slate-800 bg-slate-950 text-white"
+                      
                     >
                       {approvalDepartments.map((d) => (
                         <option key={d.code} value={d.code}>
                           {d.name}
                         </option>
                       ))}
-                    </select>
-                    <button
-                      type="button"
-                      disabled={busyId === u.id || approvalDepartments.length === 0}
-                      onClick={() => handleApprove(u)}
-                      className="px-3 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center gap-1.5 disabled:opacity-50"
-                    >
+                    </Select>
+                    <Button size="sm" type="button" disabled={busyId === u.id || approvalDepartments.length === 0} onClick={() => handleApprove(u)}>
                       <UserCheck className="w-4 h-4" aria-hidden="true" /> Aprovar
-                    </button>
+                    </Button>
                     {actor && canDeactivate(actor, u) && (
-                      <button
-                        type="button"
-                        disabled={busyId === u.id}
-                        onClick={() => handleReject(u)}
-                        className="px-3 py-2 text-xs font-bold rounded-xl bg-rose-950/60 border border-rose-800/60 text-rose-300 disabled:opacity-50"
-                      >
+                      <Button variant="danger" size="sm" type="button"  disabled={busyId === u.id}  onClick={() => handleReject(u)}>
                         Recusar
-                      </button>
+                      </Button>
                     )}
                   </div>
                 </div>
@@ -459,9 +428,7 @@ export default function TeamPage() {
         {tab === 'INATIVOS' && canSeeInactive && (
           <section aria-label="Contas desativadas" className="space-y-3">
             {inactive.length === 0 ? (
-              <p className="text-center py-12 rounded-2xl bg-slate-900/30 border border-slate-800 text-xs text-slate-400">
-                Nenhuma conta desativada.
-              </p>
+              <EmptyState title="Nenhuma conta desativada." />
             ) : (
               inactive.map((u) => (
                 <div key={u.id} className="flex flex-col md:flex-row md:items-center gap-3 p-4 rounded-2xl bg-slate-900/60 border border-slate-800">
@@ -476,18 +443,18 @@ export default function TeamPage() {
                   </div>
                   <div className="flex gap-2">
                     {!u.departmentCode && (
-                      <select
+                      <Select
                         aria-label={`Departamento para reativar ${u.name}`}
                         value={approveDept[u.id] || approvalDepartments[0]?.code || ''}
                         onChange={(e) => setApproveDept((prev) => ({ ...prev, [u.id]: e.target.value }))}
-                        className="px-3 py-2 text-xs rounded-xl border border-slate-800 bg-slate-950 text-white"
+                        
                       >
                         {approvalDepartments.map((d) => (
                           <option key={d.code} value={d.code}>
                             {d.name}
                           </option>
                         ))}
-                      </select>
+                      </Select>
                     )}
                     <button
                       type="button"
@@ -524,7 +491,7 @@ export default function TeamPage() {
                           </p>
                         </div>
                         <div className="text-right">
-                          <p className="text-[10px] uppercase font-bold text-slate-500">Gerente</p>
+                          <p className="text-[11px] uppercase font-bold text-slate-400">Gerente</p>
                           {u.manager ? (
                             <p className="text-xs font-semibold text-purple-300">{u.manager.name}</p>
                           ) : (
@@ -536,7 +503,7 @@ export default function TeamPage() {
                 </ul>
               </div>
             ))}
-            <p className="lg:col-span-2 text-[11px] text-slate-500">
+            <p className="lg:col-span-2 text-[11px] text-slate-400">
               Para nomear gerentes ou mover pessoas entre setores, abra o membro na aba Membros (ícone de engrenagem).
             </p>
           </section>
@@ -545,9 +512,9 @@ export default function TeamPage() {
         {tab === 'AUDITORIA' && canSeeAudit && (
           <section aria-label="Auditoria" className="rounded-2xl border border-slate-800 bg-slate-900/50 overflow-x-auto">
             {auditLogs.length === 0 ? (
-              <p className="text-center py-12 text-xs text-slate-400">Nenhum registro no seu escopo.</p>
+              <EmptyState title="Nenhum registro no seu escopo." />
             ) : (
-              <table className="w-full text-xs">
+              <table className="w-full min-w-[640px] text-xs">
                 <thead className="text-left text-slate-400 border-b border-slate-800">
                   <tr>
                     <th scope="col" className="p-3">Quando</th>

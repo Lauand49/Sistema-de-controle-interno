@@ -41,7 +41,7 @@ export interface RunsTableProps {
 
 export const RunsTable: React.FC<RunsTableProps> = ({ items, busy, actor, onStopped }) => (
   <div className="overflow-x-auto rounded-2xl border border-slate-800 bg-slate-900/60">
-    <table className="min-w-full divide-y divide-slate-800" aria-busy={busy || undefined}>
+    <table className="min-w-[720px] w-full divide-y divide-slate-800" aria-busy={busy || undefined}>
       <caption className="sr-only">
         Histórico de minerações de todos os autores, da mais recente para a mais antiga
       </caption>

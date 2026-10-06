@@ -25,6 +25,7 @@ import { CreateFieldModal } from '../modals/CreateFieldModal';
 import { PhaseTransitionModal } from '../modals/PhaseTransitionModal';
 import { ClosedDealContractModal } from '../modals/ClosedDealContractModal';
 import { toast } from 'sonner';
+import { Check, ChevronsLeftRight } from 'lucide-react';
 
 interface KanbanBoardProps {
   pipe: Pipe;
@@ -60,6 +61,17 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
   const [phases, setPhases] = useState<Phase[]>(pipe.phases);
   const [activeCard, setActiveCard] = useState<Card | null>(null);
   const [isFitMode, setIsFitMode] = useState(true);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [overflowing, setOverflowing] = useState(false);
+  // Indica quando as colunas não cabem na largura e é preciso rolar para o lado.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    const measure = () => setOverflowing(el.scrollWidth > el.clientWidth + 1);
+    measure();
+    window.addEventListener('resize', measure);
+    return () => window.removeEventListener('resize', measure);
+  }, [isFitMode, phases.length]);
 
   // Modals state
   const [selectedCard, setSelectedCard] = useState<Card | null>(null);
@@ -262,21 +274,28 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
           <span className="font-semibold text-slate-200">
             {phases.reduce((acc, p) => acc + p.cards.length, 0)} cards ativos
           </span>
-          <span>•</span>
+          <span aria-hidden="true">•</span>
           <span>{phases.length} fases</span>
+          {overflowing && (
+            <span className="flex items-center gap-1 text-purple-300 font-medium">
+              <ChevronsLeftRight className="w-3.5 h-3.5" aria-hidden="true" /> Role para o lado para ver todas as fases
+            </span>
+          )}
         </div>
 
         <button
           type="button"
           onClick={() => setIsFitMode(!isFitMode)}
-          className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold flex items-center gap-1.5 transition-all ${
+          className={`px-2.5 min-h-10 rounded-lg text-[11px] font-semibold flex focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus items-center gap-1.5 transition-all ${
             isFitMode
               ? 'bg-purple-950/80 text-purple-300 border border-purple-700/50'
               : 'bg-slate-900 text-slate-400 border border-slate-800 hover:text-white'
           }`}
-          title={isFitMode ? 'Alternar para colunas largas com rolamento horizontal' : 'Ajustar todas as colunas para caber na tela sem rolamento horizontal'}
+          aria-pressed={isFitMode}
+          title={isFitMode ? 'Colunas dividem a largura da tela (mínimo de 280px cada; se não couberem, role para o lado)' : 'Colunas de largura fixa com rolagem horizontal'}
         >
-          <span>{isFitMode ? '✓ Ajustado à tela' : 'Colunas largas'}</span>
+          {isFitMode && <Check className="w-3 h-3" aria-hidden="true" />}
+          <span>{isFitMode ? 'Dividir pela largura da tela' : 'Colunas largas'}</span>
         </button>
       </div>
 
@@ -286,7 +305,7 @@ export const KanbanBoard: React.FC<KanbanBoardProps> = ({
         onDragStart={handleDragStart}
         onDragEnd={handleDragEnd}
       >
-        <div className={`flex gap-3 md:gap-4 overflow-x-auto p-4 md:p-6 min-h-[calc(100vh-180px)] items-stretch max-w-full w-full ${isFitMode ? 'xl:justify-between' : ''}`}>
+        <div ref={scrollRef} tabIndex={0} aria-label="Fases do funil (role para o lado para ver mais)" className={`flex gap-3 md:gap-4 overflow-x-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-focus p-4 md:p-6 min-h-[calc(100vh-180px)] items-stretch max-w-full w-full ${isFitMode ? 'xl:justify-between' : ''}`}>
           {phases.map((phase) => (
             <KanbanColumn
               key={phase.id}

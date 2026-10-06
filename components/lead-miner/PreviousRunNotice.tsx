@@ -9,6 +9,7 @@ import { History, RefreshCw } from 'lucide-react';
 import { leadMinerApi, type RunLookup } from '@/lib/leads/client-api';
 import { rankingHref } from '@/hooks/lead-miner/runState';
 import { lookupKey, previousRunMessage } from './mining-form-helpers';
+import { Button } from '@/components/ui/Button';
 
 export const LOOKUP_DEBOUNCE_MS = 400;
 
@@ -71,15 +72,10 @@ export const PreviousRunNotice: React.FC<PreviousRunNoticeProps> = ({
               >
                 Ver
               </Link>
-              <button
-                type="button"
-                onClick={onRemine}
-                disabled={remineDisabled}
-                className="inline-flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-3 py-1.5 text-xs font-semibold text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
-              >
+              <Button size="sm" type="button" onClick={onRemine} disabled={remineDisabled}>
                 <RefreshCw className="h-3.5 w-3.5" aria-hidden="true" />
                 Remineirar
-              </button>
+              </Button>
             </div>
             {remineDisabled && remineHint && <span className="text-[11px] text-slate-400">{remineHint}</span>}
           </div>

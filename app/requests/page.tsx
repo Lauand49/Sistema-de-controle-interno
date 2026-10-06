@@ -26,6 +26,9 @@ import {
   Layers,
 } from 'lucide-react';
 import { formatDueDate } from '@/lib/dashboards/format';
+import { Badge, EmptyState, PRIORITY_TONE, PageHeader, StatCard } from '@/components/ui/Display';
+import { Button } from '@/components/ui/Button';
+import { Input, Select } from '@/components/ui/Input';
 
 export default function CrossDeptRequestsPage() {
   const { currentProfile } = useProfile();
@@ -55,7 +58,7 @@ export default function CrossDeptRequestsPage() {
         setRequests(Array.isArray(data) ? data : []);
       }
     } catch {
-      toast.error('Erro ao carregar solicitações intersetoriais.');
+      toast.error('Erro ao carregar solicitações.');
     } finally {
       setLoading(false);
     }
@@ -124,69 +127,24 @@ export default function CrossDeptRequestsPage() {
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
       <SciTecNavbar onRefresh={fetchRequests} loading={loading} />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
-        {/* Banner Hero */}
-        <div className="relative rounded-3xl bg-gradient-to-r from-purple-950/80 via-slate-900 to-indigo-950/80 border border-purple-800/40 p-6 md:p-8 shadow-2xl overflow-hidden">
-          <div className="absolute top-0 right-0 transform translate-x-12 -translate-y-12 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-            <div className="space-y-2 max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-purple-950/80 text-purple-300 border border-purple-700/50">
-                <Send className="w-3.5 h-3.5 text-purple-400" /> Integração Intersetorial
-              </div>
-              <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">
-                Central de Solicitações da SciTec jr.
-              </h1>
-              <p className="text-xs md:text-sm text-purple-200/80 leading-relaxed">
-                Canal unificado para demandas cruzadas entre Negócios, AdmJurFin, Gente e Mídias.
-                Cada pedido gera automaticamente um card no Kanban do setor responsável com rastreamento de SLA.
-              </p>
-            </div>
-
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-purple-900/40 flex items-center justify-center gap-2 transition-all transform active:scale-95 shrink-0"
-            >
-              <Plus className="w-4 h-4" /> Nova Solicitação
-            </button>
-          </div>
-        </div>
-
+      <main className="flex-1 min-w-0 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
+        <PageHeader
+          icon={Send}
+          title="Central de Solicitações"
+          subtitle="Canal unificado entre Negócios, AdmJurFin, Gente e Mídias. Cada solicitação gera um card no Kanban do setor responsável, com rastreamento de SLA."
+          actions={
+            <Button icon={Plus} onClick={() => setIsCreateModalOpen(true)}>
+              Nova Solicitação
+            </Button>
+          }
+        />
         {/* KPI Metrics Summary */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-              Total de Solicitações
-            </span>
-            <h3 className="text-2xl font-black text-white">{totalCount}</h3>
-            <span className="text-[10px] text-slate-500">Histórico geral da EJ</span>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-              Pendentes de Início
-            </span>
-            <h3 className="text-2xl font-black text-amber-400">{pendingCount}</h3>
-            <span className="text-[10px] text-slate-500">Aguardando atendimento do setor</span>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-              Em Execução
-            </span>
-            <h3 className="text-2xl font-black text-blue-400">{inProgressCount}</h3>
-            <span className="text-[10px] text-slate-500">Com responsável alocado</span>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-              Concluídas
-            </span>
-            <h3 className="text-2xl font-black text-emerald-400">{completedCount}</h3>
-            <span className="text-[10px] text-slate-500">Entregues com sucesso</span>
-          </div>
+          <StatCard label="Total de solicitações" value={totalCount} hint="Histórico geral da EJ" />
+          <StatCard label="Pendentes de início" value={pendingCount} tone="warning" hint="Aguardando atendimento do setor" />
+          <StatCard label="Em execução" value={inProgressCount} tone="info" hint="Com responsável alocado" />
+          <StatCard label="Concluídas" value={completedCount} tone="success" hint="Entregues com sucesso" />
         </div>
-
         {/* Filter Controls Bar */}
         <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-3">
           <div className="flex items-center justify-between border-b border-slate-800/60 pb-2.5">
@@ -195,84 +153,84 @@ export default function CrossDeptRequestsPage() {
             </span>
 
             <div className="relative w-64">
-              <Search className="w-3.5 h-3.5 text-slate-500 absolute left-3 top-2.5" />
-              <input
+              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+              <Input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Buscar por título, escopo ou solicitante..."
-                className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500"
+                className="w-full pl-8 pr-3"
               />
             </div>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
             <div>
-              <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+              <label htmlFor="page-1" className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
                 Setor de Destino
               </label>
-              <select
+              <Select id="page-1"
                 value={filterToDept}
                 onChange={(e) => setFilterToDept(e.target.value)}
-                className="w-full px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-purple-500"
+                className="w-full"
               >
                 <option value="ALL">Todos os Destinos</option>
                 <option value="ADMJURFIN">AdmJurFin</option>
                 <option value="MIDIAS">Mídias</option>
                 <option value="GENTE">Gente</option>
                 <option value="NEGOCIOS">Negócios</option>
-              </select>
+              </Select>
             </div>
 
             <div>
-              <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+              <label htmlFor="page-2" className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
                 Setor de Origem
               </label>
-              <select
+              <Select id="page-2"
                 value={filterFromDept}
                 onChange={(e) => setFilterFromDept(e.target.value)}
-                className="w-full px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-purple-500"
+                className="w-full"
               >
                 <option value="ALL">Todas as Origens</option>
                 <option value="NEGOCIOS">Negócios</option>
                 <option value="ADMJURFIN">AdmJurFin</option>
                 <option value="GENTE">Gente</option>
                 <option value="MIDIAS">Mídias</option>
-              </select>
+              </Select>
             </div>
 
             <div>
-              <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+              <label htmlFor="page-3" className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
                 Status
               </label>
-              <select
+              <Select id="page-3"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className="w-full px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-purple-500"
+                className="w-full"
               >
                 <option value="ALL">Todos os Status</option>
                 <option value="PENDING">Pendente</option>
                 <option value="IN_PROGRESS">Em Andamento</option>
                 <option value="COMPLETED">Concluída</option>
                 <option value="REJECTED">Rejeitada</option>
-              </select>
+              </Select>
             </div>
 
             <div>
-              <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
+              <label htmlFor="page-4" className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
                 Prioridade
               </label>
-              <select
+              <Select id="page-4"
                 value={filterPriority}
                 onChange={(e) => setFilterPriority(e.target.value)}
-                className="w-full px-3 py-1.5 rounded-lg bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-purple-500"
+                className="w-full"
               >
                 <option value="ALL">Todas as Prioridades</option>
                 <option value="LOW">Baixa</option>
                 <option value="MEDIUM">Média</option>
                 <option value="HIGH">Alta</option>
                 <option value="URGENT">Urgente</option>
-              </select>
+              </Select>
             </div>
           </div>
         </div>
@@ -280,13 +238,11 @@ export default function CrossDeptRequestsPage() {
         {/* Requests List */}
         <div className="space-y-3">
           {filteredRequests.length === 0 ? (
-            <div className="p-12 rounded-2xl bg-slate-900/40 border border-dashed border-slate-800 text-center space-y-2">
-              <CheckCircle2 className="w-8 h-8 text-slate-600 mx-auto" />
-              <h4 className="text-sm font-bold text-white">Nenhuma solicitação encontrada</h4>
-              <p className="text-xs text-slate-400">
-                Ajuste os filtros acima ou crie uma nova solicitação.
-              </p>
-            </div>
+            <EmptyState
+              icon={CheckCircle2}
+              title="Nenhuma solicitação encontrada"
+              description="Ajuste os filtros acima ou crie uma nova solicitação."
+            />
           ) : (
             filteredRequests.map((req) => (
               <div
@@ -296,17 +252,9 @@ export default function CrossDeptRequestsPage() {
                 <div className="space-y-2 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     {/* Priority Badge */}
-                    <span
-                      className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full border ${
-                        req.priority === 'URGENT'
-                          ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
-                          : req.priority === 'HIGH'
-                          ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                          : 'bg-slate-800 text-slate-300 border-slate-700'
-                      }`}
-                    >
-                      {req.priority === 'URGENT' ? '🚨 URGENTE' : req.priority}
-                    </span>
+                    <Badge tone={PRIORITY_TONE[req.priority] ?? 'neutral'}>
+                      {req.priority === 'URGENT' ? 'URGENTE' : req.priority}
+                    </Badge>
 
                     {/* Department Flow Badge */}
                     <span
@@ -316,7 +264,7 @@ export default function CrossDeptRequestsPage() {
                     >
                       {req.fromDept}
                     </span>
-                    <ArrowRight className="w-3 h-3 text-slate-500" />
+                    <ArrowRight className="w-3 h-3 text-slate-400" />
                     <span
                       className={`text-[11px] font-bold px-2 py-0.5 rounded-lg border ${getDeptColor(
                         req.toDept
@@ -344,7 +292,7 @@ export default function CrossDeptRequestsPage() {
                     {req.description}
                   </p>
 
-                  <div className="flex flex-wrap items-center gap-4 text-[11px] text-slate-500 pt-1">
+                  <div className="flex flex-wrap items-center gap-4 text-[11px] text-slate-400 pt-1">
                     <span>
                       Solicitante: <strong className="text-slate-300">{req.requester?.name || 'Membro'}</strong>
                     </span>
@@ -365,12 +313,9 @@ export default function CrossDeptRequestsPage() {
                 {/* Right Actions */}
                 <div className="flex items-center gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-slate-800 shrink-0">
                   {req.status === 'PENDING' && (
-                    <button
-                      onClick={() => handleUpdateStatus(req.id, 'IN_PROGRESS')}
-                      className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition-colors"
-                    >
+                    <Button size="sm" onClick={() => handleUpdateStatus(req.id, 'IN_PROGRESS')}>
                       Iniciar Atendimento
-                    </button>
+                    </Button>
                   )}
 
                   {req.status === 'IN_PROGRESS' && (

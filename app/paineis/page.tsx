@@ -1,4 +1,5 @@
 'use client';
+import { ButtonLink } from '@/components/ui/Button';
 import React from 'react';
 import Link from 'next/link';
 import { Building2, ChevronRight, Layers, LayoutDashboard, UserRound, Users } from 'lucide-react';
@@ -25,13 +26,10 @@ export default function PaineisHubPage() {
       showPeriod={false}
       actions={
         state.status === 'ok' ? (
-          <Link
-            href={dashboardPages.member(state.data.me.id)}
-            className={`inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-lg shadow-purple-900/40 hover:from-purple-500 hover:to-indigo-500 ${FOCUS_RING}`}
-          >
+          <ButtonLink size="md" href={dashboardPages.member(state.data.me.id)}>
             <UserRound className="h-4 w-4" aria-hidden="true" />
             Meu painel
-          </Link>
+          </ButtonLink>
         ) : null
       }
     >
@@ -87,7 +85,7 @@ function UnitSection({
               >
                 <span className="truncate text-sm font-semibold text-slate-100">{unit.name}</span>
                 <ChevronRight
-                  className="h-4 w-4 shrink-0 text-slate-500 transition-colors group-hover:text-purple-300"
+                  className="h-4 w-4 shrink-0 text-slate-400 transition-colors group-hover:text-purple-300"
                   aria-hidden="true"
                 />
               </Link>

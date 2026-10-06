@@ -3,6 +3,8 @@
 import React, { useEffect, useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { AlertTriangle, ArrowRight, Code2, LogIn, ShieldCheck, Sparkles } from 'lucide-react';
+import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
 
 interface Props {
   callbackUrl: string;
@@ -84,20 +86,15 @@ export function LoginClient({ callbackUrl, error, domain, devLoginEnabled, googl
         )}
 
         <div className="rounded-2xl border border-slate-800 bg-slate-900/80 p-6 space-y-4 shadow-xl">
-          <button
-            type="button"
-            onClick={handleGoogle}
-            disabled={submitting || !googleConfigured}
-            className="w-full px-4 py-3 text-sm font-bold rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
+          <Button size="md" type="button" onClick={handleGoogle} disabled={submitting || !googleConfigured} className="w-full">
             <LogIn className="w-4 h-4" aria-hidden="true" /> Entrar com Google
-          </button>
+          </Button>
           {!googleConfigured && (
             <p className="text-[11px] text-amber-300/90 text-center">
               Login Google ainda não configurado (AUTH_GOOGLE_ID / AUTH_GOOGLE_SECRET).
             </p>
           )}
-          <p className="flex items-center justify-center gap-1.5 text-[11px] text-slate-500">
+          <p className="flex items-center justify-center gap-1.5 text-[11px] text-slate-400">
             <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" aria-hidden="true" />
             Novos acessos ficam pendentes até a aprovação de um gerente.
           </p>
@@ -129,19 +126,19 @@ export function LoginClient({ callbackUrl, error, domain, devLoginEnabled, googl
               <label htmlFor="dev-email" className="sr-only">
                 E-mail
               </label>
-              <input
+              <Input
                 id="dev-email"
                 type="email"
                 required
                 placeholder={`nome@${domain}`}
                 value={devEmail}
                 onChange={(e) => setDevEmail(e.target.value)}
-                className="flex-1 px-3 py-2 text-xs rounded-xl border border-slate-800 bg-slate-950 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="flex-1 placeholder:text-slate-400"
               />
               <button
                 type="submit"
                 disabled={submitting}
-                className="px-3 py-2 text-xs font-bold rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 disabled:opacity-50"
+                className="px-3 py-2 text-xs font-bold rounded-xl min-h-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 bg-amber-500 hover:bg-amber-400 text-slate-950 disabled:opacity-50"
               >
                 Entrar
               </button>
@@ -155,11 +152,11 @@ export function LoginClient({ callbackUrl, error, domain, devLoginEnabled, googl
                       type="button"
                       onClick={() => handleDevLogin(u.email)}
                       disabled={submitting}
-                      className="w-full text-left px-3 py-2 rounded-xl border border-slate-800 bg-slate-900/70 hover:border-amber-600/60 flex items-center justify-between gap-2 disabled:opacity-50"
+                      className="w-full text-left px-3 py-2 rounded-xl min-h-10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 border border-slate-800 bg-slate-900/70 hover:border-amber-600/60 flex items-center justify-between gap-2 disabled:opacity-50"
                     >
                       <span className="min-w-0">
                         <span className="block text-xs font-bold text-white truncate">{u.name}</span>
-                        <span className="block text-[10px] text-slate-400 truncate">
+                        <span className="block text-[11px] text-slate-400 truncate">
                           {u.status === 'ATIVO' ? u.title : u.status} • {u.email}
                         </span>
                       </span>

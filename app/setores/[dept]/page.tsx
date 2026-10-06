@@ -58,6 +58,13 @@ import {
 } from '@/lib/permissions';
 import { dashboardPages } from '@/lib/dashboards/client-api';
 import { formatDueDate } from '@/lib/dashboards/format';
+import { Modal } from '@/components/ui/Modal';
+import { Field } from '@/components/ui/Field';
+import { Badge, PageHeader, StatCard, EmptyState, LoadingState } from '@/components/ui/Display';
+import { Button, ButtonLink } from '@/components/ui/Button';
+import { Tabs, type TabItem } from '@/components/ui/Tabs';
+import { pluralize } from '@/lib/ui/format';
+import { Input, Select } from '@/components/ui/Input';
 
 export default function SectorWorkspacePage() {
   const params = useParams();
@@ -131,7 +138,8 @@ export default function SectorWorkspacePage() {
   const canAssign = canAssignLeads(currentProfile);
 
   // Tabs State
-  const [activeTab, setActiveTab] = useState<'KANBAN' | 'LEADS' | 'TOOLS' | 'REQUESTS'>('KANBAN');
+  type SectorTab = 'KANBAN' | 'LEADS' | 'TOOLS' | 'REQUESTS';
+  const [activeTab, setActiveTab] = useState<SectorTab>('KANBAN');
 
   // Support ?tab=TOOLS directly from URL or redirects
   useEffect(() => {
@@ -153,6 +161,13 @@ export default function SectorWorkspacePage() {
   const [leadAssigneeFilter, setLeadAssigneeFilter] = useState<string>('ALL');
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+
+  const sectorTabs: TabItem<SectorTab>[] = [
+    { id: 'KANBAN', label: 'Funis & Processos', icon: Kanban },
+    ...(currentSector.code === 'NEGOCIOS' ? [{ id: 'LEADS' as const, label: 'Leads Designados', icon: Target, count: negociosLeads.length }] : []),
+    { id: 'TOOLS', label: `Ferramentas de ${unitName(currentSector.code)}`, icon: Wrench },
+    { id: 'REQUESTS', label: 'Solicitações', icon: Send, count: requests.length },
+  ];
 
   // Eligible users for lead assignment (exclusive to Negócios and Presidência)
   const negociosUsers = users.filter((u) => canBeLeadAssignee(u) && u.departmentCode === 'NEGOCIOS');
@@ -363,75 +378,50 @@ export default function SectorWorkspacePage() {
 
       <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
         {/* Breadcrumb Navigation */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 text-xs text-purple-300/80">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <nav aria-label="Trilha de navegação" className="flex items-center gap-2 text-xs text-purple-300 min-w-0">
             <Link href="/" className="hover:text-purple-200 transition-colors">
               Início
             </Link>
             <ChevronRight className="w-3 h-3 text-slate-600" />
             <span className="text-slate-400">Setores</span>
             <ChevronRight className="w-3 h-3 text-slate-600" />
-            <span className="text-white font-semibold">{currentSector.title}</span>
-          </div>
+            <span className="text-white font-semibold truncate" title={currentSector.title}>{currentSector.title}</span>
+          </nav>
 
           <div className="flex items-center gap-2">
             <button
               onClick={() => setIsCreateRequestModalOpen(true)}
-              className="px-3.5 py-1.5 text-xs font-bold rounded-xl bg-purple-950/80 border border-purple-700/50 hover:bg-purple-900/60 text-purple-200 flex items-center gap-1.5 transition-all shadow-sm"
+              className="px-3.5 min-h-10 text-xs font-bold rounded-xl bg-purple-950/80 border border-purple-700/50 hover:bg-purple-900/60 text-purple-200 flex items-center gap-1.5 transition-all shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
             >
-              <Send className="w-3.5 h-3.5 text-purple-400" />
-              Solicitar Demanda
+              <Send className="w-3.5 h-3.5 text-purple-400" aria-hidden="true" />
+              Nova Solicitação
             </button>
           </div>
         </div>
 
-        {/* Sector Hero Banner */}
-        <div
-          className={`relative rounded-3xl bg-gradient-to-r ${currentSector.bannerGradient} border ${currentSector.accentBorder} p-6 md:p-8 shadow-2xl overflow-hidden`}
-        >
-          <div className="absolute top-0 right-0 transform translate-x-10 -translate-y-10 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-            <div className="space-y-2 max-w-2xl">
-              <div
-                className={`inline-flex items-center gap-2 px-3 py-0.5 rounded-full text-xs font-bold border ${currentSector.badgeColor}`}
+        <PageHeader
+          icon={SectorIcon}
+          title={currentSector.title}
+          subtitle={currentSector.subtitle}
+          actions={
+            canViewUnitDashboard(currentProfile, currentSector.code) ? (
+              <Link
+                href={dashboardPages.unit(currentSector.code)}
+                className="inline-flex items-center justify-center gap-2 min-h-10 px-4 text-sm font-bold text-white rounded-control bg-gradient-to-r from-primary-from to-primary-to hover:brightness-110 shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
               >
-                <SectorIcon className="w-3.5 h-3.5" /> Workspace {currentSector.code}
-              </div>
-              <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">
-                {currentSector.title}
-              </h1>
-              <p className="text-xs md:text-sm text-slate-300 leading-relaxed">
-                {currentSector.subtitle}
-              </p>
-              {canViewUnitDashboard(currentProfile, currentSector.code) && (
-                <Link
-                  href={dashboardPages.unit(currentSector.code)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 mt-1 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-lg shadow-purple-900/40 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
-                >
-                  <LayoutDashboard className="w-3.5 h-3.5" aria-hidden="true" /> Ver painel
-                </Link>
-              )}
-            </div>
-
-            {/* Quick Stats Chips */}
-            <div className="flex sm:flex-col gap-3 shrink-0">
-              <div className="px-4 py-2 rounded-xl bg-slate-950/70 border border-slate-800 text-center sm:text-right">
-                <span className="text-[10px] text-slate-400 uppercase tracking-wider block">
-                  Funis Ativos
-                </span>
-                <span className="text-base font-bold text-white">{pipes.length}</span>
-              </div>
-              <div className="px-4 py-2 rounded-xl bg-slate-950/70 border border-slate-800 text-center sm:text-right">
-                <span className="text-[10px] text-slate-400 uppercase tracking-wider block">
-                  Solicitações
-                </span>
-                <span className="text-base font-bold text-amber-400">
-                  {requests.filter((r) => r.status === 'PENDING').length} pendentes
-                </span>
-              </div>
-            </div>
-          </div>
+                <LayoutDashboard className="w-4 h-4" aria-hidden="true" /> Ver painel
+              </Link>
+            ) : undefined
+          }
+        />
+        <div className="grid grid-cols-2 gap-4 max-w-xl">
+          <StatCard label={`Workspace ${unitName(currentSector.code)}`} value={pluralize(pipes.length, 'funil', 'funis')} />
+          <StatCard
+            label="Solicitações"
+            tone="warning"
+            value={pluralize(requests.filter((r) => r.status === 'PENDING').length, 'pendente', 'pendentes')}
+          />
         </div>
 
         {/* Read-Only Mode Banner */}
@@ -446,9 +436,9 @@ export default function SectorWorkspacePage() {
                   <h4 className="text-xs font-bold text-amber-300 uppercase tracking-wider">
                     Acesso restrito
                   </h4>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300">
+                  <Badge tone="warning">
                     Sem permissão
-                  </span>
+                  </Badge>
                 </div>
                 <p className="text-xs text-amber-200/80">
                   Você não participa de <strong className="text-white">{unitName(currentSector.code)}</strong>. Funis, tarefas e
@@ -460,50 +450,14 @@ export default function SectorWorkspacePage() {
         )}
 
         {/* Navigation Tabs Header */}
-        <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-3">
-          <div className="flex items-center gap-2">
-            <button
-              onClick={() => setActiveTab('KANBAN')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'KANBAN'
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
-                : 'text-slate-400 hover:text-white hover:bg-slate-900'
-                }`}
-            >
-              <Kanban className="w-3.5 h-3.5" /> Funis & Processos (Kanban)
-            </button>
-
-            {currentSector.code === 'NEGOCIOS' && (
-              <button
-                onClick={() => setActiveTab('LEADS')}
-                className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'LEADS'
-                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
-                  : 'text-slate-400 hover:text-white hover:bg-slate-900'
-                  }`}
-              >
-                <Target className="w-3.5 h-3.5 text-purple-400" /> Leads Designados ({negociosLeads.length})
-              </button>
-            )}
-
-            <button
-              onClick={() => setActiveTab('TOOLS')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'TOOLS'
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
-                : 'text-slate-400 hover:text-white hover:bg-slate-900'
-                }`}
-            >
-              <Wrench className="w-3.5 h-3.5 text-amber-400" /> Ferramentas de {currentSector.code === 'ADMJURFIN' ? 'AdmJurFin' : currentSector.code === 'MIDIAS' ? 'Mídias' : currentSector.code === 'GENTE' ? 'Gente' : 'Negócios'}
-            </button>
-
-            <button
-              onClick={() => setActiveTab('REQUESTS')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold flex items-center gap-2 transition-all ${activeTab === 'REQUESTS'
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
-                : 'text-slate-400 hover:text-white hover:bg-slate-900'
-                }`}
-            >
-              <Send className="w-3.5 h-3.5" /> Demandas do Setor ({requests.length})
-            </button>
-          </div>
+        <div className="flex flex-wrap items-end justify-between gap-4 border-b border-slate-800 pb-3">
+          <Tabs<SectorTab>
+            ariaLabel="Seções do setor"
+            value={activeTab}
+            onChange={setActiveTab}
+            className="border-b-0 max-w-full"
+            tabs={sectorTabs}
+          />
 
           {/* Pipe Switcher (when in Kanban tab and there are multiple pipes) - For non-GENTE sectors */}
           {activeTab === 'KANBAN' && currentSector.code !== 'GENTE' && pipes.length > 1 && (
@@ -511,17 +465,18 @@ export default function SectorWorkspacePage() {
               <span className="text-xs text-slate-400 font-medium hidden sm:inline">
                 Funil Selecionado:
               </span>
-              <select
+              <Select
+                aria-label="Funil selecionado"
                 value={selectedPipeId}
                 onChange={(e) => setSelectedPipeId(e.target.value)}
-                className="px-3 py-1.5 rounded-xl bg-slate-900 border border-purple-800/40 text-xs font-semibold text-white focus:outline-none focus:border-purple-500"
+                className="w-auto"
               >
                 {pipes.map((p) => (
                   <option key={p.id} value={p.id}>
                     {p.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
           )}
         </div>
@@ -557,17 +512,17 @@ export default function SectorWorkspacePage() {
                   {genteViewMode === 'KANBAN' && pipes.length > 0 && (
                     <div className="flex items-center gap-1.5">
                       <span className="text-[11px] font-semibold text-slate-400 hidden sm:inline">Funil:</span>
-                      <select
+                      <Select
                         value={selectedPipeId}
                         onChange={(e) => setSelectedPipeId(e.target.value)}
-                        className="px-3 py-1.5 rounded-xl bg-slate-950 border border-slate-700 text-xs font-semibold text-white focus:outline-none focus:border-amber-500"
+                        
                       >
                         {pipes.map((p) => (
                           <option key={p.id} value={p.id}>
                             {p.name}
                           </option>
                         ))}
-                      </select>
+                      </Select>
                     </div>
                   )}
                   {canEditSector && (
@@ -598,21 +553,18 @@ export default function SectorWorkspacePage() {
                 />
               </div>
             ) : (
-              <div className="p-12 rounded-2xl bg-slate-900/40 border border-dashed border-slate-800 text-center space-y-3">
-                <SectorIcon className="w-10 h-10 text-slate-600 mx-auto" />
-                <h3 className="text-sm font-bold text-white">Nenhum funil configurado</h3>
-                <p className="text-xs text-slate-400">
-                  Os processos deste setor ainda não foram inicializados.
-                </p>
-                {canEditSector && currentSector.code === 'GENTE' && (
-                  <button
-                    onClick={() => setIsCreatePipeModalOpen(true)}
-                    className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 text-slate-950 font-bold text-xs hover:bg-amber-400 transition-all shadow-md shadow-amber-950/40"
-                  >
-                    <Plus className="w-4 h-4" /> Criar Primeiro Funil de Gente
-                  </button>
-                )}
-              </div>
+              <EmptyState
+                icon={SectorIcon}
+                title="Nenhum funil configurado"
+                description="Os processos deste setor ainda não foram inicializados."
+                action={
+                  canEditSector && currentSector.code === 'GENTE' ? (
+                    <Button icon={Plus} onClick={() => setIsCreatePipeModalOpen(true)}>
+                      Criar primeiro funil de Gente
+                    </Button>
+                  ) : undefined
+                }
+              />
             )}
           </div>
         )}
@@ -653,14 +605,11 @@ export default function SectorWorkspacePage() {
                       href="/tools/lead-filter"
                       className="px-4 py-2.5 rounded-xl bg-purple-900/60 hover:bg-purple-800/80 border border-purple-600/50 text-purple-200 font-bold text-xs flex items-center justify-center gap-2 shadow transition-all hover:scale-[1.02]"
                     >
-                      <TrendingUp className="w-4 h-4 text-purple-300" /> Triagem Rápida ⚡
+                      <TrendingUp className="w-4 h-4 text-purple-300" /> Triagem Rápida
                     </Link>
-                    <Link
-                      href="/tools/lead-sheet"
-                      className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-lg shadow-purple-900/40 transition-all hover:scale-[1.02]"
-                    >
-                      <FileSpreadsheet className="w-4 h-4" /> Abrir Planilha Completa ➔
-                    </Link>
+                    <ButtonLink size="sm" href="/tools/lead-sheet">
+                      <FileSpreadsheet className="w-4 h-4" /> Abrir Planilha Completa
+                    </ButtonLink>
                   </div>
                 </div>
 
@@ -678,7 +627,7 @@ export default function SectorWorkspacePage() {
                           Total de Leads Ativos
                         </span>
                         <h3 className="text-2xl font-black text-white">{activeLeads.length}</h3>
-                        <span className="text-[10px] text-slate-500">Excluindo descartados</span>
+                        <span className="text-[11px] text-slate-400">Excluindo descartados</span>
                       </div>
 
                       <div className="p-5 rounded-2xl bg-slate-900/80 border border-amber-900/40 space-y-1">
@@ -686,7 +635,7 @@ export default function SectorWorkspacePage() {
                           Aguardando Designação
                         </span>
                         <h3 className="text-2xl font-black text-amber-400">{unassignedLeads.length}</h3>
-                        <span className="text-[10px] text-slate-500">Sem consultor responsável</span>
+                        <span className="text-[11px] text-slate-400">Sem consultor responsável</span>
                       </div>
 
                       <div className="p-5 rounded-2xl bg-slate-900/80 border border-purple-900/40 space-y-1">
@@ -694,7 +643,7 @@ export default function SectorWorkspacePage() {
                           Em Prospecção / Triagem
                         </span>
                         <h3 className="text-2xl font-black text-purple-300">{inTriageLeads.length}</h3>
-                        <span className="text-[10px] text-slate-500">Contatos sendo qualificados</span>
+                        <span className="text-[11px] text-slate-400">Contatos sendo qualificados</span>
                       </div>
 
                       <div className="p-5 rounded-2xl bg-slate-900/80 border border-emerald-900/40 space-y-1">
@@ -702,7 +651,7 @@ export default function SectorWorkspacePage() {
                           Reuniões no Funil
                         </span>
                         <h3 className="text-2xl font-black text-emerald-400">{meetingLeads.length}</h3>
-                        <span className="text-[10px] text-slate-500">Convertidos p/ Card de Vendas</span>
+                        <span className="text-[11px] text-slate-400">Convertidos p/ Card de Vendas</span>
                       </div>
                     </div>
                   );
@@ -774,7 +723,7 @@ export default function SectorWorkspacePage() {
                   return (
                     <div className="border border-slate-800 rounded-2xl bg-slate-900/60 overflow-hidden shadow-xl">
                       <div className="overflow-x-auto">
-                        <table className="w-full text-left text-xs border-collapse">
+                        <table className="w-full min-w-[640px] text-left text-xs border-collapse">
                           <thead>
                             <tr className="border-b border-slate-800 bg-slate-950/80 text-slate-400 text-[11px] uppercase tracking-wider font-extrabold">
                               <th className="p-3.5">Empresa / Lead</th>
@@ -792,7 +741,7 @@ export default function SectorWorkspacePage() {
                                   <td className="p-3.5 font-bold text-white">
                                     <div>{lead.companyName}</div>
                                     {lead.segment && (
-                                      <span className="text-[10px] text-purple-300/80 font-normal">
+                                      <span className="text-[11px] text-purple-300/80 font-normal">
                                         {lead.segment}
                                       </span>
                                     )}
@@ -800,17 +749,17 @@ export default function SectorWorkspacePage() {
 
                                   <td className="p-3.5 text-slate-300">
                                     <div className="font-semibold text-slate-200">{lead.contactName || 'Sem contato'}</div>
-                                    <div className="text-[10px] text-slate-500 truncate max-w-[150px]">{lead.contactInfo || '-'}</div>
+                                    <div className="text-[11px] text-slate-400 truncate max-w-[150px]">{lead.contactInfo || '-'}</div>
                                   </td>
 
                                   {/* Select de Consultor Designado */}
                                   <td className="p-3.5">
-                                    <select
+                                    <Select
                                       value={lead.assignedTo || ''}
                                       onChange={(e) => handleUpdateLeadAssignee(lead.id, e.target.value || null)}
                                       disabled={!canChangeAssignee(lead)}
                                       aria-label={`Consultor de ${lead.companyName}`}
-                                      className="w-full text-xs font-semibold px-2.5 py-1.5 rounded-lg border border-slate-800 bg-slate-950 text-slate-200 focus:ring-1 focus:ring-purple-500 disabled:opacity-50"
+                                      className="w-full disabled:opacity-50"
                                     >
                                       <option value="">Aguardando Designação</option>
                                       <optgroup label="Equipe de Negócios">
@@ -829,12 +778,12 @@ export default function SectorWorkspacePage() {
                                           ))}
                                         </optgroup>
                                       )}
-                                    </select>
+                                    </Select>
                                   </td>
 
                                   <td className="p-3.5">
                                     <span
-                                      className={`px-2.5 py-1 rounded-full text-[10px] font-extrabold border ${lead.status === 'CONVERTED_TO_PIPE'
+                                      className={`px-2.5 py-1 rounded-full text-[11px] font-extrabold border ${lead.status === 'CONVERTED_TO_PIPE'
                                         ? 'bg-emerald-950/60 text-emerald-300 border-emerald-800'
                                         : lead.status === 'IN_PROGRESS'
                                           ? 'bg-purple-950/60 text-purple-300 border-purple-800'
@@ -924,7 +873,7 @@ export default function SectorWorkspacePage() {
                         currency: 'BRL',
                       })}
                     </h3>
-                    <span className="text-[10px] text-slate-500">Receitas pagas - Despesas pagas</span>
+                    <span className="text-[11px] text-slate-400">Receitas pagas - Despesas pagas</span>
                   </div>
 
                   <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
@@ -937,7 +886,7 @@ export default function SectorWorkspacePage() {
                         currency: 'BRL',
                       })}
                     </h3>
-                    <span className="text-[10px] text-slate-500">
+                    <span className="text-[11px] text-slate-400">
                       +{' '}
                       {financeData.metrics.pendingInflow.toLocaleString('pt-BR', {
                         style: 'currency',
@@ -957,7 +906,7 @@ export default function SectorWorkspacePage() {
                         currency: 'BRL',
                       })}
                     </h3>
-                    <span className="text-[10px] text-slate-500">Infraestrutura, ferramentas e reembolsos</span>
+                    <span className="text-[11px] text-slate-400">Infraestrutura, ferramentas e reembolsos</span>
                   </div>
 
                   <div className="p-5 rounded-2xl bg-gradient-to-br from-blue-950/60 to-slate-900 border border-blue-800/40 flex flex-col justify-between">
@@ -970,15 +919,12 @@ export default function SectorWorkspacePage() {
                       </p>
                     </div>
                     {canEditSector ? (
-                      <button
-                        onClick={() => setIsNewTransactionModalOpen(true)}
-                        className="mt-3 w-full py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md shadow-blue-900/30"
-                      >
+                      <Button size="sm" onClick={() => setIsNewTransactionModalOpen(true)} className="mt-3 w-full">
                         <Plus className="w-3.5 h-3.5" /> Nova Movimentação
-                      </button>
+                      </Button>
                     ) : (
-                      <div className="mt-3 py-2 px-3 rounded-xl bg-slate-950/80 border border-slate-800 text-center text-xs text-slate-500 font-medium">
-                        🔒 Registro restrito ao AdmJurFin
+                      <div className="mt-3 py-2 px-3 rounded-xl bg-slate-950/80 border border-slate-800 text-center text-xs text-slate-400 font-medium">
+                        <Lock className="w-3.5 h-3.5 inline mr-1 -mt-0.5" aria-hidden="true" />Registro restrito ao AdmJurFin
                       </div>
                     )}
                   </div>
@@ -996,9 +942,9 @@ export default function SectorWorkspacePage() {
                   </div>
 
                   <div className="overflow-x-auto">
-                    <table className="w-full text-left text-xs">
+                    <table className="w-full min-w-[640px] text-left text-xs">
                       <thead>
-                        <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider text-[10px]">
+                        <tr className="border-b border-slate-800 text-slate-400 font-semibold uppercase tracking-wider text-[11px]">
                           <th className="pb-3">Descrição</th>
                           <th className="pb-3">Tipo</th>
                           <th className="pb-3">Categoria</th>
@@ -1013,7 +959,7 @@ export default function SectorWorkspacePage() {
                             <td className="py-3 font-medium text-white">{t.description}</td>
                             <td className="py-3">
                               <span
-                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${t.type === 'INFLOW'
+                                className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${t.type === 'INFLOW'
                                   ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
                                   : 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
                                   }`}
@@ -1024,7 +970,7 @@ export default function SectorWorkspacePage() {
                             <td className="py-3 text-slate-300">{t.category}</td>
                             <td className="py-3">
                               <span
-                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${t.status === 'PAID'
+                                className={`px-2 py-0.5 rounded-full text-[11px] font-bold ${t.status === 'PAID'
                                   ? 'bg-blue-500/20 text-blue-300'
                                   : 'bg-amber-500/20 text-amber-300'
                                   }`}
@@ -1063,9 +1009,9 @@ export default function SectorWorkspacePage() {
                       <div className="p-2.5 rounded-xl bg-blue-950/80 border border-blue-800/60 text-blue-400">
                         <FileText className="w-5 h-5" />
                       </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/40">
+                      <Badge tone="info">
                         Minutas Ativas
-                      </span>
+                      </Badge>
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-white">Gerador de Minutas & Contratos</h4>
@@ -1080,9 +1026,9 @@ export default function SectorWorkspacePage() {
                       <div className="p-2.5 rounded-xl bg-blue-950/80 border border-blue-800/60 text-blue-400">
                         <Receipt className="w-5 h-5" />
                       </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/40">
+                      <Badge tone="info">
                         Disponível
-                      </span>
+                      </Badge>
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-white">Emissor de Faturas & Recibos PJ</h4>
@@ -1097,9 +1043,9 @@ export default function SectorWorkspacePage() {
                       <div className="p-2.5 rounded-xl bg-blue-950/80 border border-blue-800/60 text-blue-400">
                         <Scale className="w-5 h-5" />
                       </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/40">
+                      <Badge tone="info">
                         Disponível
-                      </span>
+                      </Badge>
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-white">Simulador Tributário & Fiscal</h4>
@@ -1139,8 +1085,8 @@ export default function SectorWorkspacePage() {
                       <Plus className="w-4 h-4" /> Agendar Nova Pauta
                     </button>
                   ) : (
-                    <div className="px-3.5 py-1.5 rounded-xl bg-slate-950/80 border border-slate-800 text-xs text-slate-500 font-medium shrink-0">
-                      🔒 Pauta restrita a Mídias
+                    <div className="px-3.5 py-1.5 rounded-xl bg-slate-950/80 border border-slate-800 text-xs text-slate-400 font-medium shrink-0">
+                      <Lock className="w-3.5 h-3.5 inline mr-1 -mt-0.5" aria-hidden="true" />Pauta restrita a Mídias
                     </div>
                   )}
                 </div>
@@ -1187,7 +1133,7 @@ export default function SectorWorkspacePage() {
                             <span className="text-xs font-bold text-pink-400 flex items-center gap-1">
                               <Calendar className="w-3.5 h-3.5" /> {post.date}
                             </span>
-                            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${post.color}`}>
+                            <span className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${post.color}`}>
                               {post.status}
                             </span>
                           </div>
@@ -1212,9 +1158,9 @@ export default function SectorWorkspacePage() {
                       <div className="p-2.5 rounded-xl bg-pink-950/80 border border-pink-800/60 text-pink-400">
                         <Palette className="w-5 h-5" />
                       </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/40">
+                      <Badge tone="primary">
                         Brand Kit
-                      </span>
+                      </Badge>
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-white">Identidade Visual & Ativos de Marca</h4>
@@ -1229,9 +1175,9 @@ export default function SectorWorkspacePage() {
                       <div className="p-2.5 rounded-xl bg-pink-950/80 border border-pink-800/60 text-pink-400">
                         <Sparkles className="w-5 h-5" />
                       </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/40">
+                      <Badge tone="primary">
                         Copywriting
-                      </span>
+                      </Badge>
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-white">Gerador de Briefings de Conteúdo</h4>
@@ -1246,9 +1192,9 @@ export default function SectorWorkspacePage() {
                       <div className="p-2.5 rounded-xl bg-pink-950/80 border border-pink-800/60 text-pink-400">
                         <ExternalLink className="w-5 h-5" />
                       </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/40">
+                      <Badge tone="primary">
                         Canais
-                      </span>
+                      </Badge>
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-white">Central de Links de Divulgação</h4>
@@ -1289,7 +1235,7 @@ export default function SectorWorkspacePage() {
                       Membros Cadastrados
                     </span>
                     <h3 className="text-2xl font-black text-white">{users.length} membros</h3>
-                    <span className="text-[10px] text-slate-500">Distribuídos nas 4 diretorias</span>
+                    <span className="text-[11px] text-slate-400">Distribuídos nas 4 diretorias</span>
                   </div>
 
                   <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
@@ -1297,7 +1243,7 @@ export default function SectorWorkspacePage() {
                       Taxa de Alocação em Projetos
                     </span>
                     <h3 className="text-2xl font-black text-amber-400">83.3%</h3>
-                    <span className="text-[10px] text-slate-500">Membros ativos em clientes ou demandas</span>
+                    <span className="text-[11px] text-slate-400">Membros ativos em clientes ou demandas</span>
                   </div>
 
                   <div className="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
@@ -1305,7 +1251,7 @@ export default function SectorWorkspacePage() {
                       Ciclo de PDI Vigente
                     </span>
                     <h3 className="text-2xl font-black text-purple-400">2026.2</h3>
-                    <span className="text-[10px] text-slate-500">Checkpoints mensais em andamento</span>
+                    <span className="text-[11px] text-slate-400">Checkpoints mensais em andamento</span>
                   </div>
                 </div>
 
@@ -1331,10 +1277,10 @@ export default function SectorWorkspacePage() {
                         />
                         <div className="flex-1 min-w-0">
                           <h4 className="text-xs font-bold text-white truncate">{u.name}</h4>
-                          <span className="text-[10px] font-medium text-purple-300 block">
+                          <span className="text-[11px] font-medium text-purple-300 block">
                             {getUserCargoTitle(u)} • {unitName(u.departmentCode)}
                           </span>
-                          <span className="text-[10px] text-slate-500 truncate block">
+                          <span className="text-[11px] text-slate-400 truncate block">
                             {u.email}
                           </span>
                         </div>
@@ -1350,9 +1296,9 @@ export default function SectorWorkspacePage() {
                       <div className="p-2.5 rounded-xl bg-amber-950/80 border border-amber-800/60 text-amber-400">
                         <Clock className="w-5 h-5" />
                       </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                      <Badge tone="warning">
                         Ativo
-                      </span>
+                      </Badge>
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-white">Banco de Horas & Dedicação Semanal</h4>
@@ -1367,9 +1313,9 @@ export default function SectorWorkspacePage() {
                       <div className="p-2.5 rounded-xl bg-amber-950/80 border border-amber-800/60 text-amber-400">
                         <Award className="w-5 h-5" />
                       </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                      <Badge tone="warning">
                         Ciclo 2026.2
-                      </span>
+                      </Badge>
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-white">Matriz de Avaliação 360° & PDI</h4>
@@ -1384,9 +1330,9 @@ export default function SectorWorkspacePage() {
                       <div className="p-2.5 rounded-xl bg-amber-950/80 border border-amber-800/60 text-amber-400">
                         <UserCheck className="w-5 h-5" />
                       </div>
-                      <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                      <Badge tone="warning">
                         Disponível
-                      </span>
+                      </Badge>
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-white">Emissor de Certificados de Membro</h4>
@@ -1431,12 +1377,12 @@ export default function SectorWorkspacePage() {
                         <div className="p-3 rounded-xl bg-purple-950/80 border border-purple-800/60 text-purple-300">
                           <Calculator className="w-6 h-6" />
                         </div>
-                        <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full border bg-emerald-500/20 text-emerald-300 border-emerald-500/40">
+                        <Badge tone="success">
                           ● Ativo
-                        </span>
+                        </Badge>
                       </div>
                       <div>
-                        <span className="text-[10px] font-bold text-purple-400 uppercase tracking-wider">
+                        <span className="text-[11px] font-bold text-purple-400 uppercase tracking-wider">
                           Precificação & Propostas
                         </span>
                         <h4 className="text-base font-bold text-white mt-0.5 group-hover:text-purple-300 transition-colors">
@@ -1449,13 +1395,10 @@ export default function SectorWorkspacePage() {
                     </div>
 
                     <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between">
-                      <span className="text-[11px] text-slate-500">Pronto para uso</span>
-                      <Link
-                        href="/tools/pricing"
-                        className="px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-md flex items-center gap-1.5 transition-all transform hover:-translate-y-0.5"
-                      >
+                      <span className="text-[11px] text-slate-400">Pronto para uso</span>
+                      <ButtonLink size="sm" href="/tools/pricing">
                         Abrir Simulador <ArrowRight className="w-3.5 h-3.5" />
-                      </Link>
+                      </ButtonLink>
                     </div>
                   </div>
 
@@ -1466,12 +1409,12 @@ export default function SectorWorkspacePage() {
                         <div className="p-3 rounded-xl bg-purple-950/80 border border-purple-800/60 text-purple-300">
                           <Filter className="w-6 h-6" />
                         </div>
-                        <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full border bg-purple-500/20 text-purple-300 border-purple-500/40">
+                        <Badge tone="primary">
                           ● Ativo
-                        </span>
+                        </Badge>
                       </div>
                       <div>
-                        <span className="text-[10px] font-bold text-purple-400 uppercase tracking-wider">
+                        <span className="text-[11px] font-bold text-purple-400 uppercase tracking-wider">
                           Prospecção & Qualificação
                         </span>
                         <h4 className="text-base font-bold text-white mt-0.5 group-hover:text-purple-300 transition-colors">
@@ -1484,13 +1427,10 @@ export default function SectorWorkspacePage() {
                     </div>
 
                     <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between">
-                      <span className="text-[11px] text-slate-500">Pronto para uso</span>
-                      <Link
-                        href="/tools/lead-filter"
-                        className="px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-md flex items-center gap-1.5 transition-all transform hover:-translate-y-0.5"
-                      >
+                      <span className="text-[11px] text-slate-400">Pronto para uso</span>
+                      <ButtonLink size="sm" href="/tools/lead-filter">
                         Abrir Decisão Ágil <ArrowRight className="w-3.5 h-3.5" />
-                      </Link>
+                      </ButtonLink>
                     </div>
                   </div>
 
@@ -1501,12 +1441,12 @@ export default function SectorWorkspacePage() {
                         <div className="p-3 rounded-xl bg-purple-950/80 border border-purple-800/60 text-purple-300">
                           <FileSpreadsheet className="w-6 h-6" />
                         </div>
-                        <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full border bg-emerald-500/20 text-emerald-300 border-emerald-500/40">
+                        <Badge tone="success">
                           ● Ativo
-                        </span>
+                        </Badge>
                       </div>
                       <div>
-                        <span className="text-[10px] font-bold text-purple-400 uppercase tracking-wider">
+                        <span className="text-[11px] font-bold text-purple-400 uppercase tracking-wider">
                           Prospecção & Conversão
                         </span>
                         <h4 className="text-base font-bold text-white mt-0.5 group-hover:text-purple-300 transition-colors">
@@ -1519,13 +1459,10 @@ export default function SectorWorkspacePage() {
                     </div>
 
                     <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between">
-                      <span className="text-[11px] text-slate-500">Pronto para uso</span>
-                      <Link
-                        href="/tools/lead-sheet"
-                        className="px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-md flex items-center gap-1.5 transition-all transform hover:-translate-y-0.5"
-                      >
+                      <span className="text-[11px] text-slate-400">Pronto para uso</span>
+                      <ButtonLink size="sm" href="/tools/lead-sheet">
                         Abrir Planilha <ArrowRight className="w-3.5 h-3.5" />
-                      </Link>
+                      </ButtonLink>
                     </div>
                   </div>
 
@@ -1541,7 +1478,7 @@ export default function SectorWorkspacePage() {
                         </span>
                       </div>
                       <div>
-                        <span className="text-[10px] font-bold text-purple-400 uppercase tracking-wider">
+                        <span className="text-[11px] font-bold text-purple-400 uppercase tracking-wider">
                           Vendas & Contratos
                         </span>
                         <h4 className="text-base font-bold text-white mt-0.5">
@@ -1553,8 +1490,8 @@ export default function SectorWorkspacePage() {
                       </div>
                     </div>
                     <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between">
-                      <span className="text-[11px] text-slate-500">Em desenvolvimento</span>
-                      <button disabled className="px-3.5 py-1.5 rounded-xl bg-slate-800/60 text-slate-500 text-xs font-semibold cursor-not-allowed">
+                      <span className="text-[11px] text-slate-400">Em desenvolvimento</span>
+                      <button disabled className="px-3.5 py-1.5 rounded-xl bg-slate-800/60 text-slate-400 text-xs font-semibold cursor-not-allowed">
                         Em breve
                       </button>
                     </div>
@@ -1572,7 +1509,7 @@ export default function SectorWorkspacePage() {
                         </span>
                       </div>
                       <div>
-                        <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">
+                        <span className="text-[11px] font-bold text-blue-400 uppercase tracking-wider">
                           Comunicação Comercial
                         </span>
                         <h4 className="text-base font-bold text-white mt-0.5">
@@ -1584,8 +1521,8 @@ export default function SectorWorkspacePage() {
                       </div>
                     </div>
                     <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between">
-                      <span className="text-[11px] text-slate-500">Em desenvolvimento</span>
-                      <button disabled className="px-3.5 py-1.5 rounded-xl bg-slate-800/60 text-slate-500 text-xs font-semibold cursor-not-allowed">
+                      <span className="text-[11px] text-slate-400">Em desenvolvimento</span>
+                      <button disabled className="px-3.5 py-1.5 rounded-xl bg-slate-800/60 text-slate-400 text-xs font-semibold cursor-not-allowed">
                         Em breve
                       </button>
                     </div>
@@ -1610,12 +1547,12 @@ export default function SectorWorkspacePage() {
                           <div className="p-3 rounded-xl bg-purple-950/80 border border-purple-800/60 text-purple-300">
                             <Pickaxe className="w-6 h-6" aria-hidden="true" />
                           </div>
-                          <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full border bg-emerald-500/20 text-emerald-300 border-emerald-500/40">
+                          <Badge tone="success">
                             ● Ativo
-                          </span>
+                          </Badge>
                         </div>
                         <div>
-                          <span className="text-[10px] font-bold text-purple-400 uppercase tracking-wider">
+                          <span className="text-[11px] font-bold text-purple-400 uppercase tracking-wider">
                             Inteligência de Mercado
                           </span>
                           <h4 className="text-base font-bold text-white mt-0.5 group-hover:text-purple-300 transition-colors">
@@ -1628,7 +1565,7 @@ export default function SectorWorkspacePage() {
                       </div>
 
                       <div className="pt-3 border-t border-slate-800/80 flex items-center justify-between">
-                        <span className="text-[11px] text-slate-500">Pronto para uso</span>
+                        <span className="text-[11px] text-slate-400">Pronto para uso</span>
                         <span className="px-4 py-2 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 group-hover:from-purple-500 group-hover:to-indigo-500 rounded-xl shadow-md flex items-center gap-1.5 transition-all">
                           Abrir Minerador <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
                         </span>
@@ -1647,29 +1584,24 @@ export default function SectorWorkspacePage() {
             <div className="flex items-center justify-between">
               <div>
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                  <Send className="w-4 h-4 text-purple-400" /> Demandas Direcionadas a {currentSector.code}
+                  <Send className="w-4 h-4 text-purple-400" /> Solicitações recebidas por {unitName(currentSector.code)}
                 </h3>
                 <p className="text-xs text-slate-400 mt-0.5">
                   Solicitações que outros setores abriram para esta diretoria executar.
                 </p>
               </div>
 
-              <button
-                onClick={() => setIsCreateRequestModalOpen(true)}
-                className="px-3.5 py-1.5 text-xs font-bold rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white flex items-center gap-1.5 transition-all shadow-md"
-              >
+              <Button size="sm" onClick={() => setIsCreateRequestModalOpen(true)}>
                 <Plus className="w-3.5 h-3.5" /> Abrir Solicitação
-              </button>
+              </Button>
             </div>
 
             {requests.length === 0 ? (
-              <div className="p-12 rounded-2xl bg-slate-900/40 border border-dashed border-slate-800 text-center space-y-2">
-                <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto" />
-                <h4 className="text-sm font-bold text-white">Nenhuma solicitação pendente</h4>
-                <p className="text-xs text-slate-400">
-                  Todas as demandas deste setor foram atendidas ou arquivadas.
-                </p>
-              </div>
+              <EmptyState
+                icon={CheckCircle2}
+                title="Nenhuma solicitação pendente"
+                description="Todas as solicitações deste setor foram atendidas ou arquivadas."
+              />
             ) : (
               <div className="space-y-3">
                 {requests.map((req) => (
@@ -1680,7 +1612,7 @@ export default function SectorWorkspacePage() {
                     <div className="space-y-1.5">
                       <div className="flex items-center gap-2">
                         <span
-                          className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${req.priority === 'URGENT'
+                          className={`text-[11px] font-bold px-2 py-0.5 rounded-full border ${req.priority === 'URGENT'
                             ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
                             : req.priority === 'HIGH'
                               ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
@@ -1695,7 +1627,7 @@ export default function SectorWorkspacePage() {
                         </span>
 
                         <span
-                          className={`text-[10px] font-semibold px-2 py-0.2 rounded-full ${req.status === 'COMPLETED'
+                          className={`text-[11px] font-semibold px-2 py-0.2 rounded-full ${req.status === 'COMPLETED'
                             ? 'bg-emerald-500/20 text-emerald-300'
                             : req.status === 'IN_PROGRESS'
                               ? 'bg-blue-500/20 text-blue-300'
@@ -1709,7 +1641,7 @@ export default function SectorWorkspacePage() {
                       <h4 className="text-sm font-bold text-white">{req.title}</h4>
                       <p className="text-xs text-slate-400 line-clamp-2">{req.description}</p>
 
-                      <div className="flex items-center gap-3 text-[11px] text-slate-500 pt-1">
+                      <div className="flex items-center gap-3 text-[11px] text-slate-400 pt-1">
                         <span>Solicitante: <strong className="text-slate-300">{req.requester?.name || 'Membro'}</strong></span>
                         {req.dueDate && (
                           <span>
@@ -1724,12 +1656,9 @@ export default function SectorWorkspacePage() {
 
                     <div className="flex items-center gap-2 shrink-0">
                       {req.status === 'PENDING' && (
-                        <button
-                          onClick={() => handleUpdateReqStatus(req.id, 'IN_PROGRESS')}
-                          className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs transition-colors"
-                        >
+                        <Button size="sm" onClick={() => handleUpdateReqStatus(req.id, 'IN_PROGRESS')}>
                           Iniciar Atendimento
-                        </button>
+                        </Button>
                       )}
 
                       {req.status === 'IN_PROGRESS' && (
@@ -1795,100 +1724,70 @@ export default function SectorWorkspacePage() {
 
       {/* AdmJurFin: Modal Nova Movimentação Financeira */}
       {isNewTransactionModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-          <div className="relative w-full max-w-md bg-slate-900 border border-blue-800/50 rounded-2xl shadow-2xl p-6 space-y-4">
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <Receipt className="w-5 h-5 text-blue-400" /> Nova Movimentação Financeira
-            </h3>
-
-            <form onSubmit={handleCreateTransaction} className="space-y-3 text-xs">
-              <div>
-                <label className="block text-slate-300 font-semibold mb-1">Descrição</label>
-                <input
-                  type="text"
-                  value={transDesc}
-                  onChange={(e) => setTransDesc(e.target.value)}
-                  placeholder="Ex: Parcela 1/2 Projeto X ou Hospedagem Cloud"
-                  className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-blue-500"
+        <Modal
+          title="Nova Movimentação Financeira"
+          onClose={() => setIsNewTransactionModalOpen(false)}
+          size="sm"
+          closeOnBackdrop={false}
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setIsNewTransactionModalOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" form="transaction-form">
+                Salvar Lançamento
+              </Button>
+            </>
+          }
+        >
+          <form id="transaction-form" onSubmit={handleCreateTransaction} className="space-y-3 text-xs">
+            <Field label="Descrição" required>
+              <Input
+                type="text"
+                value={transDesc}
+                onChange={(e) => setTransDesc(e.target.value)}
+                placeholder="Ex: Parcela 1/2 Projeto X ou Hospedagem Cloud"
+                required
+              />
+            </Field>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field label="Valor (R$)" required>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={transAmount}
+                  onChange={(e) => setTransAmount(e.target.value)}
+                  placeholder="0.00"
                   required
                 />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Valor (R$)</label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={transAmount}
-                    onChange={(e) => setTransAmount(e.target.value)}
-                    placeholder="0.00"
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-blue-500"
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Tipo</label>
-                  <select
-                    value={transType}
-                    onChange={(e) => setTransType(e.target.value as any)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-blue-500"
-                  >
-                    <option value="INFLOW">Receita (Entrada)</option>
-                    <option value="OUTFLOW">Despesa (Saída)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Categoria</label>
-                  <select
-                    value={transCategory}
-                    onChange={(e) => setTransCategory(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-blue-500"
-                  >
-                    <option value="Projeto">Projeto</option>
-                    <option value="Ferramenta">Ferramenta / Software</option>
-                    <option value="Reembolso">Reembolso</option>
-                    <option value="Evento">Evento / Treinamento</option>
-                    <option value="Outros">Outros</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Status</label>
-                  <select
-                    value={transStatus}
-                    onChange={(e) => setTransStatus(e.target.value as any)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white focus:outline-none focus:border-blue-500"
-                  >
-                    <option value="PAID">Liquidado / Pago</option>
-                    <option value="PENDING">Pendente</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsNewTransactionModalOpen(false)}
-                  className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs shadow-md shadow-blue-900/30"
-                >
-                  Salvar Lançamento
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
+              </Field>
+              <Field label="Tipo">
+                <Select value={transType} onChange={(e) => setTransType(e.target.value as any)}>
+                  <option value="INFLOW">Receita (Entrada)</option>
+                  <option value="OUTFLOW">Despesa (Saída)</option>
+                </Select>
+              </Field>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field label="Categoria">
+                <Select value={transCategory} onChange={(e) => setTransCategory(e.target.value)}>
+                  <option value="Projeto">Projeto</option>
+                  <option value="Ferramenta">Ferramenta / Software</option>
+                  <option value="Reembolso">Reembolso</option>
+                  <option value="Evento">Evento / Treinamento</option>
+                  <option value="Outros">Outros</option>
+                </Select>
+              </Field>
+              <Field label="Status">
+                <Select value={transStatus} onChange={(e) => setTransStatus(e.target.value as any)}>
+                  <option value="PAID">Liquidado / Pago</option>
+                  <option value="PENDING">Pendente</option>
+                </Select>
+              </Field>
+            </div>
+          </form>
+        </Modal>
       )}
     </div>
   );

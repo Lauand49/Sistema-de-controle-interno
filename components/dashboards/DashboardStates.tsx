@@ -1,60 +1,51 @@
 'use client';
-
 import React from 'react';
 import Link from 'next/link';
-import { AlertTriangle, ArrowLeft, Loader2, RotateCcw, SearchX, ShieldAlert } from 'lucide-react';
+import { ArrowLeft, RotateCcw, SearchX, ShieldAlert } from 'lucide-react';
 import { dashboardPages } from '@/lib/dashboards/client-api';
+import { Button } from '@/components/ui/Button';
+import { ErrorState, LoadingState } from '@/components/ui/Display';
 import type { DashboardState } from './useDashboard';
 
-const CARD = 'rounded-2xl border border-slate-800 bg-slate-900/60 p-8 text-center';
-const FOCUS = 'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500';
-
 export function DashboardLoading() {
-  return (
-    <div role="status" className={`${CARD} flex items-center justify-center gap-2 text-sm text-slate-400`}>
-      <Loader2 className="h-5 w-5 animate-spin text-purple-400" aria-hidden="true" />
-      Carregando painel
-    </div>
-  );
+  return <LoadingState label="Carregando painel" className="rounded-card border border-border bg-surface-raised" />;
 }
 
 export function DashboardDenied() {
   return (
-    <div role="alert" className={CARD}>
-      <ShieldAlert className="mx-auto mb-3 h-10 w-10 text-amber-400" aria-hidden="true" />
-      <p className="text-lg font-semibold text-slate-100">Acesso negado</p>
-      <p className="mt-1 text-sm text-slate-400">Você não tem permissão para ver este painel.</p>
-      <BackToHub />
-    </div>
+    <ErrorState
+      icon={ShieldAlert}
+      tone="warning"
+      title="Acesso negado"
+      description="Você não tem permissão para ver este painel."
+      action={<BackToHub />}
+    />
   );
 }
 
 export function DashboardNotFound() {
   return (
-    <div role="alert" className={CARD}>
-      <SearchX className="mx-auto mb-3 h-10 w-10 text-slate-500" aria-hidden="true" />
-      <p className="text-lg font-semibold text-slate-100">Painel não encontrado</p>
-      <p className="mt-1 text-sm text-slate-400">O painel que você procura não existe ou foi removido.</p>
-      <BackToHub />
-    </div>
+    <ErrorState
+      icon={SearchX}
+      tone="warning"
+      title="Painel não encontrado"
+      description="O painel que você procura não existe ou foi removido."
+      action={<BackToHub />}
+    />
   );
 }
 
 export function DashboardError({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
-    <div role="alert" className={CARD}>
-      <AlertTriangle className="mx-auto mb-3 h-10 w-10 text-red-400" aria-hidden="true" />
-      <p className="text-lg font-semibold text-slate-100">Erro ao carregar o painel</p>
-      <p className="mt-1 text-sm text-slate-400">{message}</p>
-      <button
-        type="button"
-        onClick={onRetry}
-        className={`mt-5 inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-2 text-sm font-semibold text-white hover:from-purple-500 hover:to-indigo-500 ${FOCUS}`}
-      >
-        <RotateCcw className="h-4 w-4" aria-hidden="true" />
-        Tentar novamente
-      </button>
-    </div>
+    <ErrorState
+      title="Erro ao carregar o painel"
+      description={message}
+      action={
+        <Button icon={RotateCcw} onClick={onRetry} className="mt-2">
+          Tentar novamente
+        </Button>
+      }
+    />
   );
 }
 
@@ -62,7 +53,7 @@ function BackToHub() {
   return (
     <Link
       href={dashboardPages.hub}
-      className={`mt-5 inline-flex items-center gap-1.5 rounded-lg text-sm font-semibold text-purple-300 hover:text-purple-200 ${FOCUS}`}
+      className="mt-2 inline-flex items-center gap-1.5 min-h-10 rounded-lg text-sm font-semibold text-primary-soft hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
     >
       <ArrowLeft className="h-4 w-4" aria-hidden="true" />
       Voltar para Painéis

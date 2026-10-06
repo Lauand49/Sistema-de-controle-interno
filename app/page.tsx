@@ -24,6 +24,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { Pipe, CrossDeptRequest } from '@/types';
+import { PageHeader, StatCard } from '@/components/ui/Display';
 
 export default function HomeDashboard() {
   const { currentProfile } = useProfile();
@@ -147,96 +148,27 @@ export default function HomeDashboard() {
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-purple-500 selection:text-white">
       <SciTecNavbar />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-8">
-        {/* Welcome Banner */}
-        <div className="relative rounded-3xl bg-gradient-to-r from-purple-950/80 via-slate-900 to-indigo-950/80 border border-purple-800/40 px-6 py-4 md:px-8 md:py-5 shadow-2xl overflow-hidden flex items-center justify-between">
-          <div className="absolute top-0 right-0 transform translate-x-10 -translate-y-10 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="relative z-10">
-            <h2 className="text-2xl md:text-3xl font-black tracking-tight text-white">
-              ScitecJr
-            </h2>
-          </div>
-
-          <div className="relative z-10 shrink-0">
-            <img
-              src="/brand/mascote.png"
-              alt="Mascote SciTec jr."
-              className="h-16 sm:h-20 md:h-24 w-auto object-contain filter drop-shadow-lg"
-            />
-          </div>
-        </div>
-
+      <main className="flex-1 min-w-0 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
+        <PageHeader
+          title="ScitecJr"
+          subtitle="Visão geral dos processos, leads e solicitações da empresa júnior."
+          actions={<img src="/brand/mascote.png" alt="Mascote SciTec jr." className="h-16 w-auto object-contain" />}
+        />
         {/* Global Metrics Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
-          <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 sm:p-5 shadow-lg flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-slate-400">Cards Ativos</span>
-              <div className="p-1.5 rounded-xl bg-purple-950/40 text-purple-400">
-                <Kanban className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="text-2xl sm:text-3xl font-black text-white">
-              {loading ? <span className="text-slate-700 animate-pulse">--</span> : metrics.activeCards}
-            </div>
-          </div>
-
-          <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 sm:p-5 shadow-lg flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-slate-400">Propostas</span>
-              <div className="p-1.5 rounded-xl bg-amber-950/40 text-amber-400">
-                <TrendingUp className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="text-2xl sm:text-3xl font-black text-white">
-              {loading ? <span className="text-slate-700 animate-pulse">--</span> : metrics.proposals}
-            </div>
-          </div>
-
-          <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 sm:p-5 shadow-lg flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-slate-400">Fechado/Ganho</span>
-              <div className="p-1.5 rounded-xl bg-emerald-950/40 text-emerald-400">
-                <Building2 className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="text-2xl sm:text-3xl font-black text-white">
-              {loading ? <span className="text-slate-700 animate-pulse">--</span> : metrics.won}
-            </div>
-          </div>
-
-          <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 sm:p-5 shadow-lg flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-slate-400">Leads Triagem</span>
-              <div className="p-1.5 rounded-xl bg-indigo-950/40 text-indigo-400">
-                <Users className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="text-2xl sm:text-3xl font-black text-white">
-              {loading ? <span className="text-slate-700 animate-pulse">--</span> : metrics.pendingLeads}
-            </div>
-          </div>
-
-          <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 sm:p-5 shadow-lg flex flex-col gap-2 col-span-2 lg:col-span-1">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-slate-400">Demandas Cruzadas</span>
-              <div className="p-1.5 rounded-xl bg-rose-950/40 text-rose-400">
-                <Send className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="text-2xl sm:text-3xl font-black text-rose-400">
-              {loading ? <span className="text-slate-700 animate-pulse">--</span> : metrics.pendingRequests}
-            </div>
-          </div>
+          <StatCard label="Cards Ativos" icon={Kanban} tone="default" value={loading ? '--' : metrics.activeCards} />
+          <StatCard label="Propostas" icon={TrendingUp} tone="default" value={loading ? '--' : metrics.proposals} />
+          <StatCard label="Fechado/Ganho" icon={Building2} tone="success" value={loading ? '--' : metrics.won} />
+          <StatCard label="Leads Triagem" icon={Users} tone="default" value={loading ? '--' : metrics.pendingLeads} />
+          <StatCard label="Solicitações entre setores" icon={Send} tone="danger" value={loading ? '--' : metrics.pendingRequests} className="col-span-2 lg:col-span-1" />
         </div>
-
         {/* WORKSPACES POR DIRETORIA / SETOR */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <h3 className="text-sm font-bold uppercase tracking-wider text-purple-300/80 flex items-center gap-2">
               <Zap className="w-4 h-4 text-purple-400" /> Diretorias & Workspaces Especializados
             </h3>
-            <span className="text-xs text-slate-500 font-medium">4 Setores Ativos</span>
+            <span className="text-xs text-slate-400 font-medium">4 Setores Ativos</span>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -252,7 +184,7 @@ export default function HomeDashboard() {
                         <div className={`p-3 rounded-xl border ${sec.iconColor}`}>
                           <Icon className="w-6 h-6" />
                         </div>
-                        <span className="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-slate-950/80 border border-slate-700 text-slate-300">
+                        <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-950/80 border border-slate-700 text-slate-300">
                           {sec.badge}
                         </span>
                       </div>
@@ -294,7 +226,7 @@ export default function HomeDashboard() {
 
           <div className="rounded-2xl bg-slate-900/60 border border-slate-800 p-4 space-y-3">
             {recentRequests.length === 0 ? (
-              <div className="p-6 text-center text-xs text-slate-500">
+              <div className="p-6 text-center text-xs text-slate-400">
                 Nenhuma solicitação pendente no momento.
               </div>
             ) : (
@@ -306,8 +238,8 @@ export default function HomeDashboard() {
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
                       <span className="font-bold text-white">{req.title}</span>
-                      <span className="text-[10px] text-purple-400 font-semibold">
-                        {req.fromDept} ➔ {req.toDept}
+                      <span className="text-[11px] text-purple-400 font-semibold">
+                        {req.fromDept} <ArrowRight className="inline w-3 h-3" aria-label="para" /> {req.toDept}
                       </span>
                     </div>
                     <p className="text-slate-400 text-[11px] line-clamp-1">{req.description}</p>
@@ -336,7 +268,7 @@ export default function HomeDashboard() {
             </div>
             <div>
               <h5 className="text-xs font-bold text-white">Minhas Tarefas</h5>
-              <p className="text-[10px] text-slate-400">Tarefas atribuídas nominalmente</p>
+              <p className="text-[11px] text-slate-400">Tarefas atribuídas nominalmente</p>
             </div>
           </Link>
 
@@ -367,7 +299,7 @@ export default function HomeDashboard() {
                   <h5 className="text-xs font-bold text-white">
                     {sectorName ? `Ferramentas de ${sectorName}` : 'Ferramentas dos Setores'}
                   </h5>
-                  <p className="text-[10px] text-slate-400">
+                  <p className="text-[11px] text-slate-400">
                     {sectorName ? 'Utilitários exclusivos do seu setor' : 'Módulos operacionais de cada diretoria'}
                   </p>
                 </div>
@@ -384,7 +316,7 @@ export default function HomeDashboard() {
             </div>
             <div>
               <h5 className="text-xs font-bold text-white">Equipe & Membros</h5>
-              <p className="text-[10px] text-slate-400">Perfis internos e diretoria</p>
+              <p className="text-[11px] text-slate-400">Perfis internos e diretoria</p>
             </div>
           </Link>
         </div>

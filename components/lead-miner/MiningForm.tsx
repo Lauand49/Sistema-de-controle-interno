@@ -49,6 +49,8 @@ import {
   type MiningFormField,
   type MiningFormValues,
 } from './mining-form-helpers';
+import { Select } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
 
 type IaState = 'loading' | 'available' | 'unavailable' | 'error';
 
@@ -57,8 +59,7 @@ export interface MiningFormProps {
   onRunStarted: (run: RunProgress | string, title: string) => void;
 }
 
-const inputClass =
-  'w-full rounded-xl border bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:opacity-60';
+const inputClass = 'w-full';
 
 export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
   const [values, setValues] = useState<MiningFormValues>(INITIAL_FORM_VALUES);
@@ -224,7 +225,7 @@ export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
   const joinIds = (...ids: Array<string | undefined>) => ids.filter(Boolean).join(' ') || undefined;
   const cidadeHintId = joinIds(describedBy('cidade'), cidadeNote ? 'mining-cidade-note' : undefined);
   const bairroHintId = joinIds(describedBy('bairro'), bairroNote ? 'mining-bairro-note' : undefined);
-  const border = (field: MiningFormField) => (serverErrors[field] ? 'border-red-500/70' : 'border-slate-700');
+  const border = (field: MiningFormField) => (serverErrors[field] ? '!border-danger' : '');
 
   const pendingCount = Object.keys(pending).length;
 
@@ -246,7 +247,7 @@ export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
           <label htmlFor="mining-uf" className="mb-1 block text-sm font-semibold text-slate-200">
             UF
           </label>
-          <select
+          <Select
             id="mining-uf"
             value={values.uf}
             onChange={(e) => changeUf(e.target.value)}
@@ -261,7 +262,7 @@ export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
                 {uf}
               </option>
             ))}
-          </select>
+          </Select>
           {hint('uf')}
         </div>
         <div>
@@ -369,7 +370,7 @@ export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
             />
             <label
               htmlFor="mining-ia"
-              className={`flex items-center gap-1 text-sm ${iaAvailable ? 'text-slate-300' : 'text-slate-500'}`}
+              className={`flex items-center gap-1 text-sm ${iaAvailable ? 'text-slate-300' : 'text-slate-400'}`}
             >
               <Sparkles className="h-3.5 w-3.5 text-purple-400" aria-hidden="true" />
               Usar IA
@@ -396,7 +397,7 @@ export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
               aria-describedby="mining-pagespeed-hint"
               className="h-4 w-4 rounded border-slate-600 bg-slate-900 accent-purple-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
             />
-            <label htmlFor="mining-pagespeed" className={`text-sm ${pagespeedBlocked ? 'text-slate-500' : 'text-slate-300'}`}>
+            <label htmlFor="mining-pagespeed" className={`text-sm ${pagespeedBlocked ? 'text-slate-400' : 'text-slate-300'}`}>
               Analisar desempenho (PageSpeed)
             </label>
           </div>
@@ -435,19 +436,14 @@ export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
               ? `Preencha ${pendingCount === 1 ? 'o campo pendente' : `os ${pendingCount} campos pendentes`} para iniciar.`
               : 'Tudo pronto para minerar.'}
         </p>
-        <button
-          type="submit"
-          disabled={!enabled}
-          aria-describedby="mining-submit-hint"
-          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-md hover:from-purple-500 hover:to-indigo-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
-        >
+        <Button size="md" type="submit" disabled={!enabled} aria-describedby="mining-submit-hint">
           {submitting ? (
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
           ) : (
             <Pickaxe className="h-4 w-4" aria-hidden="true" />
           )}
           {submitting ? 'Iniciando…' : 'Iniciar mineração'}
-        </button>
+        </Button>
       </div>
     </form>
   );

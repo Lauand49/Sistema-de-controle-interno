@@ -1,4 +1,5 @@
 'use client';
+import { Button, IconButton } from '@/components/ui/Button';
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
@@ -40,6 +41,8 @@ import {
   ChevronRight,
   TrendingUp,
 } from 'lucide-react';
+import { PageHeader, EmptyState } from '@/components/ui/Display';
+import { Input, Select } from '@/components/ui/Input';
 
 export default function ProjectPricingPage() {
   const { profiles, currentProfile } = useProfile();
@@ -331,7 +334,7 @@ SciTec jr. - Consultoria & Engenharia em Computação
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
       <SciTecNavbar />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
+      <main className="flex-1 min-w-0 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
         {/* Navigation Breadcrumb & Hero */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-xs text-purple-300/80">
@@ -365,23 +368,11 @@ SciTec jr. - Consultoria & Engenharia em Computação
           </div>
         </div>
 
-        {/* Hero Banner */}
-        <div className="relative rounded-3xl bg-gradient-to-r from-purple-950/80 via-slate-900 to-indigo-950/80 border border-purple-800/40 p-6 md:p-8 shadow-2xl overflow-hidden">
-          <div className="absolute top-0 right-0 transform translate-x-12 -translate-y-12 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="relative z-10 max-w-3xl space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-purple-950/90 text-purple-300 border border-purple-700/60">
-              <Calculator className="w-3.5 h-3.5 text-purple-400" /> Motor Científico de Precificação
-            </div>
-            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">
-              Simulador de Preço & Escopo de Projetos
-            </h1>
-            <p className="text-xs md:text-sm text-purple-200/80 leading-relaxed">
-              Cálculo formal baseado em alocação de horas por especialidade técnica, custos extras e fatores modificadores de mercado (porte, urgência, complexidade, experiência da equipe e fidelidade).
-            </p>
-          </div>
-        </div>
-
+        <PageHeader
+          icon={Calculator}
+          title="Simulador de Preço & Escopo de Projetos"
+          subtitle="Cálculo baseado em alocação de horas por especialidade, custos extras e fatores de mercado (porte, urgência, complexidade, experiência e fidelidade)."
+        />
         {/* Main Content: Left Column Form, Right Column Realtime Results */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* LEFT COLUMN: Inputs & Parameters (7 Cols) */}
@@ -397,28 +388,28 @@ SciTec jr. - Consultoria & Engenharia em Computação
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  <label htmlFor="page-1" className="block text-xs font-semibold text-slate-300 mb-1.5">
                     Nome da Empresa / Cliente
                   </label>
-                  <input
+                  <Input id="page-1"
                     type="text"
                     value={cliente}
                     onChange={(e) => setCliente(e.target.value)}
                     placeholder="Ex: Farmácia São Lucas ou BioTech"
-                    className="w-full px-3.5 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                    className="w-full"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-300 mb-1.5">
+                  <label htmlFor="page-2" className="block text-xs font-semibold text-slate-300 mb-1.5">
                     Nome do Projeto / Escopo
                   </label>
-                  <input
+                  <Input id="page-2"
                     type="text"
                     value={nomeProjeto}
                     onChange={(e) => setNomeProjeto(e.target.value)}
                     placeholder="Ex: Plataforma E-commerce Custom"
-                    className="w-full px-3.5 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-sm text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 focus:ring-1 focus:ring-purple-500 transition-all"
+                    className="w-full"
                   />
                 </div>
               </div>
@@ -428,51 +419,51 @@ SciTec jr. - Consultoria & Engenharia em Computação
                 {/* Porte do Cliente */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-semibold text-slate-300">Porte do Cliente</label>
+                    <label htmlFor="pr-1" className="text-xs font-semibold text-slate-300">Porte do Cliente</label>
                     <span className="text-[11px] font-bold text-purple-400">
                       +{(pricingResult.modificadores.porte * 100).toFixed(0)}%
                     </span>
                   </div>
-                  <select
+                  <Select id="pr-1"
                     value={porteCliente}
                     onChange={(e) => setPorteCliente(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-sm text-white focus:outline-none focus:border-purple-500"
+                    className="w-full"
                   >
                     {CLIENT_SIZE_MODIFIERS.map((p) => (
                       <option key={p.id} value={p.id}>
                         {p.label} (+{(p.modifier * 100).toFixed(0)}%)
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
 
                 {/* Urgência */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-semibold text-slate-300 flex items-center gap-1">
+                    <label htmlFor="pr-2" className="text-xs font-semibold text-slate-300 flex items-center gap-1">
                       <Flame className="w-3.5 h-3.5 text-amber-400" /> Urgência do Projeto
                     </label>
                     <span className="text-[11px] font-bold text-amber-400">
                       +{(pricingResult.modificadores.urgencia * 100).toFixed(0)}%
                     </span>
                   </div>
-                  <select
+                  <Select id="pr-2"
                     value={urgencia}
                     onChange={(e) => setUrgencia(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-sm text-white focus:outline-none focus:border-purple-500"
+                    className="w-full"
                   >
                     {URGENCY_MODIFIERS.map((u) => (
                       <option key={u.id} value={u.id}>
                         {u.label} (+{(u.modifier * 100).toFixed(0)}%)
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
 
                 {/* Experiência da Equipe no Escopo */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-semibold text-slate-300 flex items-center gap-1">
+                    <label htmlFor="pr-3" className="text-xs font-semibold text-slate-300 flex items-center gap-1">
                       <Award className="w-3.5 h-3.5 text-purple-400" /> Experiência no Escopo
                     </label>
                     <span
@@ -488,10 +479,10 @@ SciTec jr. - Consultoria & Engenharia em Computação
                       {(pricingResult.modificadores.experiencia * 100).toFixed(0)}%
                     </span>
                   </div>
-                  <select
+                  <Select id="pr-3"
                     value={nivelExperiencia}
                     onChange={(e) => setNivelExperiencia(Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-sm text-white focus:outline-none focus:border-purple-500"
+                    className="w-full"
                   >
                     {EXPERIENCE_MODIFIERS.map((e) => (
                       <option key={e.level} value={e.level}>
@@ -499,13 +490,13 @@ SciTec jr. - Consultoria & Engenharia em Computação
                         {(e.modifier * 100).toFixed(0)}%)
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
 
                 {/* Complexidade Técnica */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-semibold text-slate-300 flex items-center gap-1">
+                    <label htmlFor="pr-4" className="text-xs font-semibold text-slate-300 flex items-center gap-1">
                       <Layers className="w-3.5 h-3.5 text-indigo-400" /> Complexidade Técnica
                     </label>
                     <span
@@ -521,10 +512,10 @@ SciTec jr. - Consultoria & Engenharia em Computação
                       {(pricingResult.modificadores.complexidade * 100).toFixed(0)}%
                     </span>
                   </div>
-                  <select
+                  <Select id="pr-4"
                     value={nivelComplexidade}
                     onChange={(e) => setNivelComplexidade(Number(e.target.value))}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-sm text-white focus:outline-none focus:border-purple-500"
+                    className="w-full"
                   >
                     {COMPLEXITY_MODIFIERS.map((c) => (
                       <option key={c.level} value={c.level}>
@@ -532,7 +523,7 @@ SciTec jr. - Consultoria & Engenharia em Computação
                         {(c.modifier * 100).toFixed(0)}%)
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
               </div>
 
@@ -541,7 +532,7 @@ SciTec jr. - Consultoria & Engenharia em Computação
                 {/* Team Size */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-semibold text-slate-300 flex items-center gap-1">
+                    <label htmlFor="pr-5" className="text-xs font-semibold text-slate-300 flex items-center gap-1">
                       <Users className="w-3.5 h-3.5 text-blue-400" /> Equipe (Pessoas)
                     </label>
                     <span className="text-[11px] font-bold text-blue-400">
@@ -549,15 +540,15 @@ SciTec jr. - Consultoria & Engenharia em Computação
                       {(pricingResult.modificadores.pessoas * 100).toFixed(0)}%
                     </span>
                   </div>
-                  <input
+                  <Input id="pr-5"
                     type="number"
                     min={1}
                     max={20}
                     value={numPessoas}
                     onChange={(e) => setNumPessoas(Math.max(1, Number(e.target.value)))}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-sm text-white focus:outline-none focus:border-purple-500"
+                    className="w-full"
                   />
-                  <span className="text-[10px] text-slate-500 block mt-1">
+                  <span className="text-[11px] text-slate-400 block mt-1">
                     Base: 4 pessoas (±5% por pessoa)
                   </span>
                 </div>
@@ -574,10 +565,10 @@ SciTec jr. - Consultoria & Engenharia em Computação
                     />
                     <div className="text-xs">
                       <span className="font-semibold text-white">Fidelidade</span>
-                      <span className="block text-[10px] text-emerald-400 font-bold">-5% no projeto</span>
+                      <span className="block text-[11px] text-emerald-400 font-bold">-5% no projeto</span>
                     </div>
                   </label>
-                  <span className="text-[10px] text-slate-500 block mt-1">
+                  <span className="text-[11px] text-slate-400 block mt-1">
                     Bonificação institucional
                   </span>
                 </div>
@@ -585,7 +576,7 @@ SciTec jr. - Consultoria & Engenharia em Computação
                 {/* Commercial Discount */}
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-xs font-semibold text-slate-300 flex items-center gap-1">
+                    <label htmlFor="pr-7" className="text-xs font-semibold text-slate-300 flex items-center gap-1">
                       <Percent className="w-3.5 h-3.5 text-emerald-400" /> Desconto Comercial
                     </label>
                     <span className="text-[11px] font-bold text-emerald-400">
@@ -593,7 +584,7 @@ SciTec jr. - Consultoria & Engenharia em Computação
                     </span>
                   </div>
                   <div className="relative">
-                    <input
+                    <Input id="pr-7"
                       type="number"
                       min={0}
                       max={50}
@@ -602,11 +593,11 @@ SciTec jr. - Consultoria & Engenharia em Computação
                       onChange={(e) =>
                         setDescontoComercialPct(Math.min(50, Math.max(0, Number(e.target.value))))
                       }
-                      className="w-full pl-3 pr-8 py-2 rounded-xl bg-slate-950/80 border border-slate-800 text-sm text-white focus:outline-none focus:border-purple-500"
+                      className="w-full pl-3 pr-8"
                     />
-                    <span className="absolute right-3 top-2.5 text-xs text-slate-500">%</span>
+                    <span className="absolute right-3 top-2.5 text-xs text-slate-400">%</span>
                   </div>
-                  <span className="text-[10px] text-slate-500 block mt-1">
+                  <span className="text-[11px] text-slate-400 block mt-1">
                     Negociação diretoria comercial
                   </span>
                 </div>
@@ -647,70 +638,64 @@ SciTec jr. - Consultoria & Engenharia em Computação
                     >
                       {/* Cargo Dropdown */}
                       <div className="flex-1 w-full">
-                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                        <label htmlFor="page-3" className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
                           Função Técnica
                         </label>
-                        <select
+                        <Select id="page-3"
                           value={serv.cargo}
                           onChange={(e) => updateServiceRow(index, 'cargo', e.target.value)}
-                          className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-purple-500"
+                          className="w-full"
                         >
                           {ROLES_RATES.map((role) => (
                             <option key={role.cargo} value={role.cargo}>
                               {role.cargo} — R$ {role.valorHora.toFixed(2)}/h
                             </option>
                           ))}
-                        </select>
+                        </Select>
                       </div>
 
                       {/* Horas Input */}
                       <div className="w-full md:w-28">
-                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                        <label htmlFor={`pr-8-${index}`} className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
                           Horas
                         </label>
                         <div className="relative">
-                          <input
+                          <Input id={`pr-8-${index}`}
                             type="number"
                             min={1}
                             max={1000}
                             value={serv.horas}
                             onChange={(e) => updateServiceRow(index, 'horas', e.target.value)}
-                            className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-purple-500"
+                            className="w-full"
                           />
-                          <span className="absolute right-2.5 top-1.5 text-xs text-slate-500">h</span>
+                          <span className="absolute right-2.5 top-1.5 text-xs text-slate-400">h</span>
                         </div>
                       </div>
 
                       {/* Descrição Opcional */}
                       <div className="flex-1 w-full">
-                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                        <label htmlFor="page-4" className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
                           Atividades / Escopo Detalhado
                         </label>
-                        <input
+                        <Input id="page-4"
                           type="text"
                           value={serv.descricao || ''}
                           onChange={(e) => updateServiceRow(index, 'descricao', e.target.value)}
                           placeholder="Ex: Telas, endpoints ou arquitetura..."
-                          className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500"
+                          className="w-full"
                         />
                       </div>
 
                       {/* Subtotal & Delete */}
                       <div className="w-full md:w-32 flex items-center justify-between md:justify-end gap-3 pt-2 md:pt-4">
                         <div className="text-right">
-                          <span className="text-[10px] text-slate-400 block">Subtotal</span>
+                          <span className="text-[11px] text-slate-400 block">Subtotal</span>
                           <span className="text-xs font-bold text-purple-300">
                             {formatCurrency(rowSubtotal)}
                           </span>
                         </div>
 
-                        <button
-                          onClick={() => removeServiceRow(index)}
-                          className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
-                          title="Remover linha"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <IconButton variant="danger-ghost" icon={Trash2} onClick={() => removeServiceRow(index)} aria-label="Remover linha" />
                       </div>
                     </div>
                   );
@@ -743,18 +728,13 @@ SciTec jr. - Consultoria & Engenharia em Computação
                   </p>
                 </div>
 
-                <button
-                  onClick={addExtraCostRow}
-                  className="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-purple-300 border border-purple-700/40 transition-all flex items-center gap-1.5"
-                >
+                <Button variant="secondary" size="sm" onClick={addExtraCostRow}>
                   <Plus className="w-3.5 h-3.5" /> Adicionar Despesa
-                </button>
+                </Button>
               </div>
 
               {custosExtras.length === 0 ? (
-                <div className="p-4 rounded-xl bg-slate-950/50 border border-dashed border-slate-800 text-center text-xs text-slate-500">
-                  Nenhuma despesa extra cadastrada neste projeto.
-                </div>
+                <EmptyState title="Nenhuma despesa extra cadastrada neste projeto." className="p-4" />
               ) : (
                 <div className="space-y-3">
                   {custosExtras.map((cost, idx) => (
@@ -763,40 +743,34 @@ SciTec jr. - Consultoria & Engenharia em Computação
                       className="p-3.5 rounded-xl bg-slate-950/70 border border-slate-800 flex flex-col md:flex-row items-start md:items-center gap-3"
                     >
                       <div className="flex-1 w-full">
-                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                        <label htmlFor={`pr-9-${idx}`} className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
                           Descrição da Despesa
                         </label>
-                        <input
+                        <Input id={`pr-9-${idx}`}
                           type="text"
                           value={cost.descricao}
                           onChange={(e) => updateExtraCostRow(idx, 'descricao', e.target.value)}
                           placeholder="Ex: Servidor AWS, Domínio, Licença de tema..."
-                          className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-purple-500"
+                          className="w-full"
                         />
                       </div>
 
                       <div className="w-full md:w-36">
-                        <label className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
+                        <label htmlFor="page-5" className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
                           Valor (R$)
                         </label>
-                        <input
+                        <Input id="page-5"
                           type="number"
                           min={0}
                           step={10}
                           value={cost.valor_total}
                           onChange={(e) => updateExtraCostRow(idx, 'valor_total', e.target.value)}
-                          className="w-full px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-purple-500"
+                          className="w-full"
                         />
                       </div>
 
                       <div className="pt-2 md:pt-4">
-                        <button
-                          onClick={() => removeExtraCostRow(idx)}
-                          className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors"
-                          title="Remover despesa"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
+                        <IconButton variant="danger-ghost" icon={Trash2} onClick={() => removeExtraCostRow(idx)} aria-label="Remover despesa" />
                       </div>
                     </div>
                   ))}
@@ -835,7 +809,7 @@ SciTec jr. - Consultoria & Engenharia em Computação
 
                   {(descontoComercialPct > 0 || descontoFidelidade) && (
                     <div className="mt-2 flex items-center gap-2">
-                      <span className="text-xs text-slate-500 line-through">
+                      <span className="text-xs text-slate-400 line-through">
                         {formatCurrency(pricingResult.preco_sem_desconto)}
                       </span>
                       <span className="text-[11px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 px-2 py-0.5 rounded-full">
@@ -989,10 +963,10 @@ SciTec jr. - Consultoria & Engenharia em Computação
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <select
+                      <Select
                         value={selectedAssignee}
                         onChange={(e) => setSelectedAssignee(e.target.value)}
-                        className="flex-1 px-3 py-2 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-purple-500"
+                        className="flex-1"
                       >
                         <option value="">Responsável Comercial (Opcional)</option>
                         {profiles.map((user) => (
@@ -1000,7 +974,7 @@ SciTec jr. - Consultoria & Engenharia em Computação
                             {user.name} ({user.title})
                           </option>
                         ))}
-                      </select>
+                      </Select>
 
                       <button
                         onClick={handleSendToFunnel}

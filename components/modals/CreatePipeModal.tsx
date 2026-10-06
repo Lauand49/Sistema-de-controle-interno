@@ -4,7 +4,6 @@ import React, { useState } from 'react';
 import { Pipe } from '@/types';
 import { toast } from 'sonner';
 import {
-  X,
   Plus,
   Trash2,
   Sparkles,
@@ -18,6 +17,10 @@ import {
   Folder,
   Palette,
 } from 'lucide-react';
+import { Modal } from '@/components/ui/Modal';
+import { Button } from '@/components/ui/Button';
+import { Field } from '@/components/ui/Field';
+import { Input } from '@/components/ui/Input';
 
 interface CreatePipeModalProps {
   isOpen: boolean;
@@ -150,69 +153,46 @@ export const CreatePipeModal: React.FC<CreatePipeModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-      <div className="relative w-full max-w-2xl bg-slate-900 border border-purple-800/50 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
-        {/* Header */}
-        <div className="p-5 border-b border-slate-800 flex items-center justify-between bg-gradient-to-r from-purple-950/60 via-slate-900 to-indigo-950/40">
-          <div className="flex items-center gap-2.5">
-            <div className="p-2 rounded-xl bg-purple-600/20 text-purple-400 border border-purple-500/30">
-              <Layers className="w-5 h-5" />
-            </div>
-            <div>
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
-                Criar Novo Funil Personalizado
-              </h2>
-              <p className="text-xs text-slate-400">
-                Configure um novo fluxo de trabalho para o setor de{' '}
-                <strong className="text-purple-300">{defaultDepartment}</strong>
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+    <Modal
+      title="Criar Novo Funil Personalizado"
+      description={`Configure um novo fluxo de trabalho para o setor de ${defaultDepartment}`}
+      onClose={onClose}
+      size="lg"
+      closeOnBackdrop={false}
+      footer={
+        <>
+          <Button variant="secondary" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button type="submit" form="create-pipe-form" icon={Plus} loading={loading}>
+            {loading ? 'Criando...' : 'Criar Funil'}
+          </Button>
+        </>
+      }
+    >
+      <form id="create-pipe-form" onSubmit={handleSubmit} className="space-y-5 text-xs">
+        <div className="space-y-3">
+          <Field label="Nome do funil" required>
+            <Input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="Ex: Acompanhamento de Trainees 2026.2 ou Ciclo de Feedback"
+              required
+            />
+          </Field>
+          <Field label="Descrição & objetivo (opcional)">
+            <Input
+              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              placeholder="Ex: Processo de capacitação e avaliação contínua dos membros ingressantes"
+            />
+          </Field>
         </div>
-
-        {/* Form Body */}
-        <form onSubmit={handleSubmit} className="p-6 space-y-5 overflow-y-auto flex-1 text-xs">
-          {/* Funnel Name & Description */}
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
-                Nome do Funil <span className="text-rose-400">*</span>
-              </label>
-              <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Ex: Acompanhamento de Trainees 2026.2 ou Ciclo de Feedback"
-                className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="block text-xs font-semibold text-slate-300 mb-1">
-                Descrição & Objetivo (Opcional)
-              </label>
-              <input
-                type="text"
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Ex: Processo de capacitação e avaliação contínua dos membros ingressantes"
-                className="w-full px-3.5 py-2 rounded-xl bg-slate-950 border border-slate-800 text-xs text-white placeholder-slate-600 focus:outline-none focus:border-purple-500"
-              />
-            </div>
-          </div>
-
           {/* Icon Selector */}
           <div>
-            <label className="block text-xs font-semibold text-slate-300 mb-2">
-              Ícone Representativo
-            </label>
+            <p className="block text-xs font-semibold text-fg mb-2">Ícone Representativo</p>
             <div className="grid grid-cols-4 sm:grid-cols-8 gap-2">
               {AVAILABLE_ICONS.map((item) => {
                 const IconComponent = item.icon;
@@ -225,12 +205,13 @@ export const CreatePipeModal: React.FC<CreatePipeModalProps> = ({
                     className={`p-2.5 rounded-xl border flex flex-col items-center justify-center gap-1 transition-all ${
                       isSelected
                         ? 'bg-purple-950/80 border-purple-500 text-purple-300 shadow-md shadow-purple-900/30 font-bold'
-                        : 'bg-slate-950/60 border-slate-800 text-slate-400 hover:text-white hover:border-slate-700'
+                        : 'bg-slate-950/60 border-slate-800 text-fg-muted hover:text-white hover:border-slate-700'
                     }`}
                     title={item.label}
+                    aria-pressed={isSelected}
                   >
                     <IconComponent className="w-4 h-4" />
-                    <span className="text-[10px] truncate max-w-full">{item.label}</span>
+                    <span className="text-[11px] truncate max-w-full">{item.label}</span>
                   </button>
                 );
               })}
@@ -241,20 +222,14 @@ export const CreatePipeModal: React.FC<CreatePipeModalProps> = ({
           <div className="space-y-3 pt-2 border-t border-slate-800">
             <div className="flex items-center justify-between">
               <div>
-                <label className="text-xs font-semibold text-slate-300 block">
-                  Fases do Funil (Etapas do Processo)
-                </label>
-                <p className="text-[11px] text-slate-400">
+                <p className="text-xs font-semibold text-fg block">Fases do Funil (Etapas do Processo)</p>
+                <p className="text-[11px] text-fg-muted">
                   Defina as colunas pelas quais os cards irão transitar.
                 </p>
               </div>
-              <button
-                type="button"
-                onClick={handleAddPhase}
-                className="px-3 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-purple-300 border border-purple-800/40 text-xs font-semibold flex items-center gap-1.5 transition-all"
-              >
-                <Plus className="w-3.5 h-3.5" /> Adicionar Fase
-              </button>
+              <Button type="button" variant="secondary" size="sm" icon={Plus} onClick={handleAddPhase}>
+                Adicionar Fase
+              </Button>
             </div>
 
             <div className="space-y-2.5">
@@ -263,17 +238,18 @@ export const CreatePipeModal: React.FC<CreatePipeModalProps> = ({
                   key={idx}
                   className="p-3 rounded-xl bg-slate-950/70 border border-slate-800 flex items-center gap-3"
                 >
-                  <div className="w-6 h-6 rounded-lg bg-slate-900 border border-slate-700 flex items-center justify-center font-bold text-[11px] text-slate-400 shrink-0">
+                  <div className="w-6 h-6 rounded-lg bg-slate-900 border border-slate-700 flex items-center justify-center font-bold text-[11px] text-fg-muted shrink-0">
                     {idx + 1}
                   </div>
 
                   {/* Phase Name Input */}
-                  <input
+                  <Input
                     type="text"
+                    aria-label={`Nome da fase ${idx + 1}`}
                     value={phase.name}
                     onChange={(e) => handleUpdatePhase(idx, 'name', e.target.value)}
                     placeholder={`Nome da Fase ${idx + 1}`}
-                    className="flex-1 px-3 py-1.5 rounded-lg bg-slate-900 border border-slate-700 text-xs text-white focus:outline-none focus:border-purple-500"
+                    className="flex-1"
                     required
                   />
 
@@ -284,7 +260,9 @@ export const CreatePipeModal: React.FC<CreatePipeModalProps> = ({
                         key={color}
                         type="button"
                         onClick={() => handleUpdatePhase(idx, 'color', color)}
-                        className={`w-4 h-4 rounded-full border transition-transform ${
+                        aria-label={`Cor ${color}`}
+                        aria-pressed={phase.color === color}
+                        className={`w-6 h-6 rounded-full border transition-transform ${
                           phase.color === color
                             ? 'scale-125 border-white ring-2 ring-purple-500/50'
                             : 'border-transparent hover:scale-110 opacity-70 hover:opacity-100'
@@ -295,7 +273,7 @@ export const CreatePipeModal: React.FC<CreatePipeModalProps> = ({
                   </div>
 
                   {/* Final Phase Checkbox */}
-                  <label className="flex items-center gap-1.5 text-[11px] text-slate-400 cursor-pointer shrink-0 ml-1">
+                  <label className="flex items-center gap-1.5 text-[11px] text-fg-muted cursor-pointer shrink-0 ml-1">
                     <input
                       type="checkbox"
                       checked={phase.isFinal}
@@ -309,8 +287,9 @@ export const CreatePipeModal: React.FC<CreatePipeModalProps> = ({
                   <button
                     type="button"
                     onClick={() => handleRemovePhase(idx)}
-                    className="p-1.5 rounded-lg text-slate-500 hover:text-rose-400 hover:bg-rose-500/10 transition-colors shrink-0"
+                    className="w-10 h-10 inline-flex items-center justify-center rounded-lg text-fg-muted hover:text-danger-soft hover:bg-danger-subtle transition-colors shrink-0 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
                     title="Remover fase"
+                    aria-label={`Remover fase ${idx + 1}`}
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -319,31 +298,7 @@ export const CreatePipeModal: React.FC<CreatePipeModalProps> = ({
             </div>
           </div>
 
-          {/* Footer Actions */}
-          <div className="pt-4 border-t border-slate-800 flex items-center justify-end gap-2.5">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition-colors"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={loading}
-              className="px-5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-purple-900/40 flex items-center gap-2 transition-all disabled:opacity-50"
-            >
-              {loading ? (
-                'Criando...'
-              ) : (
-                <>
-                  <Plus className="w-3.5 h-3.5" /> Criar Funil
-                </>
-              )}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+      </form>
+    </Modal>
   );
 };

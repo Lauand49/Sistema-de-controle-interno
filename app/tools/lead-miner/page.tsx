@@ -14,6 +14,7 @@ import { OdblAttribution } from '@/components/lead-miner/OdblAttribution';
 import { useActiveRuns } from '@/hooks/lead-miner/useActiveRuns';
 import { useRunDrivers } from '@/hooks/lead-miner/useRunDrivers';
 import type { RunProgress } from '@/lib/leads/client-api';
+import { PageHeader } from '@/components/ui/Display';
 
 const navLinkClass =
   'inline-flex items-center gap-1.5 rounded-xl border border-slate-700 bg-slate-900 px-3 py-2 text-xs font-semibold text-slate-200 hover:border-purple-500 hover:text-white focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500';
@@ -85,7 +86,7 @@ export default function LeadMinerPage() {
   return (
     <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100">
       <SciTecNavbar />
-      <main className="mx-auto w-full max-w-6xl flex-1 space-y-6 p-6">
+      <main className="flex-1 min-w-0 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
         <header className="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
           <div className="space-y-2">
             <Link
@@ -95,15 +96,7 @@ export default function LeadMinerPage() {
               <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
               Ferramentas
             </Link>
-            <h1 className="flex items-center gap-2 text-2xl font-black tracking-tight text-white">
-              <span className="rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 p-2">
-                <Pickaxe className="h-5 w-5 text-white" aria-hidden="true" />
-              </span>
-              Minerador de Leads
-            </h1>
-            <p className="text-sm text-slate-400">
-              Escolha o bairro e os nichos para buscar empresas e analisar a presença digital delas.
-            </p>
+            <PageHeader icon={Pickaxe} title="Minerador de Leads" subtitle="Escolha o bairro e os nichos para buscar empresas e analisar a presença digital delas." />
           </div>
           <nav aria-label="Minerador de Leads" className="flex gap-2">
             <Link href="/tools/lead-miner/runs" className={navLinkClass}>

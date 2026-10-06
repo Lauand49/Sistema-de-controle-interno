@@ -1,4 +1,5 @@
 'use client';
+import { Button } from '@/components/ui/Button';
 
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { Search, RotateCcw, AlertCircle } from 'lucide-react';
@@ -13,11 +14,11 @@ import {
   type RankingInvalidField,
   type RankingUiKey,
 } from './ranking-helpers';
+import { Input, Select } from '@/components/ui/Input';
 
 const TEXT_DEBOUNCE_MS = 400;
 
-const FIELD =
-  'w-full rounded-xl border border-slate-800 bg-slate-900 px-3 py-2 text-sm text-slate-100 placeholder:text-slate-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 aria-[invalid=true]:border-red-500';
+const FIELD = 'aria-[invalid=true]:border-red-500';
 const LABEL = 'mb-1 block text-xs font-semibold text-slate-400';
 
 interface RankingFiltersProps {
@@ -59,7 +60,7 @@ function DebouncedInput({
     return () => clearTimeout(t);
   }, [local, onCommit]);
 
-  return <input {...rest} value={local} onChange={(e) => setLocal(e.target.value)} />;
+  return <Input {...rest} value={local} onChange={(e) => setLocal(e.target.value)} />;
 }
 
 function SelectField({
@@ -80,9 +81,9 @@ function SelectField({
       <label htmlFor={id} className={LABEL}>
         {label}
       </label>
-      <select id={id} className={FIELD} value={value} onChange={(e) => onChange(e.target.value)}>
+      <Select id={id} className={FIELD} value={value} onChange={(e) => onChange(e.target.value)}>
         {children}
-      </select>
+      </Select>
     </div>
   );
 }
@@ -130,7 +131,7 @@ export const RankingFilters: React.FC<RankingFiltersProps> = ({
             Buscar por nome, endereço ou telefone
           </label>
           <div className="relative">
-            <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-500" aria-hidden="true" />
+            <Search className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" aria-hidden="true" />
             <DebouncedInput
               id={id('q')}
               type="search"
@@ -142,14 +143,10 @@ export const RankingFilters: React.FC<RankingFiltersProps> = ({
             />
           </div>
         </div>
-        <button
-          type="button"
-          onClick={onClear}
-          className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
-        >
+        <Button variant="secondary" size="sm" type="button" onClick={onClear}>
           <RotateCcw className="h-4 w-4" aria-hidden="true" />
           Limpar filtros
-        </button>
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
@@ -219,7 +216,7 @@ export const RankingFilters: React.FC<RankingFiltersProps> = ({
               aria-invalid={scoreInvalid}
               aria-describedby={scoreInvalid ? scoreErrId : undefined}
             />
-            <span className="text-slate-500" aria-hidden="true">
+            <span className="text-slate-400" aria-hidden="true">
               –
             </span>
             <label htmlFor={id('scoreMax')} className="sr-only">
@@ -324,7 +321,7 @@ export const RankingFilters: React.FC<RankingFiltersProps> = ({
             <label htmlFor={id('analyzedFrom')} className="sr-only">
               Analisadas a partir de
             </label>
-            <input
+            <Input
               id={id('analyzedFrom')}
               type="date"
               className={FIELD}
@@ -333,11 +330,11 @@ export const RankingFilters: React.FC<RankingFiltersProps> = ({
               aria-invalid={datesInvalid}
               aria-describedby={datesInvalid ? datesErrId : undefined}
             />
-            <span className="text-xs text-slate-500">até</span>
+            <span className="text-xs text-slate-400">até</span>
             <label htmlFor={id('analyzedTo')} className="sr-only">
               Analisadas até
             </label>
-            <input
+            <Input
               id={id('analyzedTo')}
               type="date"
               className={FIELD}

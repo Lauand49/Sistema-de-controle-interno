@@ -5,6 +5,18 @@
 Atualizado ao fim dos ajustes pós-etapa 3 (T1–T6) e das correções da revisão (P1–P5). Leia junto com `docs/PLANO-INTEGRACAO.md` (seção 8.4 e 8.4.1) e `AGENTS.md`.
 
 
+## Etapa 6 — revisão de design (branch `etapa-6-design`)
+
+- Guia: `docs/DESIGN.md`. Auditoria: `docs/DESIGN-AUDITORIA.md`. Conferência manual: `docs/DESIGN-CHECKLIST.md`. PR: `docs/PR-ETAPA-6.md`. Plano: seção 8.7.
+- Regra: UI nova usa `components/ui` e os tokens; sem emoji como ícone; sem azul sólido como primário. A guarda é `tests/ui/design-guard.test.ts` (lista de exceções documentada).
+- **Rodada 2 feita:** menu com rótulos a partir de xl; `PageHeader`/`StatCard`/`EmptyState`/`LoadingState`/`ErrorState` nas telas e nos painéis; modais em `Modal`; controles crus trocados; guarda ampliada.
+- **Rodada 3 feita:** menu do perfil com ícones uniformes; "Novo card"/"Nova solicitação" com rótulo a partir de 1024px e "Mais" (Equipe, Painéis) entre 1280 e 1535px; tabelas com largura mínima em contêiner rolável; 15 botões de gradiente trocados por `Button`; rótulos ligados por `htmlFor`/`id` (inclusive dentro de `.map()`); blocos de acesso restrito e fila vazia com `ErrorState`/`EmptyState`.
+- **Ainda fora do padrão (de propósito ou por falta de escopo):** `ContatoTabs`, kanban do Gente, badges, `StopRunButton` e `DiscardedLeadsDrawer` (fora do pedido); links estilizados como botão primário (`<Link>` com gradiente: paineis, miner, ferramentas, perfil "Entrar"), botões primários de estado ativo/inativo (abas da navbar) e botões secundários/ghost escritos à mão (só o primário foi migrado); estado "Triagem concluída" do lead-filter; cores de departamento (azul, rosa, âmbar) e o gradiente azul do cartão em `/tools`, que são identidade e estão na lista de exceções do teste de guarda. Conferir tudo no navegador com o checklist.
+- **Rodada 4:** `ButtonLink`/`buttonVariants` e botões secundários migrados; "Triagem concluída" em `EmptyState`; restam só os itens de "melhoria futura" do `DESIGN.md`.
+- **Rodada 5:** `IconButton`, `danger-ghost`, tons de `Badge`, `ContatoTabs` em `Tabs`, `NavLink` da navbar, `StopRunButton` com `Button` e `Drawer` feitos; pendente só o kanban do Gente (SectorTaskBoard) e gradientes das exceções do guarda.
+- **Achados de lógica não alterados:** o campo "Gerente Responsável" (funil de Negócios, fase Ganho) é texto livre (`prisma/seed.ts`); o texto da atividade "Demanda intersetorial ... CONCLUÍDA" é gravado pela API (`app/api/requests/[id]/route.ts`) e não foi trocado para "Solicitação" (formato de dado salvo).
+
+
 ## Etapa 5 — revisão de acesso, dados e painéis (branch `etapa-5-revisao-acesso`)
 
 - Relatório: `docs/AUDITORIA-ACESSO.md` (inventário, achados L-01, A-01, A-04 a A-06, decisões D-01 a D-08). Texto do PR: `docs/PR-ETAPA-5.md`. Plano: seção 8.6.

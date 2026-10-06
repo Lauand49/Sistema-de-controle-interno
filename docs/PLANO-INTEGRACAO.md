@@ -192,6 +192,7 @@ Em Negócios → Ferramentas, o card **"Minerador de Leads"** substitui o placeh
 | 4 — Deploy | Dockerfile standalone, Cloud Run, Neon, OAuth Internal, orçamento/quotas, guia passo a passo | arquivos e guias prontos na branch `etapa-4-deploy` (PR pendente; **nada foi implantado**; depende de pessoas; ver 8.5) |
 
 | 5 — Revisão de acesso | Revisão de acesso, dados e painéis; correção do laço de recarga ao deslogar | concluída na branch `etapa-5-revisao-acesso` (PR pendente; ver 8.6 e `docs/AUDITORIA-ACESSO.md`) |
+| 6 — Revisão de design | Unificação visual: tokens, `components/ui`, cabeçalho, kanban, modal do card, modais, emojis e cores | concluída na branch `etapa-6-design` (PR pendente; ver 8.7 e `docs/DESIGN.md`) |
 Cada etapa: branch própria a partir desta, PR para `main`, `npm run build` passando antes de entregar.
 
 ### 8.1 Registro da Etapa 0
@@ -397,6 +398,19 @@ Relatório completo em `docs/AUDITORIA-ACESSO.md` (inventário de páginas e rot
 - **Decisões do dono pendentes:** D-01 a D-08 em `docs/AUDITORIA-ACESSO.md` (403 × 404, diretório de pessoas, vínculos de tarefa, ordem de validação em `hierarchy`, página de precificação, dados individuais no painel de unidade, prazo com hora, `/api/health` pública).
 - **Testes novos (offline):** `tests/auth/` (middleware real com JWT assinado; harness de login/logout), `tests/access/` (matriz de 12 personas × 43 rotas; dados da pessoa) e `tests/dashboards/f5-numeros-e-acesso.test.ts` (repositório Prisma real + duplo em memória). `vitest.config.ts` ganhou `server.deps.inline: ['next-auth']` para rodar o middleware real.
 - **Não verificado:** comportamento do roteador do Next no navegador (o harness simula o roteador e o `signOut`); contagens dos painéis em Postgres real; nenhum teste de integração rodou.
+
+### 8.7 Revisão de design
+
+Guia em `docs/DESIGN.md`, inventário em `docs/DESIGN-AUDITORIA.md`, roteiro de conferência manual em `docs/DESIGN-CHECKLIST.md`. Só apresentação: nenhuma rota de API, permissão, schema ou formato de dado mudou.
+
+- **Fundação:** tokens semânticos no Tailwind (`primary`, `surface`, `border`, `fg`, `danger`, `warning`, `success`, `info`), `components/ui` (Button, Field, Input/Select/Textarea/DateInput, CurrencyInput, Modal/ModalFrame, Tabs, Badge, StatCard, EmptyState, PageHeader), tema escuro fixo (`darkMode: 'class'` + `dark` no `<html>`) e `color-scheme: dark`.
+- **Estrutura:** navbar sem overflow (rótulos só com ícone abaixo de 1536px, chip do usuário truncado com tooltip), container único por página, título por rota (`<Página> · SciTec Jr. OS`), termo único **Solicitação**, nome de exibição da unidade (`unitName`), contagens com plural (`pluralize`).
+- **Kanban:** colunas de mesma largura mínima e cabeçalho de altura fixa, tooltip nos títulos, aviso de rolagem horizontal. "campos configurados" (definidos na fase) × "campos preenchidos" (valores do card, inclui fases anteriores): eram rótulos enganosos, não bug.
+- **Modal do card:** `Modal` + `Field` + `Tabs`; todos os controles com caixa; calendário visível; valor em pt-BR (grava o mesmo texto); descrição que cresce; cor primária única; ícones lucide.
+- **Resto do site:** controles com estilo único, modais com Esc/foco preso, rótulos ligados por `htmlFor`, emojis trocados por lucide, botões azuis para primário, contraste (`text-slate-500` → `400`, fonte mínima 11px).
+- **Rodada 2:** menu com rótulos a partir de 1280px, padrão de página/estados em todas as telas, 13 modais em `Modal`, controles crus eliminados (guarda ampliada).
+- **Guarda:** `tests/ui/design-guard.test.ts`.
+- **Não verificado:** aparência no navegador (checklist para o dono); migração dos botões soltos para `Button` e dos badges/abas restantes (ver HANDOFF).
 
 ---
 

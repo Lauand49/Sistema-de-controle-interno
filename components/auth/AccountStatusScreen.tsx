@@ -3,6 +3,7 @@
 import React from 'react';
 import { Clock, LogOut, RefreshCw, ShieldOff } from 'lucide-react';
 import type { User } from '@/types';
+import { Button } from '@/components/ui/Button';
 
 interface Props {
   user: User;
@@ -37,28 +38,20 @@ export const AccountStatusScreen: React.FC<Props> = ({ user, onLogout, onRefresh
               ? 'Seu acesso foi registrado. Um Gerente de Departamento ou a Presidência precisa aprovar sua conta e definir seu departamento.'
               : 'Sua conta foi desativada. Fale com o gerente do seu departamento ou com a Presidência.'}
           </p>
-          <p className="text-xs text-slate-500">
+          <p className="text-xs text-slate-400">
             Conectado como <span className="font-semibold text-slate-300">{user.email}</span>
           </p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2 justify-center">
           {pending && (
-            <button
-              type="button"
-              onClick={onRefresh}
-              className="px-4 py-2.5 text-xs font-bold rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white flex items-center justify-center gap-2"
-            >
+            <Button size="sm" type="button" onClick={onRefresh}>
               <RefreshCw className="w-4 h-4" aria-hidden="true" /> Verificar novamente
-            </button>
+            </Button>
           )}
-          <button
-            type="button"
-            onClick={onLogout}
-            className="px-4 py-2.5 text-xs font-bold rounded-xl border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center gap-2"
-          >
+          <Button variant="secondary" size="sm" type="button" onClick={onLogout}>
             <LogOut className="w-4 h-4" aria-hidden="true" /> Sair
-          </button>
+          </Button>
         </div>
       </div>
     </main>

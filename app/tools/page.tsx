@@ -25,6 +25,7 @@ import {
   Award,
   Pickaxe,
 } from 'lucide-react';
+import { PageHeader } from '@/components/ui/Display';
 
 export default function ToolsHubPage() {
   const { currentProfile } = useProfile();
@@ -125,24 +126,12 @@ export default function ToolsHubPage() {
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
       <SciTecNavbar />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto p-6 space-y-8">
-        {/* Banner Informativo */}
-        <div className="relative rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950/60 to-purple-950/70 border border-slate-800 p-8 shadow-2xl overflow-hidden">
-          <div className="absolute top-0 right-0 transform translate-x-10 -translate-y-10 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="relative z-10 max-w-3xl space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-purple-300 border border-purple-700/40">
-              <Wrench className="w-3.5 h-3.5 text-purple-400" /> Ferramentas Especializadas por Setor
-            </div>
-            <h2 className="text-3xl font-black tracking-tight text-white">
-              Hub de Ferramentas SciTec jr.
-            </h2>
-            <p className="text-sm text-slate-300 leading-relaxed">
-              As ferramentas agora são integradas e exclusivas de cada diretoria. Cada setor possui utilitários operacionais customizados para seu fluxo de trabalho, acessíveis diretamente na aba <strong className="text-purple-300">Ferramentas</strong> de cada setor.
-            </p>
-          </div>
-        </div>
-
+      <main className="flex-1 min-w-0 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
+        <PageHeader
+          icon={Wrench}
+          title="Hub de Ferramentas SciTec jr."
+          subtitle="As ferramentas são integradas e exclusivas de cada diretoria, acessíveis na aba Ferramentas de cada setor."
+        />
         {/* Card ativo: Minerador de Leads (Negócios) */}
         {showLeadMiner && (
           <Link
@@ -167,7 +156,7 @@ export default function ToolsHubPage() {
                     <h4 className="text-lg font-black text-white group-hover:text-purple-300 transition-colors">
                       Minerador de Leads
                     </h4>
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                       ● Ativo
                     </span>
                   </div>
@@ -188,7 +177,7 @@ export default function ToolsHubPage() {
             <h3 className="text-sm font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-purple-400" /> Diretórios Operacionais Setoriais
             </h3>
-            <span className="text-xs text-slate-500 font-medium">
+            <span className="text-xs text-slate-400 font-medium">
               4 Diretorias com ferramentas dedicadas
             </span>
           </div>
@@ -218,7 +207,7 @@ export default function ToolsHubPage() {
                               {sector.name}
                             </h4>
                             {isUserSector && (
-                              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
                                 Seu Setor
                               </span>
                             )}
@@ -240,7 +229,7 @@ export default function ToolsHubPage() {
 
                     {/* Lista de Recursos */}
                     <div className="space-y-1.5 pt-2">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
                         Recursos & Módulos Inclusos:
                       </span>
                       <ul className="space-y-1">
@@ -258,7 +247,7 @@ export default function ToolsHubPage() {
                   </div>
 
                   <div className="mt-6 pt-4 border-t border-slate-800/80 flex items-center justify-between">
-                    <span className="text-xs text-slate-500 font-medium">
+                    <span className="text-xs text-slate-400 font-medium">
                       {hasAccess ? 'Exclusivo no espaço do setor' : 'Apenas membros do departamento e Presidência'}
                     </span>
 

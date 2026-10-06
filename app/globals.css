@@ -17,6 +17,11 @@
   }
 }
 
+html {
+  /* Tema escuro: calendário/seletores nativos ficam claros sobre fundo escuro. */
+  color-scheme: dark;
+}
+
 html,
 body {
   max-width: 100vw;
@@ -67,4 +72,12 @@ body {
 }
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(124, 58, 237, 0.6);
+}
+
+/* Fallback do ícone de calendário/hora em navegadores que ignoram color-scheme. */
+input[type='date']::-webkit-calendar-picker-indicator,
+input[type='time']::-webkit-calendar-picker-indicator,
+input[type='datetime-local']::-webkit-calendar-picker-indicator {
+  filter: invert(0.85);
+  cursor: pointer;
 }

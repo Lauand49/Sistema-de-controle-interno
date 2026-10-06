@@ -13,13 +13,13 @@ export const AiInsight: React.FC<{ analysis: CompanyAnalysis }> = ({ analysis: a
       <div className="space-y-3 text-sm text-slate-200">
         {oportunidade && (
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Oportunidade</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">Oportunidade</h3>
             <p className="mt-0.5 whitespace-pre-line">{oportunidade}</p>
           </div>
         )}
         {justificativa && (
           <div>
-            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-500">Justificativa</h3>
+            <h3 className="text-xs font-semibold uppercase tracking-wide text-slate-400">Justificativa</h3>
             <p className="mt-0.5 whitespace-pre-line">{justificativa}</p>
           </div>
         )}

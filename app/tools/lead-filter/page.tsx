@@ -29,6 +29,13 @@ import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { useProfile } from '@/contexts/ProfileContext';
 import { canUseNegociosTools } from '@/lib/permissions';
+import { Modal } from '@/components/ui/Modal';
+import { Button, ButtonLink } from '@/components/ui/Button';
+import { Field } from '@/components/ui/Field';
+import { Select } from '@/components/ui/Input';
+import { CONTROL_CLASS } from '@/components/ui/Input';
+import { LoadingState, ErrorState, EmptyState } from '@/components/ui/Display';
+import { PageHeader } from '@/components/ui/Display';
 
 interface HistoryItem {
   lead: TriageLead;
@@ -370,11 +377,16 @@ export default function LeadFilterPage() {
   const progressPercent =
     queueLeads.length > 0 ? Math.min(100, Math.round((currentIndex / queueLeads.length) * 100)) : 0;
 
+  const closeUpload = () => {
+    setIsUploadModalOpen(false);
+    setParsedPreview(null);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-purple-500 selection:text-white">
       <SciTecNavbar />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto p-6 flex flex-col space-y-6">
+      <main className="flex-1 min-w-0 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6 flex flex-col">
         {/* Navigation & Header Bar */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-800">
           <div className="space-y-1">
@@ -385,26 +397,16 @@ export default function LeadFilterPage() {
               <span className="text-slate-600">/</span>
               <span className="text-slate-300">Triagem Rápida de Leads</span>
             </div>
-            <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-2.5">
-              <Filter className="w-6 h-6 text-purple-400" /> Triagem Rápida de Leads
-            </h1>
-            <p className="text-xs text-slate-400">
-              Qualificação preliminar ágil: aprove leads com perfil comercial ou descarte-os com justificativa.
-            </p>
+            <PageHeader icon={Filter} title="Triagem Rápida de Leads" subtitle="Qualificação preliminar ágil: aprove leads com perfil comercial ou descarte-os com justificativa." />
           </div>
 
           {canManageLeads && (
             <div className="flex items-center flex-wrap gap-2.5">
               {/* Undo Button */}
-              <button
-                onClick={handleUndo}
-                disabled={!canManageLeads || historyStack.length === 0 || currentIndex === 0}
-                title="Desfazer última decisão (Ctrl+Z)"
-                className="px-3 py-2 rounded-xl text-xs font-semibold bg-slate-900 border border-slate-800 hover:bg-slate-800 text-slate-300 disabled:opacity-40 disabled:pointer-events-none flex items-center gap-1.5 transition-all"
-              >
+              <Button variant="secondary" size="sm" onClick={handleUndo} disabled={!canManageLeads || historyStack.length === 0 || currentIndex === 0} title="Desfazer última decisão (Ctrl+Z)">
                 <RotateCcw className="w-3.5 h-3.5 text-amber-400" />
                 <span>Desfazer</span>
-              </button>
+              </Button>
 
               {/* Hidden Discarded Drawer Button */}
               <button
@@ -413,7 +415,7 @@ export default function LeadFilterPage() {
               >
                 <Eye className="w-3.5 h-3.5 text-rose-400" />
                 <span>Ver Descartados</span>
-                <span className="px-1.5 py-0.5 rounded-full bg-rose-950 border border-rose-800/60 text-[10px] font-bold">
+                <span className="px-1.5 py-0.5 rounded-full bg-rose-950 border border-rose-800/60 text-[11px] font-bold">
                   {discardedLeads.length}
                 </span>
               </button>
@@ -441,36 +443,29 @@ export default function LeadFilterPage() {
 
         {/* Módulo Exclusivo: Bloqueio Total para Outros Setores */}
         {!canManageLeads ? (
-          <div className="py-20 flex flex-col items-center justify-center text-center space-y-6 max-w-lg mx-auto bg-slate-900/50 border border-slate-800 p-8 rounded-3xl shadow-2xl animate-in fade-in duration-200">
-            <div className="w-16 h-16 rounded-3xl bg-amber-950/70 border border-amber-700/60 text-amber-400 flex items-center justify-center shadow-xl shadow-amber-950/40">
-              <Lock className="w-8 h-8" />
-            </div>
-            <div className="space-y-2">
-              <span className="text-xs font-extrabold uppercase tracking-wider text-amber-400 bg-amber-950/80 px-3 py-1 rounded-full border border-amber-800/60">
-                Acesso Restrito
-              </span>
-              <h2 className="text-2xl font-black text-white">
-                Módulo Exclusivo e Interno de Negócios
-              </h2>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                A triagem rápida e a qualificação de leads são confidenciais e de uso estritamente interno da Diretoria de <strong>Negócios</strong>. Membros de outros setores (Mídias, Gente ou AdmJurFin) não possuem autorização para avaliar ou visualizar a base de leads da SciTec jr.
-              </p>
-            </div>
-            <div className="flex items-center gap-3 pt-2">
-              <Link
-                href="/setores/negocios"
-                className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition-colors shadow-lg shadow-purple-900/30"
-              >
-                Ir para o Setor de Negócios
-              </Link>
-              <Link
-                href="/"
-                className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition-colors"
-              >
-                Voltar à Página Inicial
-              </Link>
-            </div>
-          </div>
+          <ErrorState
+            icon={Lock}
+            tone="warning"
+            title="Acesso restrito: módulo exclusivo de Negócios"
+            description="A triagem rápida e a qualificação de leads são confidenciais e de uso interno da Diretoria de Negócios. Membros de outros setores (Mídias, Gente ou AdmJurFin) não têm autorização para avaliar ou visualizar a base de leads da SciTec jr."
+            action={
+              <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                <Link
+                  href="/setores/negocios"
+                  className="inline-flex items-center min-h-10 px-5 rounded-control bg-primary hover:bg-primary-hover text-white font-bold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                >
+                  Ir para o Setor de Negócios
+                </Link>
+                <Link
+                  href="/"
+                  className="inline-flex items-center min-h-10 px-5 rounded-control bg-surface-overlay hover:bg-border-strong text-fg font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                >
+                  Voltar à Página Inicial
+                </Link>
+              </div>
+            }
+            className="max-w-lg mx-auto"
+          />
         ) : (
           <>
 
@@ -510,24 +505,16 @@ export default function LeadFilterPage() {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col items-center justify-center py-4">
           {loading ? (
-            <div className="text-center py-16 space-y-3">
-              <div className="w-10 h-10 border-3 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-sm text-slate-400">Carregando leads para a triagem...</p>
-            </div>
+            <LoadingState label="Carregando leads para a triagem…" className="py-16" />
           ) : queueLeads.length === 0 ? (
             /* Empty Queue State */
-            <div className="max-w-md w-full bg-slate-900/60 border border-slate-800 rounded-3xl p-8 text-center space-y-5">
-              <div className="w-16 h-16 rounded-2xl bg-purple-950/80 border border-purple-800/60 text-purple-300 flex items-center justify-center mx-auto">
-                <Layers className="w-8 h-8" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-bold text-white">Nenhum Lead Pendente de Triagem</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Importe uma planilha de prospecção (.xlsx ou .csv) para iniciar a qualificação individual de leads.
-                </p>
-              </div>
-
-              <div className="pt-2 flex flex-col gap-2.5">
+            <EmptyState
+              icon={Layers}
+              title="Nenhum lead pendente de triagem"
+              description="Importe uma planilha de prospecção (.xlsx ou .csv) para iniciar a qualificação individual de leads."
+              className="max-w-md w-full"
+              action={
+                <div className="pt-2 flex flex-col gap-2.5">
                 {canManageLeads ? (
                   <button
                     onClick={() => setIsUploadModalOpen(true)}
@@ -536,8 +523,8 @@ export default function LeadFilterPage() {
                     <Upload className="w-4 h-4" /> Importar Planilha de Leads
                   </button>
                 ) : (
-                  <div className="w-full py-3 px-4 rounded-xl text-xs font-medium bg-slate-950/80 border border-slate-800 text-slate-500 text-center">
-                    🔒 Importação de leads restrita a Negócios
+                  <div className="w-full py-3 px-4 rounded-xl text-xs font-medium bg-slate-950/80 border border-slate-800 text-slate-400 text-center">
+                    <Lock className="w-3.5 h-3.5 inline mr-1 -mt-0.5" aria-hidden="true" />Importação de leads restrita a Negócios
                   </div>
                 )}
                 <Link
@@ -547,22 +534,18 @@ export default function LeadFilterPage() {
                   <FileSpreadsheet className="w-4 h-4 text-emerald-400" /> Acessar Planilha Existente
                 </Link>
               </div>
-            </div>
+              }
+            />
           ) : currentIndex >= queueLeads.length ? (
             /* Completed Queue State */
-            <div className="max-w-lg w-full bg-slate-900/80 border border-slate-800 rounded-3xl p-8 text-center space-y-6 shadow-2xl">
-              <div className="w-16 h-16 rounded-2xl bg-emerald-950/80 border border-emerald-700/60 text-emerald-400 flex items-center justify-center mx-auto shadow-inner">
-                <CheckCircle2 className="w-9 h-9" />
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="text-2xl font-black text-white">Triagem Concluída!</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Todos os leads da fila foram avaliados. Os leads aprovados já estão disponíveis para a equipe comercial na planilha de trabalho.
-                </p>
-              </div>
-
-              {/* Session Summary Card */}
+            <EmptyState
+              icon={CheckCircle2}
+              title="Triagem Concluída!"
+              description="Todos os leads da fila foram avaliados. Os leads aprovados já estão disponíveis para a equipe comercial na planilha de trabalho."
+              className="max-w-lg w-full"
+              action={
+                <div className="w-full space-y-4 pt-2">
+                  {/* Session Summary Card */}
               <div className="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-slate-950/70 border border-slate-800/80">
                 <div className="text-center p-3 rounded-xl bg-emerald-950/30 border border-emerald-800/30">
                   <span className="text-2xl font-black text-emerald-300">{sessionApproved}</span>
@@ -573,22 +556,17 @@ export default function LeadFilterPage() {
                   <p className="text-[11px] text-rose-400 font-semibold mt-0.5">Leads Descartados</p>
                 </div>
               </div>
-
-              <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                <Link
-                  href="/tools/lead-sheet"
-                  className="flex-1 py-3 px-4 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-950/30"
-                >
-                  <FileSpreadsheet className="w-4 h-4" /> Ver Planilha de Leads
-                </Link>
-                <button
-                  onClick={() => setIsDrawerOpen(true)}
-                  className="py-3 px-4 rounded-xl text-xs font-bold bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 flex items-center justify-center gap-2 transition-colors"
-                >
-                  <Eye className="w-4 h-4 text-rose-400" /> Ver Descartados ({discardedLeads.length})
-                </button>
-              </div>
-            </div>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <ButtonLink href="/tools/lead-sheet" icon={FileSpreadsheet}>
+                      Ver Planilha de Leads
+                    </ButtonLink>
+                    <Button variant="secondary" onClick={() => setIsDrawerOpen(true)}>
+                      <Eye className="w-4 h-4" aria-hidden="true" /> Ver Descartados ({discardedLeads.length})
+                    </Button>
+                  </div>
+                </div>
+              }
+            />
           ) : (
             /* Active Triage Decision Card */
             <div className="w-full flex flex-col items-center space-y-4">
@@ -603,29 +581,29 @@ export default function LeadFilterPage() {
 
               {/* Keyboard Shortcuts Hint */}
               {canManageLeads && (
-                <div className="flex items-center justify-center gap-6 text-[11px] text-slate-500 pt-2 font-medium">
+                <div className="flex items-center justify-center gap-6 text-[11px] text-slate-400 pt-2 font-medium">
                   <span className="flex items-center gap-1.5">
-                    <kbd className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono text-[10px]">
+                    <kbd className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono text-[11px]">
                       ←
                     </kbd>{' '}
                     ou{' '}
-                    <kbd className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono text-[10px]">
+                    <kbd className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono text-[11px]">
                       N
                     </kbd>{' '}
                     Descartar
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <kbd className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono text-[10px]">
+                    <kbd className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono text-[11px]">
                       →
                     </kbd>{' '}
                     ou{' '}
-                    <kbd className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono text-[10px]">
+                    <kbd className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono text-[11px]">
                       S
                     </kbd>{' '}
                     Aprovar
                   </span>
                   <span className="flex items-center gap-1.5">
-                    <kbd className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono text-[10px]">
+                    <kbd className="px-2 py-0.5 rounded bg-slate-800 border border-slate-700 text-slate-300 font-mono text-[11px]">
                       Ctrl+Z
                     </kbd>{' '}
                     Desfazer
@@ -652,165 +630,95 @@ export default function LeadFilterPage() {
 
       {/* Upload Spreadsheet Modal */}
       {isUploadModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-xl overflow-hidden shadow-2xl p-6 space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-purple-950 text-purple-400 border border-purple-800/50">
-                  <Upload className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-white text-base">Importar Planilha para Triagem</h3>
-                  <p className="text-xs text-slate-400">
-                    Carregue um arquivo .xlsx ou .csv para avaliar os leads um a um
-                  </p>
+        <Modal
+          title="Importar Planilha para Triagem"
+          description="Carregue um arquivo .xlsx ou .csv para avaliar os leads um a um"
+          onClose={closeUpload}
+          closeOnBackdrop={false}
+          footer={
+            parsedPreview ? (
+              <>
+                <Button variant="ghost" onClick={closeUpload}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleSaveBatchToTriage}>Iniciar Triagem</Button>
+              </>
+            ) : undefined
+          }
+        >
+          {!parsedPreview ? (
+            <>
+            <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleFileChange} className="hidden" aria-label="Arquivo da planilha" />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full min-h-40 border-2 border-dashed border-border-strong hover:border-primary-soft rounded-card p-8 flex flex-col items-center justify-center text-center transition-colors bg-surface group space-y-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+            >
+              <span className="p-4 rounded-full bg-primary-subtle text-primary-soft group-hover:scale-110 transition-transform">
+                <FileSpreadsheet className="w-8 h-8" aria-hidden="true" />
+              </span>
+              <span className="space-y-1">
+                <span className="block text-sm font-semibold text-fg">Clique para selecionar a planilha</span>
+                <span className="block text-xs text-fg-muted">Formatos aceitos: Excel (.xlsx, .xls) ou CSV</span>
+              </span>
+            </button>
+            </>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between gap-3 bg-primary-subtle border border-primary/30 p-3 rounded-control text-xs text-primary-soft">
+                <span className="font-semibold">{parsedPreview.length} leads detectados na planilha.</span>
+                <Button variant="ghost" size="sm" onClick={() => setParsedPreview(null)}>
+                  Trocar arquivo
+                </Button>
+              </div>
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-fg-muted">Confirme o mapeamento das colunas:</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <Field label="Nome da empresa" required>
+                  <Select value={mapping.companyName} onChange={(e) => setMapping({ ...mapping, companyName: e.target.value })}>
+
+                    {columns.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                <Field label="Contato / decisor">
+                  <Select value={mapping.contactName} onChange={(e) => setMapping({ ...mapping, contactName: e.target.value })}>
+                    <option value="">-- Não mapear --</option>
+                    {columns.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                <Field label="Telefone / e-mail">
+                  <Select value={mapping.contactInfo} onChange={(e) => setMapping({ ...mapping, contactInfo: e.target.value })}>
+                    <option value="">-- Não mapear --</option>
+                    {columns.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                <Field label="Segmento / setor">
+                  <Select value={mapping.segment} onChange={(e) => setMapping({ ...mapping, segment: e.target.value })}>
+                    <option value="">-- Não mapear --</option>
+                    {columns.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
                 </div>
               </div>
-              <button
-                onClick={() => {
-                  setIsUploadModalOpen(false);
-                  setParsedPreview(null);
-                }}
-                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
-              >
-                <X className="w-5 h-5" />
-              </button>
             </div>
-
-            {!parsedPreview ? (
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-slate-700 hover:border-purple-500 rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors bg-slate-950/40 group space-y-3"
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".xlsx,.xls,.csv"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                <div className="p-4 rounded-full bg-purple-950/40 text-purple-400 group-hover:scale-110 transition-transform">
-                  <FileSpreadsheet className="w-8 h-8" />
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-semibold text-white">Clique para selecionar a planilha</p>
-                  <p className="text-xs text-slate-500">Formatos aceitos: Excel (.xlsx, .xls) ou CSV</p>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between bg-purple-950/40 border border-purple-800/40 p-3 rounded-xl text-xs text-purple-300">
-                  <span className="font-semibold">
-                    {parsedPreview.length} leads detectados na planilha.
-                  </span>
-                  <button
-                    onClick={() => setParsedPreview(null)}
-                    className="text-xs text-purple-400 hover:text-white underline"
-                  >
-                    Trocar arquivo
-                  </button>
-                </div>
-
-                <div className="space-y-3">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                    Confirme o mapeamento das colunas:
-                  </h4>
-
-                  <div className="grid grid-cols-2 gap-3 text-xs">
-                    <div>
-                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">
-                        Nome da Empresa *
-                      </label>
-                      <select
-                        value={mapping.companyName}
-                        onChange={(e) => setMapping({ ...mapping, companyName: e.target.value })}
-                        className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-slate-200"
-                      >
-                        {columns.map((c) => (
-                          <option key={c} value={c}>
-                            {c}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">
-                        Contato / Decisor
-                      </label>
-                      <select
-                        value={mapping.contactName}
-                        onChange={(e) => setMapping({ ...mapping, contactName: e.target.value })}
-                        className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-slate-200"
-                      >
-                        <option value="">-- Não mapear --</option>
-                        {columns.map((c) => (
-                          <option key={c} value={c}>
-                            {c}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">
-                        Telefone / E-mail
-                      </label>
-                      <select
-                        value={mapping.contactInfo}
-                        onChange={(e) => setMapping({ ...mapping, contactInfo: e.target.value })}
-                        className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-slate-200"
-                      >
-                        <option value="">-- Não mapear --</option>
-                        {columns.map((c) => (
-                          <option key={c} value={c}>
-                            {c}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">
-                        Segmento / Setor
-                      </label>
-                      <select
-                        value={mapping.segment}
-                        onChange={(e) => setMapping({ ...mapping, segment: e.target.value })}
-                        className="w-full bg-slate-950 border border-slate-700 rounded-xl p-2 text-slate-200"
-                      >
-                        <option value="">-- Não mapear --</option>
-                        {columns.map((c) => (
-                          <option key={c} value={c}>
-                            {c}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-3 border-t border-slate-800 flex justify-end gap-2">
-                  <button
-                    onClick={() => {
-                      setIsUploadModalOpen(false);
-                      setParsedPreview(null);
-                    }}
-                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={handleSaveBatchToTriage}
-                    className="px-5 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white transition-colors"
-                  >
-                    Iniciar Triagem ➔
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
+          )}
+        </Modal>
       )}
     </div>
   );

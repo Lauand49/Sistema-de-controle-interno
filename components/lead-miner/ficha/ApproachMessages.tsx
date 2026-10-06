@@ -11,6 +11,8 @@ import {
 import { Muted, Section } from './Section';
 import { fallbackLabel } from '@/components/lead-miner/enrichment-helpers';
 import { formatDateTime } from './ficha-helpers';
+import { Select } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
 
 /**
  * Seção "Mensagens de abordagem" (Req. 15). Visível quando há Analise. Seletor de canal, botão
@@ -73,25 +75,19 @@ export const ApproachMessages: React.FC<ApproachMessagesProps> = ({ companyId, i
           <label htmlFor="approach-canal" className="sr-only">
             Canal da mensagem
           </label>
-          <select
+          <Select
             id="approach-canal"
             value={canal}
             onChange={(e) => setCanal(e.target.value as ApproachChannel)}
-            className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs text-slate-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
+            
           >
             <option value="WHATSAPP">WhatsApp</option>
             <option value="EMAIL">E-mail</option>
-          </select>
-          <button
-            type="button"
-            onClick={() => void generate()}
-            disabled={busy}
-            aria-busy={busy}
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-3 py-1.5 text-xs font-bold text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:cursor-not-allowed disabled:opacity-60"
-          >
+          </Select>
+          <Button size="sm" type="button" onClick={() => void generate()} disabled={busy} aria-busy={busy}>
             {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <MessageSquarePlus className="h-4 w-4" aria-hidden="true" />}
             {busy ? 'Gerando…' : 'Gerar mensagem de abordagem'}
-          </button>
+          </Button>
         </div>
       }
     >
@@ -115,13 +111,9 @@ export const ApproachMessages: React.FC<ApproachMessagesProps> = ({ companyId, i
                     <span>· {formatDateTime(m.createdAt) ?? '—'}</span>
                   </span>
                   <span className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => void copy(m)}
-                      className="inline-flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-900 px-2 py-1 font-semibold text-slate-200 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
-                    >
+                    <Button variant="secondary" size="sm" type="button" onClick={() => void copy(m)}>
                       <Copy className="h-3.5 w-3.5" aria-hidden="true" /> Copiar
-                    </button>
+                    </Button>
                     {m.canal === 'WHATSAPP' && m.whatsappLink && (
                       <a
                         href={m.whatsappLink}

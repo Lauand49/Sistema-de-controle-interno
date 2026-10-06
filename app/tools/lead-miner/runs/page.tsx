@@ -1,4 +1,5 @@
 'use client';
+import { ButtonLink, Button } from '@/components/ui/Button';
 /**
  * Tela_Mineracoes — `/tools/lead-miner/runs` (Req. 11.1–11.7, 11.9, 2.15, 7.11, 8.6, 8.15).
  * Histórico de minerações de todos os autores com busca, filtros (sincronizados com a query
@@ -33,6 +34,7 @@ import { leadMinerApi, type RunListItem, type RunsListResponse } from '@/lib/lea
 import { useActiveRuns } from '@/hooks/lead-miner/useActiveRuns';
 import { useRunDrivers } from '@/hooks/lead-miner/useRunDrivers';
 import { useProfile } from '@/contexts/ProfileContext';
+import { PageHeader } from '@/components/ui/Display';
 
 function RunsScreen() {
   const router = useRouter();
@@ -150,19 +152,12 @@ function RunsScreen() {
             <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
             Minerador de Leads
           </Link>
-          <h1 className="flex items-center gap-2 text-2xl font-bold text-white">
-            <History className="h-6 w-6 text-purple-400" aria-hidden="true" />
-            Minerações
-          </h1>
-          <p className="mt-1 text-sm text-slate-400">Histórico de minerações de todos os autores.</p>
+          <PageHeader icon={History} title="Minerações" subtitle="Histórico de minerações de todos os autores." />
         </div>
-        <Link
-          href="/tools/lead-miner"
-          className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-2.5 text-sm font-bold text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
-        >
+        <ButtonLink size="md" href="/tools/lead-miner">
           <Pickaxe className="h-4 w-4" aria-hidden="true" />
           Nova mineração
-        </Link>
+        </ButtonLink>
       </header>
 
       {drivers.length > 0 && (
@@ -203,13 +198,9 @@ function RunsScreen() {
         <div role="alert" className="flex items-center gap-2 rounded-2xl border border-red-800/60 bg-red-950/40 p-4 text-sm text-red-300">
           <AlertCircle className="h-4 w-4 shrink-0" aria-hidden="true" />
           <span>{error}</span>
-          <button
-            type="button"
-            onClick={() => setReloadNonce((n) => n + 1)}
-            className="ml-auto rounded-xl border border-red-800/60 px-3 py-1.5 text-xs font-semibold hover:bg-red-900/40 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
-          >
+          <Button variant="danger" size="sm" type="button"  onClick={() => setReloadNonce((n) => n + 1)} className="ml-auto">
             Tentar novamente
-          </button>
+          </Button>
         </div>
       )}
 
@@ -222,7 +213,7 @@ function RunsScreen() {
 
       {empty && (
         <div className="flex flex-col items-center gap-3 rounded-2xl border border-slate-800 bg-slate-900/60 p-10 text-center">
-          <SearchX className="h-8 w-8 text-slate-500" aria-hidden="true" />
+          <SearchX className="h-8 w-8 text-slate-400" aria-hidden="true" />
           <p className="text-sm font-semibold text-slate-300">{NO_RUNS_FOUND}</p>
         </div>
       )}
@@ -251,7 +242,7 @@ export default function LeadMinerRunsPage() {
   return (
     <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100">
       <SciTecNavbar />
-      <main className="mx-auto w-full max-w-7xl flex-1 p-6">
+      <main className="flex-1 min-w-0 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
         <LeadMinerGate>
           <Suspense
             fallback={

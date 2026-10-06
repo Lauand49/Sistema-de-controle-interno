@@ -56,7 +56,7 @@ export const BulkActionsBar: React.FC<BulkActionsBarProps> = ({
         <p className="font-semibold text-slate-200">
           {count === 0 ? 'Nenhuma empresa selecionada' : `${count} ${count === 1 ? 'empresa selecionada' : 'empresas selecionadas'}`}
         </p>
-        <p className={valid ? 'text-slate-500' : 'text-amber-300'}>{BULK_LIMIT_MESSAGE}</p>
+        <p className={valid ? 'text-slate-400' : 'text-amber-300'}>{BULK_LIMIT_MESSAGE}</p>
       </div>
       <div className="flex flex-wrap items-center gap-2">
         {count > 0 && (

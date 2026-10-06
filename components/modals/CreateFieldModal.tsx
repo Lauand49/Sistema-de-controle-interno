@@ -2,8 +2,11 @@
 
 import React, { useState } from 'react';
 import { Phase, FieldType } from '@/types';
-import { X, Settings2 } from 'lucide-react';
 import { toast } from 'sonner';
+import { Modal } from '@/components/ui/Modal';
+import { Button } from '@/components/ui/Button';
+import { Field } from '@/components/ui/Field';
+import { Input, Select } from '@/components/ui/Input';
 
 interface CreateFieldModalProps {
   phaseId: string;
@@ -77,119 +80,68 @@ export const CreateFieldModal: React.FC<CreateFieldModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto animate-in fade-in duration-200">
-      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col">
-        <div className="p-5 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between bg-slate-50 dark:bg-slate-950">
-          <div className="flex items-center gap-2">
-            <Settings2 className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-            <h3 className="font-bold text-slate-900 dark:text-slate-100">
-              Novo Campo Configurável - {currentPhase?.name}
-            </h3>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg"
-          >
-            <X className="w-5 h-5" />
-          </button>
+    <Modal
+      title={`Novo campo configurável - ${currentPhase?.name ?? ''}`}
+      onClose={onClose}
+      closeOnBackdrop={false}
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose}>
+            Cancelar
+          </Button>
+          <Button type="submit" form="create-field-form" loading={isLoading}>
+            {isLoading ? 'Adicionando...' : 'Salvar Campo'}
+          </Button>
+        </>
+      }
+    >
+      <form id="create-field-form" onSubmit={handleSubmit} className="space-y-4">
+        <Field label="Fase alvo">
+          <Select value={selectedPhaseId} onChange={(e) => setSelectedPhaseId(e.target.value)}>
+            {phases.map((p) => (
+              <option key={p.id} value={p.id}>
+                {p.name}
+              </option>
+            ))}
+          </Select>
+        </Field>
+        <Field label="Nome / rótulo do campo" required>
+          <Input
+            type="text"
+            value={label}
+            onChange={(e) => setLabel(e.target.value)}
+            placeholder="Ex: Valor Estimado, Contato Principal, Motivo de Perda"
+            required
+          />
+        </Field>
+        <Field label="Tipo do campo">
+          <Select value={type} onChange={(e) => setType(e.target.value as FieldType)}>
+            <option value="TEXT">Texto Curto (TEXT)</option>
+            <option value="NUMBER">Número (NUMBER)</option>
+            <option value="CURRENCY">Moeda (CURRENCY - R$)</option>
+            <option value="DATE">Data (DATE)</option>
+            <option value="SELECT">Seleção (SELECT)</option>
+            <option value="TEXTAREA">Texto Longo (TEXTAREA)</option>
+          </Select>
+        </Field>
+        {type === 'SELECT' && (
+          <Field label="Opções da lista (separadas por vírgula)">
+            <Input type="text" value={optionsStr} onChange={(e) => setOptionsStr(e.target.value)} placeholder="Opção A, Opção B, Opção C" />
+          </Field>
+        )}
+        <div className="flex items-center gap-2 pt-2">
+          <input
+            type="checkbox"
+            id="req-check"
+            checked={required}
+            onChange={(e) => setRequired(e.target.checked)}
+            className="w-4 h-4 accent-purple-600 rounded focus-visible:ring-2 focus-visible:ring-focus"
+          />
+          <label htmlFor="req-check" className="text-sm font-semibold text-fg">
+            Campo obrigatório na fase gate (required)
+          </label>
         </div>
-
-        <form onSubmit={handleSubmit} className="p-6 space-y-4">
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              Fase Alvo
-            </label>
-            <select
-              value={selectedPhaseId}
-              onChange={(e) => setSelectedPhaseId(e.target.value)}
-              className="w-full px-3 py-2 text-sm rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
-            >
-              {phases.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              Nome / Rótulo do Campo <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={label}
-              onChange={(e) => setLabel(e.target.value)}
-              placeholder="Ex: Valor Estimado, Contato Principal, Motivo de Perda"
-              required
-              className="w-full px-3 py-2 text-sm rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
-              Tipo do Campo
-            </label>
-            <select
-              value={type}
-              onChange={(e) => setType(e.target.value as FieldType)}
-              className="w-full px-3 py-2 text-sm rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
-            >
-              <option value="TEXT">Texto Curto (TEXT)</option>
-              <option value="NUMBER">Número (NUMBER)</option>
-              <option value="CURRENCY">Moeda (CURRENCY - R$)</option>
-              <option value="DATE">Data (DATE)</option>
-              <option value="SELECT">Seleção (SELECT)</option>
-              <option value="TEXTAREA">Texto Longo (TEXTAREA)</option>
-            </select>
-          </div>
-
-          {type === 'SELECT' && (
-            <div>
-              <label className="block text-sm font-semibold text-slate-700 dark:text-slate-300 mb-1">
-                Opções da Lista (separadas por vírgula)
-              </label>
-              <input
-                type="text"
-                value={optionsStr}
-                onChange={(e) => setOptionsStr(e.target.value)}
-                placeholder="Opção A, Opção B, Opção C"
-                className="w-full px-3 py-2 text-sm rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-900 dark:text-slate-100"
-              />
-            </div>
-          )}
-
-          <div className="flex items-center gap-2 pt-2">
-            <input
-              type="checkbox"
-              id="req-check"
-              checked={required}
-              onChange={(e) => setRequired(e.target.checked)}
-              className="w-4 h-4 text-blue-600 rounded border-slate-300 focus:ring-blue-500"
-            />
-            <label htmlFor="req-check" className="text-sm font-semibold text-slate-800 dark:text-slate-200">
-              Campo Obrigatório na Fase Gate (Required)
-            </label>
-          </div>
-
-          <div className="pt-4 border-t border-slate-200 dark:border-slate-800 flex items-center justify-end gap-3">
-            <button
-              type="button"
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-200/60 dark:hover:bg-slate-800 rounded-lg"
-            >
-              Cancelar
-            </button>
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="px-5 py-2 text-sm font-semibold text-white bg-purple-600 hover:bg-purple-700 rounded-lg transition-colors disabled:opacity-50"
-            >
-              {isLoading ? 'Adicionando...' : 'Salvar Campo'}
-            </button>
-          </div>
-        </form>
-      </div>
-    </div>
+      </form>
+    </Modal>
   );
 };

@@ -13,7 +13,7 @@ interface ActivityTimelineProps {
 export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ activities }) => {
   if (!activities || activities.length === 0) {
     return (
-      <div className="text-center py-6 text-slate-500 text-sm">
+      <div className="text-center py-6 text-slate-400 text-sm">
         Nenhuma atividade registrada ainda.
       </div>
     );
@@ -88,7 +88,7 @@ export const ActivityTimeline: React.FC<ActivityTimelineProps> = ({ activities }
                             {activity.user.name}
                           </span>
                         ) : (
-                          <span className="text-xs font-medium text-slate-500">Sistema</span>
+                          <span className="text-xs font-medium text-slate-400">Sistema</span>
                         )}
                       </div>
                       <span className="text-xs text-slate-400">

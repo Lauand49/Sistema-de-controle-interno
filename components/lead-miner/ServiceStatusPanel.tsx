@@ -65,12 +65,12 @@ export const ServiceStatusPanel: React.FC<ServiceStatusPanelProps> = ({ services
                 />
                 <span>
                   {l.nome}
-                  {l.nota ? <span className="block text-xs text-slate-500">{l.nota}</span> : null}
+                  {l.nota ? <span className="block text-xs text-slate-400">{l.nota}</span> : null}
                 </span>
               </span>
               <span className="shrink-0 text-right">
                 <span className={l.available ? 'text-emerald-400' : 'text-amber-400'}>{estado}</span>
-                <span className="block text-xs text-slate-500">{usageSummary(l.usados, l.limite)}</span>
+                <span className="block text-xs text-slate-400">{usageSummary(l.usados, l.limite)}</span>
               </span>
             </li>
           );

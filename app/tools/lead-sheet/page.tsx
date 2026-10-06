@@ -41,6 +41,11 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { canAssignLeads, canBeLeadAssignee, canUseNegociosTools } from '@/lib/permissions';
+import { LoadingState } from '@/components/ui/Display';
+import { PageHeader } from '@/components/ui/Display';
+import { Input, Select, Textarea } from '@/components/ui/Input';
+import { Button, IconButton } from '@/components/ui/Button';
+import { ErrorState } from '@/components/ui/Display';
 
 type TabType = 'TRIAGE' | 'MEETING';
 
@@ -356,7 +361,7 @@ export default function LeadSheetPage() {
     setActiveTab('MEETING');
     toast.success('Lead convertido! Nova plaquinha gerada na aba "Reunião Marcada".', {
       action: {
-        label: 'Ver no Funil ➔',
+        label: 'Ver no Funil',
         onClick: () => router.push(`/pipe?openCard=${newCardId}`),
       },
       duration: 7000,
@@ -401,7 +406,7 @@ export default function LeadSheetPage() {
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
       <SciTecNavbar />
 
-      <main className="flex-1 max-w-7xl w-full mx-auto p-6 space-y-6">
+      <main className="flex-1 min-w-0 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
         {/* Header & Stats Banner */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-gradient-to-r from-purple-950/80 via-slate-900 to-indigo-950/80 border border-purple-800/40 p-6 rounded-2xl shadow-xl">
           <div className="space-y-1">
@@ -412,15 +417,7 @@ export default function LeadSheetPage() {
               <span className="text-slate-600">/</span>
               <span className="text-slate-300">Planilha de Leads</span>
             </div>
-            <div className="flex items-center gap-2 text-xs font-bold text-purple-300">
-              <FileSpreadsheet className="w-4 h-4 text-purple-400" /> Ferramenta de Prospecção SciTec
-            </div>
-            <h2 className="text-2xl font-black text-white">
-              Anotação e Triagem de Leads via Planilha
-            </h2>
-            <p className="text-xs text-purple-200/70">
-              Importe listas de prospecção em Excel/CSV, anote o plano de ação de cada lead e converta direto para a fase "Reunião marcada" do Funil SciTec.
-            </p>
+            <PageHeader icon={FileSpreadsheet} title="Anotação e Triagem de Leads via Planilha" subtitle="Importe listas de prospecção em Excel/CSV, anote o plano de ação de cada lead e converta direto para a fase Reunião marcada do Funil SciTec." />
           </div>
 
           <div className="flex items-center gap-3 shrink-0 flex-wrap">
@@ -429,7 +426,7 @@ export default function LeadSheetPage() {
               className="px-4 py-2.5 rounded-xl bg-purple-900/60 hover:bg-purple-800/80 border border-purple-600/50 text-purple-200 font-bold text-xs flex items-center justify-center gap-2 shadow transition-all hover:scale-[1.02]"
               title="Abrir modo de decisão rápida individual de leads"
             >
-              <Filter className="w-4 h-4 text-purple-300" /> Triagem Rápida ⚡
+              <Filter className="w-4 h-4 text-purple-300" /> Triagem Rápida
             </Link>
 
             <a
@@ -452,8 +449,8 @@ export default function LeadSheetPage() {
                 />
               </label>
             ) : (
-              <div className="px-4 py-2.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-slate-500 font-medium flex items-center justify-center gap-2">
-                🔒 Importação restrita a Negócios
+              <div className="px-4 py-2.5 rounded-xl bg-slate-900/90 border border-slate-800 text-xs text-slate-400 font-medium flex items-center justify-center gap-2">
+                <Lock className="w-3.5 h-3.5 inline mr-1 -mt-0.5" aria-hidden="true" />Importação restrita a Negócios
               </div>
             )}
           </div>
@@ -461,36 +458,29 @@ export default function LeadSheetPage() {
 
         {/* Módulo Exclusivo: Bloqueio Total para Outros Setores */}
         {!canManageLeads ? (
-          <div className="py-20 flex flex-col items-center justify-center text-center space-y-6 max-w-lg mx-auto bg-slate-900/50 border border-slate-800 p-8 rounded-3xl shadow-2xl animate-in fade-in duration-200">
-            <div className="w-16 h-16 rounded-3xl bg-amber-950/70 border border-amber-700/60 text-amber-400 flex items-center justify-center shadow-xl shadow-amber-950/40">
-              <Lock className="w-8 h-8" />
-            </div>
-            <div className="space-y-2">
-              <span className="text-xs font-extrabold uppercase tracking-wider text-amber-400 bg-amber-950/80 px-3 py-1 rounded-full border border-amber-800/60">
-                Acesso Restrito
-              </span>
-              <h2 className="text-2xl font-black text-white">
-                Módulo Exclusivo e Interno de Negócios
-              </h2>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                A anotação, triagem e designação de leads é confidencial e de uso estritamente interno da Diretoria de <strong>Negócios</strong>. Membros de outros setores (Mídias, Gente ou AdmJurFin) não possuem autorização para visualizar ou manipular a carteira de prospecção da SciTec jr.
-              </p>
-            </div>
-            <div className="flex items-center gap-3 pt-2">
-              <Link
-                href="/setores/negocios"
-                className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition-colors shadow-lg shadow-purple-900/30"
-              >
-                Ir para o Setor de Negócios
-              </Link>
-              <Link
-                href="/"
-                className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition-colors"
-              >
-                Voltar à Página Inicial
-              </Link>
-            </div>
-          </div>
+          <ErrorState
+            icon={Lock}
+            tone="warning"
+            title="Acesso restrito: módulo exclusivo de Negócios"
+            description="A anotação, triagem e designação de leads é confidencial e de uso interno da Diretoria de Negócios. Membros de outros setores (Mídias, Gente ou AdmJurFin) não têm autorização para visualizar ou manipular a carteira de prospecção da SciTec jr."
+            action={
+              <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                <Link
+                  href="/setores/negocios"
+                  className="inline-flex items-center min-h-10 px-5 rounded-control bg-primary hover:bg-primary-hover text-white font-bold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                >
+                  Ir para o Setor de Negócios
+                </Link>
+                <Link
+                  href="/"
+                  className="inline-flex items-center min-h-10 px-5 rounded-control bg-surface-overlay hover:bg-border-strong text-fg font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                >
+                  Voltar à Página Inicial
+                </Link>
+              </div>
+            }
+            className="max-w-lg mx-auto"
+          />
         ) : (
           <>
 
@@ -561,30 +551,30 @@ export default function LeadSheetPage() {
             {/* Select Mappers Grid */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
               <div>
-                <label className="block font-semibold text-purple-300 mb-1">
+                <label htmlFor="page-1" className="block font-semibold text-purple-300 mb-1">
                   Nome da Empresa / Cliente <span className="text-red-400">*</span>
                 </label>
-                <select
+                <Select id="page-1"
                   value={mapping.companyName}
                   onChange={(e) => setMapping({ ...mapping, companyName: e.target.value })}
-                  className="w-full p-2 rounded-lg bg-slate-950 border border-purple-800 text-white font-medium"
+                  className="w-full"
                 >
                   {columns.map((c) => (
                     <option key={c} value={c}>
                       {c}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">
+                <label htmlFor="ls-2" className="block font-semibold text-slate-300 mb-1">
                   Contato Principal (Nome)
                 </label>
-                <select
+                <Select id="ls-2"
                   value={mapping.contactName}
                   onChange={(e) => setMapping({ ...mapping, contactName: e.target.value })}
-                  className="w-full p-2 rounded-lg bg-slate-950 border border-slate-800 text-white"
+                  className="w-full"
                 >
                   <option value="">-- Ignorar ou Nenhum --</option>
                   {columns.map((c) => (
@@ -592,17 +582,17 @@ export default function LeadSheetPage() {
                       {c}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">
+                <label htmlFor="ls-3" className="block font-semibold text-slate-300 mb-1">
                   Telefone / E-mail / WhatsApp
                 </label>
-                <select
+                <Select id="ls-3"
                   value={mapping.contactInfo}
                   onChange={(e) => setMapping({ ...mapping, contactInfo: e.target.value })}
-                  className="w-full p-2 rounded-lg bg-slate-950 border border-slate-800 text-white"
+                  className="w-full"
                 >
                   <option value="">-- Ignorar ou Nenhum --</option>
                   {columns.map((c) => (
@@ -610,17 +600,17 @@ export default function LeadSheetPage() {
                       {c}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">
+                <label htmlFor="ls-4" className="block font-semibold text-slate-300 mb-1">
                   Segmento / Nicho
                 </label>
-                <select
+                <Select id="ls-4"
                   value={mapping.segment}
                   onChange={(e) => setMapping({ ...mapping, segment: e.target.value })}
-                  className="w-full p-2 rounded-lg bg-slate-950 border border-slate-800 text-white"
+                  className="w-full"
                 >
                   <option value="">-- Ignorar ou Nenhum --</option>
                   {columns.map((c) => (
@@ -628,17 +618,17 @@ export default function LeadSheetPage() {
                       {c}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">
+                <label htmlFor="ls-5" className="block font-semibold text-slate-300 mb-1">
                   Plano de Ação / Recomendação
                 </label>
-                <select
+                <Select id="ls-5"
                   value={mapping.actionPlan}
                   onChange={(e) => setMapping({ ...mapping, actionPlan: e.target.value })}
-                  className="w-full p-2 rounded-lg bg-slate-950 border border-slate-800 text-white"
+                  className="w-full"
                 >
                   <option value="">-- Ignorar ou Valor Padrão --</option>
                   {columns.map((c) => (
@@ -646,17 +636,17 @@ export default function LeadSheetPage() {
                       {c}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
 
               <div>
-                <label className="block font-semibold text-slate-300 mb-1">
+                <label htmlFor="ls-6" className="block font-semibold text-slate-300 mb-1">
                   Observações / Contexto
                 </label>
-                <select
+                <Select id="ls-6"
                   value={mapping.notes}
                   onChange={(e) => setMapping({ ...mapping, notes: e.target.value })}
-                  className="w-full p-2 rounded-lg bg-slate-950 border border-slate-800 text-white"
+                  className="w-full"
                 >
                   <option value="">-- Ignorar ou Nenhum --</option>
                   {columns.map((c) => (
@@ -664,7 +654,7 @@ export default function LeadSheetPage() {
                       {c}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
             </div>
 
@@ -674,7 +664,7 @@ export default function LeadSheetPage() {
                 Pré-visualização dos 3 primeiros registros:
               </span>
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs text-slate-300">
+                <table className="w-full min-w-[720px] text-left text-xs text-slate-300">
                   <thead className="border-b border-slate-800 text-purple-400">
                     <tr>
                       <th className="p-2">Empresa</th>
@@ -724,7 +714,7 @@ export default function LeadSheetPage() {
               <FileSpreadsheet className="w-4 h-4" />
               <span>Leads em Triagem</span>
               <span
-                className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                className={`px-2 py-0.5 rounded-full text-[11px] font-extrabold ${
                   activeTab === 'TRIAGE' ? 'bg-purple-800 text-white' : 'bg-slate-800 text-purple-300'
                 }`}
               >
@@ -743,7 +733,7 @@ export default function LeadSheetPage() {
               <Calendar className="w-4 h-4" />
               <span>Reunião Marcada</span>
               <span
-                className={`px-2 py-0.5 rounded-full text-[10px] font-extrabold ${
+                className={`px-2 py-0.5 rounded-full text-[11px] font-extrabold ${
                   activeTab === 'MEETING' ? 'bg-indigo-800 text-white' : 'bg-slate-800 text-indigo-300'
                 }`}
               >
@@ -754,10 +744,10 @@ export default function LeadSheetPage() {
 
           <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end flex-wrap">
             {/* Filter by Member / Assignee */}
-            <select
+            <Select
               value={assigneeFilter}
               onChange={(e) => setAssigneeFilter(e.target.value)}
-              className="px-3 py-1.5 rounded-xl border border-slate-800 bg-slate-900/90 text-xs text-purple-300 font-semibold focus:outline-none focus:ring-2 focus:ring-purple-500"
+              
             >
               <option value="ALL">Todos os Responsáveis</option>
               <option value="UNASSIGNED">Sem Responsável</option>
@@ -777,16 +767,16 @@ export default function LeadSheetPage() {
                   ))}
                 </optgroup>
               )}
-            </select>
+            </Select>
 
             <div className="relative w-full sm:w-64">
               <Search className="w-4 h-4 text-purple-400 absolute left-3 top-2.5" />
-              <input
+              <Input
                 type="text"
                 placeholder="Buscar por empresa, contato..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-4 py-1.5 text-xs rounded-xl border border-slate-800 bg-slate-900/90 text-white placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                className="w-full pl-9 pr-4 placeholder:text-slate-400"
               />
             </div>
 
@@ -801,7 +791,7 @@ export default function LeadSheetPage() {
             >
               <EyeOff className="w-3.5 h-3.5 text-rose-400" />
               <span className="hidden md:inline">Descartados</span>
-              <span className="px-1.5 py-0.2 rounded-full bg-rose-950 text-rose-300 text-[10px] font-bold">
+              <span className="px-1.5 py-0.2 rounded-full bg-rose-950 text-rose-300 text-[11px] font-bold">
                 {discardedLeads.length}
               </span>
             </button>
@@ -813,7 +803,7 @@ export default function LeadSheetPage() {
           <div className="space-y-4 animate-in fade-in duration-200">
             <div className="bg-slate-900/80 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
+                <table className="w-full min-w-[960px] text-left text-xs">
                   <thead className="bg-slate-950/80 border-b border-slate-800 text-purple-300 font-bold uppercase tracking-wider">
                     <tr>
                       <th className="p-3.5">Empresa / Cliente</th>
@@ -829,14 +819,13 @@ export default function LeadSheetPage() {
                   <tbody className="divide-y divide-slate-800/60 text-slate-200">
                     {loading ? (
                       <tr>
-                        <td colSpan={8} className="text-center py-12 text-slate-500 font-medium">
-                          <RefreshCw className="w-6 h-6 animate-spin mx-auto text-purple-500 mb-2" />
-                          Carregando lista de leads...
+                        <td colSpan={8} className="text-center py-12 text-slate-400 font-medium">
+                          <LoadingState label="Carregando lista de leads…" />
                         </td>
                       </tr>
                     ) : triageLeads.length === 0 ? (
                       <tr>
-                        <td colSpan={8} className="text-center py-12 text-slate-500 font-medium">
+                        <td colSpan={8} className="text-center py-12 text-slate-400 font-medium">
                           <div className="max-w-md mx-auto space-y-2">
                             <CheckCircle2 className="w-10 h-10 text-emerald-400 mx-auto" />
                             <p className="font-bold text-white text-sm">Nenhum lead pendente nesta lista de triagem!</p>
@@ -851,7 +840,7 @@ export default function LeadSheetPage() {
                         <tr key={lead.id} className="hover:bg-slate-800/30 transition-colors">
                           <td className="p-3.5 font-bold text-white max-w-[180px]">
                             <div>{lead.companyName}</div>
-                            <span className="text-[10px] text-slate-500 font-normal">
+                            <span className="text-[11px] text-slate-400 font-normal">
                               {new Date(lead.createdAt).toLocaleDateString('pt-BR')}
                             </span>
                           </td>
@@ -863,7 +852,7 @@ export default function LeadSheetPage() {
 
                           {/* Member Assignment (Responsável) - Restrito a Negócios & Presidência */}
                           <td className="p-3.5 min-w-[150px]">
-                            <select
+                            <Select
                               value={lead.assignedTo || ''}
                               onChange={(e) => {
                                 const val = e.target.value || null;
@@ -871,7 +860,7 @@ export default function LeadSheetPage() {
                               }}
                               disabled={!canChangeAssignee(lead)}
                               aria-label={`Responsável por ${lead.companyName}`}
-                              className="w-full text-xs font-semibold px-2 py-1 rounded-lg border border-slate-800 bg-slate-950 text-slate-200 focus:ring-1 focus:ring-purple-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                              className="w-full disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               <option value="">Não atribuído</option>
                               <optgroup label="Equipe de Negócios">
@@ -890,7 +879,7 @@ export default function LeadSheetPage() {
                                   ))}
                                 </optgroup>
                               )}
-                            </select>
+                            </Select>
                           </td>
 
                           <td className="p-3.5 text-slate-400 font-medium">
@@ -905,7 +894,7 @@ export default function LeadSheetPage() {
 
                           {/* Editable Action Plan */}
                           <td className="p-3.5 min-w-[220px]">
-                            <textarea
+                            <Textarea
                               rows={2}
                               defaultValue={lead.actionPlan}
                               disabled={!canManageLeads}
@@ -915,13 +904,13 @@ export default function LeadSheetPage() {
                                 }
                               }}
                               placeholder={canManageLeads ? "Digite o plano de abordagem..." : "Sem plano de abordagem definido"}
-                              className="w-full p-1.5 text-xs bg-slate-950/80 border border-slate-800 rounded text-slate-100 focus:ring-1 focus:ring-purple-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                              className="w-full disabled:opacity-60 disabled:cursor-not-allowed"
                             />
                           </td>
 
                           {/* Editable Notes */}
                           <td className="p-3.5 min-w-[180px]">
-                            <textarea
+                            <Textarea
                               rows={2}
                               defaultValue={lead.notes || ''}
                               disabled={!canManageLeads}
@@ -931,13 +920,13 @@ export default function LeadSheetPage() {
                                 }
                               }}
                               placeholder={canManageLeads ? "Anotações livres..." : "Nenhuma anotação"}
-                              className="w-full p-1.5 text-xs bg-slate-950/80 border border-slate-800 rounded text-slate-400 focus:ring-1 focus:ring-purple-500 disabled:opacity-60 disabled:cursor-not-allowed"
+                              className="w-full disabled:opacity-60 disabled:cursor-not-allowed"
                             />
                           </td>
 
                           {/* Status Dropdown */}
                           <td className="p-3.5">
-                            <select
+                            <Select
                               value={lead.status}
                               disabled={!canManageLeads}
                               onChange={(e) => {
@@ -957,40 +946,24 @@ export default function LeadSheetPage() {
                               <option value="PENDING">Pendente</option>
                               <option value="IN_PROGRESS">Em Triagem</option>
                               <option value="DISCARDED">Descartado</option>
-                            </select>
+                            </Select>
                           </td>
 
                           {/* Action: Convert or Discard */}
                           <td className="p-3.5 text-right">
                             {!canManageLeads ? (
-                              <span className="text-[11px] text-slate-500 italic px-2 py-1 bg-slate-900/60 rounded-lg border border-slate-800/60">
+                              <span className="text-[11px] text-slate-400 italic px-2 py-1 bg-slate-900/60 rounded-lg border border-slate-800/60">
                                 Somente Leitura
                               </span>
                             ) : (
                               <div className="flex items-center justify-end gap-2">
-                                <button
-                                  onClick={() => setConvertingLead(lead)}
-                                  title="Agendar reunião e criar Card no Funil de Vendas"
-                                  className="px-3.5 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-md flex items-center gap-1.5 transition-all transform hover:-translate-y-0.5"
-                                >
+                                <Button size="sm" onClick={() => setConvertingLead(lead)} title="Agendar reunião e criar Card no Funil de Vendas">
                                   <Zap className="w-3.5 h-3.5 text-yellow-300" /> Converter p/ Card
-                                </button>
+                                </Button>
 
-                                <button
-                                  onClick={() => handleDiscardLead(lead.id)}
-                                  title="Descartar lead (mover para lista escondida)"
-                                  className="p-1.5 text-slate-500 hover:text-rose-400 rounded-lg hover:bg-slate-800 transition-colors flex items-center gap-1"
-                                >
-                                  <Ban className="w-4 h-4" />
-                                </button>
+                                <IconButton variant="danger-ghost" icon={Ban} onClick={() => handleDiscardLead(lead.id)} aria-label="Descartar lead (mover para lista escondida)" />
 
-                                <button
-                                  onClick={() => handleDeleteLead(lead.id)}
-                                  title="Excluir permanentemente"
-                                  className="p-1.5 text-slate-500 hover:text-red-400 rounded-lg hover:bg-slate-800 transition-colors"
-                                >
-                                  <Trash2 className="w-4 h-4" />
-                                </button>
+                                <IconButton variant="danger-ghost" icon={Trash2} onClick={() => handleDeleteLead(lead.id)} aria-label="Excluir permanentemente" />
                               </div>
                             )}
                           </td>
@@ -1032,7 +1005,7 @@ export default function LeadSheetPage() {
                     <div className="space-y-2.5">
                       <div className="flex items-start justify-between gap-3">
                         <div className="space-y-1">
-                          <span className="text-[10px] font-extrabold uppercase tracking-wider text-indigo-400 flex items-center gap-1">
+                          <span className="text-[11px] font-extrabold uppercase tracking-wider text-indigo-400 flex items-center gap-1">
                             <Sparkles className="w-3 h-3 text-indigo-400" /> Reunião Marcada
                           </span>
                           <h4 className="text-base font-bold text-white group-hover:text-indigo-200 transition-colors">
@@ -1062,7 +1035,7 @@ export default function LeadSheetPage() {
                       <div className="flex items-center gap-2.5 p-2.5 rounded-xl bg-indigo-950/60 border border-indigo-800/50 text-indigo-200 text-xs">
                         <Clock className="w-4 h-4 text-indigo-400 shrink-0" />
                         <div>
-                          <span className="text-[10px] text-indigo-300/70 uppercase block font-semibold">Data da Reunião:</span>
+                          <span className="text-[11px] text-indigo-300/70 uppercase block font-semibold">Data da Reunião:</span>
                           <strong className="text-white font-bold text-xs">
                             {formatMeetingDate(lead.pipeCard?.meetingDate)}
                           </strong>
@@ -1073,13 +1046,13 @@ export default function LeadSheetPage() {
                     {/* Informações da Plaquinha */}
                     <div className="my-4 space-y-2 text-xs text-slate-300">
                       <div className="flex items-center gap-2">
-                        <UserIcon className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                        <UserIcon className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                         <span className="font-semibold text-slate-200">{lead.contactName || 'Contato a qualificar'}</span>
                       </div>
 
                       {lead.contactInfo && (
                         <div className="flex items-center gap-2 text-slate-400">
-                          <Phone className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                          <Phone className="w-3.5 h-3.5 text-slate-400 shrink-0" />
                           <span className="truncate">{lead.contactInfo}</span>
                         </div>
                       )}
@@ -1093,7 +1066,7 @@ export default function LeadSheetPage() {
 
                       {lead.segment && (
                         <div className="pt-1">
-                          <span className="px-2 py-0.5 rounded-md bg-slate-800 border border-slate-700/60 text-[10px] font-semibold text-purple-300">
+                          <span className="px-2 py-0.5 rounded-md bg-slate-800 border border-slate-700/60 text-[11px] font-semibold text-purple-300">
                             {lead.segment}
                           </span>
                         </div>
@@ -1112,7 +1085,7 @@ export default function LeadSheetPage() {
                       {canManageLeads && (
                         <button
                           onClick={() => handleRevertLead(lead.id)}
-                          className="text-[11px] font-medium text-slate-500 hover:text-slate-300 transition-colors"
+                          className="text-[11px] font-medium text-slate-400 hover:text-slate-300 transition-colors"
                           title="Reverter este lead para a lista de triagem"
                         >
                           Reverter p/ Triagem
@@ -1145,11 +1118,11 @@ export default function LeadSheetPage() {
             <div className="flex items-center gap-2.5">
               <EyeOff className="w-4 h-4 text-rose-400" />
               <span>Lista Oculta de Leads Descartados</span>
-              <span className="px-2 py-0.5 rounded-full bg-rose-950/70 text-rose-300 border border-rose-900/60 text-[10px] font-extrabold">
+              <span className="px-2 py-0.5 rounded-full bg-rose-950/70 text-rose-300 border border-rose-900/60 text-[11px] font-extrabold">
                 {discardedLeads.length} descartados
               </span>
             </div>
-            <div className="flex items-center gap-1 text-[11px] text-slate-500">
+            <div className="flex items-center gap-1 text-[11px] text-slate-400">
               <span>{showDiscardedDrawer ? 'Ocultar lista' : 'Exibir lista escondida'}</span>
               <ChevronDown
                 className={`w-4 h-4 transition-transform duration-200 ${
@@ -1162,7 +1135,7 @@ export default function LeadSheetPage() {
           {showDiscardedDrawer && (
             <div className="p-6 border-t border-slate-800 bg-slate-900/40 space-y-4 animate-in fade-in duration-200">
               {discardedLeads.length === 0 ? (
-                <p className="text-center py-6 text-xs text-slate-500">
+                <p className="text-center py-6 text-xs text-slate-400">
                   Nenhum lead descartado nesta lista oculta.
                 </p>
               ) : (
@@ -1178,7 +1151,7 @@ export default function LeadSheetPage() {
                             {lead.companyName}
                           </span>
                           {lead.segment && (
-                            <span className="text-[10px] px-2 py-0.5 rounded bg-slate-800 text-slate-400">
+                            <span className="text-[11px] px-2 py-0.5 rounded bg-slate-800 text-slate-400">
                               {lead.segment}
                             </span>
                           )}
@@ -1187,7 +1160,7 @@ export default function LeadSheetPage() {
                           {lead.contactName || 'Sem contato'} {lead.contactInfo ? `• ${lead.contactInfo}` : ''}
                         </div>
                         {lead.notes && (
-                          <p className="text-[10px] text-rose-300/80 italic">
+                          <p className="text-[11px] text-rose-300/80 italic">
                             Obs: {lead.notes}
                           </p>
                         )}
@@ -1203,16 +1176,10 @@ export default function LeadSheetPage() {
                             <RotateCcw className="w-3.5 h-3.5 text-purple-400" />
                             Restaurar Lead
                           </button>
-                          <button
-                            onClick={() => handleDeleteLead(lead.id)}
-                            className="p-1.5 rounded-lg text-slate-500 hover:text-red-400 hover:bg-slate-800 transition-colors"
-                            title="Excluir definitivamente"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          <IconButton variant="danger-ghost" icon={Trash2} onClick={() => handleDeleteLead(lead.id)} aria-label="Excluir definitivamente" />
                         </div>
                       ) : (
-                        <span className="text-[11px] text-slate-500 italic shrink-0">Descartado</span>
+                        <span className="text-[11px] text-slate-400 italic shrink-0">Descartado</span>
                       )}
                     </div>
                   ))}
