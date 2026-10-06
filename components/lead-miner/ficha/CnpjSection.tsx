@@ -12,6 +12,10 @@ import { Field, Muted, Section } from './Section';
 import { cnpjOriginLabel } from '@/components/lead-miner/enrichment-helpers';
 import { formatDateTime } from './ficha-helpers';
 import { CONTROL_CLASS } from '@/components/ui/Input';
+import { Modal } from '@/components/ui/Modal';
+import { Button } from '@/components/ui/Button';
+import { Field as FormField } from '@/components/ui/Field';
+import { Input } from '@/components/ui/Input';
 
 /**
  * Seção "CNPJ" (Req. 17.3, 11.5–11.8, 11.10, 12.4): CNPJ formatado, origem, Dados_CNPJ e data;
@@ -178,66 +182,43 @@ export const CnpjSection: React.FC<CnpjSectionProps> = ({ company, onUpdated }) 
       )}
 
       {dialogOpen && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="cnpj-dialog-title"
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4"
+        <Modal
+          title={cnpj ? 'Alterar CNPJ' : 'Informar CNPJ'}
+          onClose={() => setDialogOpen(false)}
+          size="sm"
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setDialogOpen(false)}>
+                Cancelar
+              </Button>
+              <Button onClick={() => void submit()} disabled={input.trim() === ''} loading={busy}>
+                Salvar
+              </Button>
+            </>
+          }
         >
-          <div className="w-full max-w-md rounded-2xl border border-slate-800 bg-slate-900 p-6">
-            <h3 id="cnpj-dialog-title" className="text-base font-bold text-white">
-              {cnpj ? 'Alterar CNPJ' : 'Informar CNPJ'}
-            </h3>
-            <label htmlFor="cnpj-input" className="mt-4 block text-xs font-semibold text-slate-400">
-              CNPJ
-            </label>
-            <input
-              id="cnpj-input"
-              type="text"
-              value={input}
-              autoFocus
-              onChange={(e) => setInput(e.target.value)}
-              aria-invalid={!!fieldError}
-              aria-describedby={fieldError ? 'cnpj-input-error' : undefined}
-              placeholder="00.000.000/0000-00"
-              className={`${CONTROL_CLASS} mt-1 w-full`}
-            />
-            {fieldError && (
-              <p id="cnpj-input-error" role="alert" className="mt-1 text-xs text-red-400">
-                {fieldError}
-              </p>
-            )}
+          <div className="space-y-2">
+            <FormField label="CNPJ" error={fieldError || undefined}>
+              <Input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="00.000.000/0000-00"
+              />
+            </FormField>
             {conflict && (
-              <p role="alert" className="mt-1 text-xs text-amber-400">
+              <p role="alert" className="text-xs text-warning-soft">
                 CNPJ já vinculado à empresa{' '}
                 <a
                   href={`/tools/lead-miner/leads/${encodeURIComponent(conflict.id)}`}
-                  className="rounded underline hover:text-amber-300 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+                  className="rounded underline hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
                 >
                   {conflict.nome}
                 </a>
               </p>
             )}
-            <div className="mt-5 flex justify-end gap-2">
-              <button
-                type="button"
-                onClick={() => setDialogOpen(false)}
-                className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
-              >
-                Cancelar
-              </button>
-              <button
-                type="button"
-                onClick={() => void submit()}
-                disabled={busy || input.trim() === ''}
-                className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-2 text-xs font-bold text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {busy && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
-                Salvar
-              </button>
-            </div>
           </div>
-        </div>
+        </Modal>
       )}
     </Section>
   );

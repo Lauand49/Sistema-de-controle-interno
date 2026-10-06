@@ -58,7 +58,9 @@ import {
 } from '@/lib/permissions';
 import { dashboardPages } from '@/lib/dashboards/client-api';
 import { formatDueDate } from '@/lib/dashboards/format';
-import { ModalFrame } from '@/components/ui/Modal';
+import { Modal } from '@/components/ui/Modal';
+import { Field } from '@/components/ui/Field';
+import { Input } from '@/components/ui/Input';
 import { PageHeader, StatCard, EmptyState, LoadingState } from '@/components/ui/Display';
 import { Button } from '@/components/ui/Button';
 import { Tabs, type TabItem } from '@/components/ui/Tabs';
@@ -1745,100 +1747,70 @@ export default function SectorWorkspacePage() {
 
       {/* AdmJurFin: Modal Nova Movimentação Financeira */}
       {isNewTransactionModalOpen && (
-        <ModalFrame onClose={() => setIsNewTransactionModalOpen(false)} label="Nova Movimentação Financeira" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-          <div className="relative w-full max-w-md bg-slate-900 border border-blue-800/50 rounded-2xl shadow-2xl p-6 space-y-4">
-            <h3 className="text-base font-bold text-white flex items-center gap-2">
-              <Receipt className="w-5 h-5 text-blue-400" /> Nova Movimentação Financeira
-            </h3>
-
-            <form onSubmit={handleCreateTransaction} className="space-y-3 text-xs">
-              <div>
-                <label htmlFor="page-1" className="block text-slate-300 font-semibold mb-1">Descrição</label>
-                <input id="page-1"
-                  type="text"
-                  value={transDesc}
-                  onChange={(e) => setTransDesc(e.target.value)}
-                  placeholder="Ex: Parcela 1/2 Projeto X ou Hospedagem Cloud"
-                  className={`${CONTROL_CLASS} w-full`}
+        <Modal
+          title="Nova Movimentação Financeira"
+          onClose={() => setIsNewTransactionModalOpen(false)}
+          size="sm"
+          closeOnBackdrop={false}
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setIsNewTransactionModalOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" form="transaction-form">
+                Salvar Lançamento
+              </Button>
+            </>
+          }
+        >
+          <form id="transaction-form" onSubmit={handleCreateTransaction} className="space-y-3 text-xs">
+            <Field label="Descrição" required>
+              <Input
+                type="text"
+                value={transDesc}
+                onChange={(e) => setTransDesc(e.target.value)}
+                placeholder="Ex: Parcela 1/2 Projeto X ou Hospedagem Cloud"
+                required
+              />
+            </Field>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field label="Valor (R$)" required>
+                <Input
+                  type="number"
+                  step="0.01"
+                  min="0"
+                  value={transAmount}
+                  onChange={(e) => setTransAmount(e.target.value)}
+                  placeholder="0.00"
                   required
                 />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor="page-2" className="block text-slate-300 font-semibold mb-1">Valor (R$)</label>
-                  <input id="page-2"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={transAmount}
-                    onChange={(e) => setTransAmount(e.target.value)}
-                    placeholder="0.00"
-                    className={`${CONTROL_CLASS} w-full`}
-                    required
-                  />
-                </div>
-
-                <div>
-                  <label htmlFor="page-3" className="block text-slate-300 font-semibold mb-1">Tipo</label>
-                  <select id="page-3"
-                    value={transType}
-                    onChange={(e) => setTransType(e.target.value as any)}
-                    className={`${CONTROL_CLASS} w-full`}
-                  >
-                    <option value="INFLOW">Receita (Entrada)</option>
-                    <option value="OUTFLOW">Despesa (Saída)</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor="page-4" className="block text-slate-300 font-semibold mb-1">Categoria</label>
-                  <select id="page-4"
-                    value={transCategory}
-                    onChange={(e) => setTransCategory(e.target.value)}
-                    className={`${CONTROL_CLASS} w-full`}
-                  >
-                    <option value="Projeto">Projeto</option>
-                    <option value="Ferramenta">Ferramenta / Software</option>
-                    <option value="Reembolso">Reembolso</option>
-                    <option value="Evento">Evento / Treinamento</option>
-                    <option value="Outros">Outros</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="page-5" className="block text-slate-300 font-semibold mb-1">Status</label>
-                  <select id="page-5"
-                    value={transStatus}
-                    onChange={(e) => setTransStatus(e.target.value as any)}
-                    className={`${CONTROL_CLASS} w-full`}
-                  >
-                    <option value="PAID">Liquidado / Pago</option>
-                    <option value="PENDING">Pendente</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2">
-                <button
-                  type="button"
-                  onClick={() => setIsNewTransactionModalOpen(false)}
-                  className="px-3.5 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-purple-900/30"
-                >
-                  Salvar Lançamento
-                </button>
-              </div>
-            </form>
-          </div>
-        </ModalFrame>
+              </Field>
+              <Field label="Tipo">
+                <Select value={transType} onChange={(e) => setTransType(e.target.value as any)}>
+                  <option value="INFLOW">Receita (Entrada)</option>
+                  <option value="OUTFLOW">Despesa (Saída)</option>
+                </Select>
+              </Field>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field label="Categoria">
+                <Select value={transCategory} onChange={(e) => setTransCategory(e.target.value)}>
+                  <option value="Projeto">Projeto</option>
+                  <option value="Ferramenta">Ferramenta / Software</option>
+                  <option value="Reembolso">Reembolso</option>
+                  <option value="Evento">Evento / Treinamento</option>
+                  <option value="Outros">Outros</option>
+                </Select>
+              </Field>
+              <Field label="Status">
+                <Select value={transStatus} onChange={(e) => setTransStatus(e.target.value as any)}>
+                  <option value="PAID">Liquidado / Pago</option>
+                  <option value="PENDING">Pendente</option>
+                </Select>
+              </Field>
+            </div>
+          </form>
+        </Modal>
       )}
     </div>
   );

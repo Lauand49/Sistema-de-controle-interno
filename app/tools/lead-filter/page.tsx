@@ -29,7 +29,10 @@ import { toast } from 'sonner';
 import * as XLSX from 'xlsx';
 import { useProfile } from '@/contexts/ProfileContext';
 import { canUseNegociosTools } from '@/lib/permissions';
-import { ModalFrame } from '@/components/ui/Modal';
+import { Modal } from '@/components/ui/Modal';
+import { Button } from '@/components/ui/Button';
+import { Field } from '@/components/ui/Field';
+import { Select } from '@/components/ui/Input';
 import { CONTROL_CLASS } from '@/components/ui/Input';
 import { LoadingState } from '@/components/ui/Display';
 import { PageHeader } from '@/components/ui/Display';
@@ -374,6 +377,11 @@ export default function LeadFilterPage() {
   const progressPercent =
     queueLeads.length > 0 ? Math.min(100, Math.round((currentIndex / queueLeads.length) * 100)) : 0;
 
+  const closeUpload = () => {
+    setIsUploadModalOpen(false);
+    setParsedPreview(null);
+  };
+
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-purple-500 selection:text-white">
       <SciTecNavbar />
@@ -648,168 +656,95 @@ export default function LeadFilterPage() {
 
       {/* Upload Spreadsheet Modal */}
       {isUploadModalOpen && (
-        <ModalFrame onClose={() => {
-                  setIsUploadModalOpen(false);
-                  setParsedPreview(null);
-                }} label="Importar Planilha para Triagem" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-xl overflow-hidden shadow-2xl p-6 space-y-5">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-              <div className="flex items-center gap-2.5">
-                <div className="p-2 rounded-xl bg-purple-950 text-purple-400 border border-purple-800/50">
-                  <Upload className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="font-bold text-white text-base">Importar Planilha para Triagem</h3>
-                  <p className="text-xs text-slate-400">
-                    Carregue um arquivo .xlsx ou .csv para avaliar os leads um a um
-                  </p>
+        <Modal
+          title="Importar Planilha para Triagem"
+          description="Carregue um arquivo .xlsx ou .csv para avaliar os leads um a um"
+          onClose={closeUpload}
+          closeOnBackdrop={false}
+          footer={
+            parsedPreview ? (
+              <>
+                <Button variant="ghost" onClick={closeUpload}>
+                  Cancelar
+                </Button>
+                <Button onClick={handleSaveBatchToTriage}>Iniciar Triagem</Button>
+              </>
+            ) : undefined
+          }
+        >
+          {!parsedPreview ? (
+            <>
+            <input ref={fileInputRef} type="file" accept=".xlsx,.xls,.csv" onChange={handleFileChange} className="hidden" aria-label="Arquivo da planilha" />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full min-h-40 border-2 border-dashed border-border-strong hover:border-primary-soft rounded-card p-8 flex flex-col items-center justify-center text-center transition-colors bg-surface group space-y-3 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+            >
+              <span className="p-4 rounded-full bg-primary-subtle text-primary-soft group-hover:scale-110 transition-transform">
+                <FileSpreadsheet className="w-8 h-8" aria-hidden="true" />
+              </span>
+              <span className="space-y-1">
+                <span className="block text-sm font-semibold text-fg">Clique para selecionar a planilha</span>
+                <span className="block text-xs text-fg-muted">Formatos aceitos: Excel (.xlsx, .xls) ou CSV</span>
+              </span>
+            </button>
+            </>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between gap-3 bg-primary-subtle border border-primary/30 p-3 rounded-control text-xs text-primary-soft">
+                <span className="font-semibold">{parsedPreview.length} leads detectados na planilha.</span>
+                <Button variant="ghost" size="sm" onClick={() => setParsedPreview(null)}>
+                  Trocar arquivo
+                </Button>
+              </div>
+              <div className="space-y-3">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-fg-muted">Confirme o mapeamento das colunas:</h4>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
+                <Field label="Nome da empresa" required>
+                  <Select value={mapping.companyName} onChange={(e) => setMapping({ ...mapping, companyName: e.target.value })}>
+
+                    {columns.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                <Field label="Contato / decisor">
+                  <Select value={mapping.contactName} onChange={(e) => setMapping({ ...mapping, contactName: e.target.value })}>
+                    <option value="">-- Não mapear --</option>
+                    {columns.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                <Field label="Telefone / e-mail">
+                  <Select value={mapping.contactInfo} onChange={(e) => setMapping({ ...mapping, contactInfo: e.target.value })}>
+                    <option value="">-- Não mapear --</option>
+                    {columns.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                <Field label="Segmento / setor">
+                  <Select value={mapping.segment} onChange={(e) => setMapping({ ...mapping, segment: e.target.value })}>
+                    <option value="">-- Não mapear --</option>
+                    {columns.map((c) => (
+                      <option key={c} value={c}>
+                        {c}
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
                 </div>
               </div>
-              <button
-                onClick={() => {
-                  setIsUploadModalOpen(false);
-                  setParsedPreview(null);
-                }}
-                className="p-1.5 text-slate-400 hover:text-white rounded-lg hover:bg-slate-800"
-              >
-                <X className="w-5 h-5" />
-              </button>
             </div>
-
-            {!parsedPreview ? (
-              <div
-                onClick={() => fileInputRef.current?.click()}
-                className="border-2 border-dashed border-slate-700 hover:border-purple-500 rounded-2xl p-8 flex flex-col items-center justify-center text-center cursor-pointer transition-colors bg-slate-950/40 group space-y-3"
-              >
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".xlsx,.xls,.csv"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                <div className="p-4 rounded-full bg-purple-950/40 text-purple-400 group-hover:scale-110 transition-transform">
-                  <FileSpreadsheet className="w-8 h-8" />
-                </div>
-                <div className="space-y-1">
-                  <p className="text-sm font-semibold text-white">Clique para selecionar a planilha</p>
-                  <p className="text-xs text-slate-400">Formatos aceitos: Excel (.xlsx, .xls) ou CSV</p>
-                </div>
-              </div>
-            ) : (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between bg-purple-950/40 border border-purple-800/40 p-3 rounded-xl text-xs text-purple-300">
-                  <span className="font-semibold">
-                    {parsedPreview.length} leads detectados na planilha.
-                  </span>
-                  <button
-                    onClick={() => setParsedPreview(null)}
-                    className="text-xs text-purple-400 hover:text-white underline"
-                  >
-                    Trocar arquivo
-                  </button>
-                </div>
-
-                <div className="space-y-3">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                    Confirme o mapeamento das colunas:
-                  </h4>
-
-                  <div className="grid grid-cols-2 gap-3 text-xs">
-                    <div>
-                      <label htmlFor="page-1" className="block text-[11px] font-semibold text-slate-300 mb-1">
-                        Nome da Empresa *
-                      </label>
-                      <select id="page-1"
-                        value={mapping.companyName}
-                        onChange={(e) => setMapping({ ...mapping, companyName: e.target.value })}
-                        className={`${CONTROL_CLASS} w-full`}
-                      >
-                        {columns.map((c) => (
-                          <option key={c} value={c}>
-                            {c}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">
-                        Contato / Decisor
-                      </label>
-                      <select
-                        value={mapping.contactName}
-                        onChange={(e) => setMapping({ ...mapping, contactName: e.target.value })}
-                        className={`${CONTROL_CLASS} w-full`}
-                      >
-                        <option value="">-- Não mapear --</option>
-                        {columns.map((c) => (
-                          <option key={c} value={c}>
-                            {c}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">
-                        Telefone / E-mail
-                      </label>
-                      <select
-                        value={mapping.contactInfo}
-                        onChange={(e) => setMapping({ ...mapping, contactInfo: e.target.value })}
-                        className={`${CONTROL_CLASS} w-full`}
-                      >
-                        <option value="">-- Não mapear --</option>
-                        {columns.map((c) => (
-                          <option key={c} value={c}>
-                            {c}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-[11px] font-semibold text-slate-300 mb-1">
-                        Segmento / Setor
-                      </label>
-                      <select
-                        value={mapping.segment}
-                        onChange={(e) => setMapping({ ...mapping, segment: e.target.value })}
-                        className={`${CONTROL_CLASS} w-full`}
-                      >
-                        <option value="">-- Não mapear --</option>
-                        {columns.map((c) => (
-                          <option key={c} value={c}>
-                            {c}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="pt-3 border-t border-slate-800 flex justify-end gap-2">
-                  <button
-                    onClick={() => {
-                      setIsUploadModalOpen(false);
-                      setParsedPreview(null);
-                    }}
-                    className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-400 hover:text-white"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={handleSaveBatchToTriage}
-                    className="px-5 py-2 rounded-xl text-xs font-bold bg-purple-600 hover:bg-purple-500 text-white transition-colors"
-                  >
-                    Iniciar Triagem
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </ModalFrame>
+          )}
+        </Modal>
       )}
     </div>
   );

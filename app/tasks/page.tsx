@@ -28,7 +28,9 @@ import {
 import { toast } from 'sonner';
 import { isDepartmentManager, isGlobal, isSectorManager } from '@/lib/permissions';
 import { formatDueDate } from '@/lib/dashboards/format';
-import { ModalFrame } from '@/components/ui/Modal';
+import { Modal } from '@/components/ui/Modal';
+import { Field } from '@/components/ui/Field';
+import { DateInput, Input, Select, Textarea } from '@/components/ui/Input';
 import { CONTROL_CLASS } from '@/components/ui/Input';
 import { LoadingState, EmptyState, PageHeader, StatCard } from '@/components/ui/Display';
 import { Button } from '@/components/ui/Button';
@@ -576,139 +578,73 @@ export default function MyTasksPage() {
 
         {/* Modal: Create / Edit Task */}
         {isModalOpen && (
-          <ModalFrame onClose={() => setIsModalOpen(false)} label="Tarefa" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/75 backdrop-blur-sm">
-            <div className="bg-slate-900 border border-slate-800 rounded-3xl w-full max-w-lg overflow-hidden shadow-2xl p-6 space-y-5 animate-in fade-in duration-150">
-              <div className="flex items-center justify-between pb-3 border-b border-slate-800">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 rounded-xl bg-purple-950/60 border border-purple-800/40 text-purple-400">
-                    <CheckSquare className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="font-bold text-white text-base">
-                      {editingTask ? 'Editar Tarefa' : 'Nova Tarefa'}
-                    </h3>
-                    <p className="text-[11px] text-slate-400">Designação nominal para membros da SciTec jr.</p>
-                  </div>
-                </div>
-                <button
-                  onClick={() => setIsModalOpen(false)}
-                  className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+          <Modal
+            title={editingTask ? 'Editar Tarefa' : 'Nova Tarefa'}
+            description="Designação nominal para membros da SciTec jr."
+            onClose={() => setIsModalOpen(false)}
+            closeOnBackdrop={false}
+            footer={
+              <>
+                <Button variant="ghost" onClick={() => setIsModalOpen(false)}>
+                  Cancelar
+                </Button>
+                <Button type="submit" form="task-form" loading={submitting}>
+                  {submitting ? 'Salvando...' : editingTask ? 'Salvar Alterações' : 'Criar Tarefa'}
+                </Button>
+              </>
+            }
+          >
+            <form id="task-form" onSubmit={handleSubmitTask} className="space-y-4">
+              <Field label="Título da tarefa" required>
+                <Input
+                  type="text"
+                  required
+                  placeholder="Ex: Entrar em contato com o cliente X para diagnóstico..."
+                  value={formTitle}
+                  onChange={(e) => setFormTitle(e.target.value)}
+                />
+              </Field>
+              <Field label="Descrição / orientações">
+                <Textarea
+                  placeholder="Detalhes sobre o que deve ser feito, links ou anotações..."
+                  value={formDescription}
+                  onChange={(e) => setFormDescription(e.target.value)}
+                />
+              </Field>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Field label="Responsável nominal">
+                  <Select value={formAssigneeId} onChange={(e) => setFormAssigneeId(e.target.value)}>
+                    <option value="">Não atribuído</option>
+                    {profiles.map((u) => (
+                      <option key={u.id} value={u.id}>
+                        {u.name} ({u.title})
+                      </option>
+                    ))}
+                  </Select>
+                </Field>
+                <Field label="Prioridade">
+                  <Select value={formPriority} onChange={(e) => setFormPriority(e.target.value as TaskPriority)}>
+                    <option value="LOW">Baixa</option>
+                    <option value="MEDIUM">Média</option>
+                    <option value="HIGH">Alta</option>
+                    <option value="URGENT">Urgente</option>
+                  </Select>
+                </Field>
               </div>
-
-              <form onSubmit={handleSubmitTask} className="space-y-4">
-                {/* Título */}
-                <div className="space-y-1.5">
-                  <label htmlFor="page-1" className="text-xs font-semibold text-slate-300">
-                    Título da Tarefa <span className="text-rose-400">*</span>
-                  </label>
-                  <input id="page-1"
-                    type="text"
-                    required
-                    placeholder="Ex: Entrar em contato com o cliente X para diagnóstico..."
-                    value={formTitle}
-                    onChange={(e) => setFormTitle(e.target.value)}
-                    className={`${CONTROL_CLASS} w-full placeholder:text-slate-600`}
-                  />
-                </div>
-
-                {/* Descrição */}
-                <div className="space-y-1.5">
-                  <label htmlFor="page-2" className="text-xs font-semibold text-slate-300">Descrição / Orientações</label>
-                  <textarea id="page-2"
-                    rows={3}
-                    placeholder="Detalhes sobre o que deve ser feito, links ou anotações..."
-                    value={formDescription}
-                    onChange={(e) => setFormDescription(e.target.value)}
-                    className={`${CONTROL_CLASS} w-full placeholder:text-slate-600`}
-                  />
-                </div>
-
-                {/* Linha Dupla: Responsável e Prioridade */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {/* Responsável */}
-                  <div className="space-y-1.5">
-                    <label htmlFor="page-3" className="text-xs font-semibold text-slate-300">Responsável Nominal</label>
-                    <select id="page-3"
-                      value={formAssigneeId}
-                      onChange={(e) => setFormAssigneeId(e.target.value)}
-                      className={`${CONTROL_CLASS} w-full`}
-                    >
-                      <option value="">Não atribuído</option>
-                      {profiles.map((u) => (
-                        <option key={u.id} value={u.id}>
-                          {u.name} ({u.title})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Prioridade */}
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-slate-300">Prioridade</label>
-                    <select
-                      value={formPriority}
-                      onChange={(e) => setFormPriority(e.target.value as TaskPriority)}
-                      className={`${CONTROL_CLASS} w-full`}
-                    >
-                      <option value="LOW">Baixa</option>
-                      <option value="MEDIUM">Média</option>
-                      <option value="HIGH">Alta</option>
-                      <option value="URGENT">Urgente</option>
-                    </select>
-                  </div>
-                </div>
-
-                {/* Linha Dupla: Status e Data de Entrega */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {/* Status */}
-                  <div className="space-y-1.5">
-                    <label htmlFor="page-4" className="text-xs font-semibold text-slate-300">Status</label>
-                    <select id="page-4"
-                      value={formStatus}
-                      onChange={(e) => setFormStatus(e.target.value as TaskStatus)}
-                      className={`${CONTROL_CLASS} w-full`}
-                    >
-                      <option value="TODO">A Fazer</option>
-                      <option value="IN_PROGRESS">Em Andamento</option>
-                      <option value="DONE">Concluída</option>
-                    </select>
-                  </div>
-
-                  {/* Prazo */}
-                  <div className="space-y-1.5">
-                    <label htmlFor="page-5" className="text-xs font-semibold text-slate-300">Prazo de Entrega</label>
-                    <input id="page-5"
-                      type="date"
-                      value={formDueDate}
-                      onChange={(e) => setFormDueDate(e.target.value)}
-                      className={`${CONTROL_CLASS} w-full`}
-                    />
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-800">
-                  <button
-                    type="button"
-                    onClick={() => setIsModalOpen(false)}
-                    className="px-4 py-2 text-xs font-semibold text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors"
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    type="submit"
-                    disabled={submitting}
-                    className="px-5 py-2 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-lg shadow-purple-900/40 transition-all disabled:opacity-50"
-                  >
-                    {submitting ? 'Salvando...' : editingTask ? 'Salvar Alterações' : 'Criar Tarefa'}
-                  </button>
-                </div>
-              </form>
-            </div>
-          </ModalFrame>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Field label="Status">
+                  <Select value={formStatus} onChange={(e) => setFormStatus(e.target.value as TaskStatus)}>
+                    <option value="TODO">A Fazer</option>
+                    <option value="IN_PROGRESS">Em Andamento</option>
+                    <option value="DONE">Concluída</option>
+                  </Select>
+                </Field>
+                <Field label="Prazo de entrega">
+                  <DateInput value={formDueDate} onChange={(e) => setFormDueDate(e.target.value)} />
+                </Field>
+              </div>
+            </form>
+          </Modal>
         )}
       </main>
     </div>

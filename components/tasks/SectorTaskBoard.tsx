@@ -22,7 +22,10 @@ import {
   Layers,
   ChevronRight, Lock } from 'lucide-react';
 import { formatDueDate } from '@/lib/dashboards/format';
-import { ModalFrame } from '@/components/ui/Modal';
+import { Modal } from '@/components/ui/Modal';
+import { Button } from '@/components/ui/Button';
+import { Field } from '@/components/ui/Field';
+import { DateInput, Input, Select, Textarea } from '@/components/ui/Input';
 import { CONTROL_CLASS } from '@/components/ui/Input';
 import { EmptyState } from '@/components/ui/Display';
 
@@ -467,125 +470,72 @@ export const SectorTaskBoard: React.FC<SectorTaskBoardProps> = ({
 
       {/* Modal Nova / Editar Tarefa */}
       {isModalOpen && (
-        <ModalFrame onClose={() => setIsModalOpen(false)} label="Tarefa" className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm animate-fadeIn">
-          <div className="relative w-full max-w-lg bg-slate-900 border border-purple-800/50 rounded-2xl shadow-2xl overflow-hidden p-6 space-y-4">
-            <div className="flex items-center justify-between border-b border-slate-800 pb-3">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <CheckSquare className="w-5 h-5 text-purple-400" />
-                {editingTask ? 'Editar Tarefa do Quadro' : 'Nova Tarefa no Quadro'}
-              </h3>
-              <button
-                onClick={() => setIsModalOpen(false)}
-                className="p-1.5 text-slate-400 hover:text-white rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5" />
-              </button>
+        <Modal
+          title={editingTask ? 'Editar Tarefa do Quadro' : 'Nova Tarefa no Quadro'}
+          onClose={() => setIsModalOpen(false)}
+          closeOnBackdrop={false}
+          footer={
+            <>
+              <Button variant="secondary" onClick={() => setIsModalOpen(false)}>
+                Cancelar
+              </Button>
+              <Button type="submit" form="sector-task-form" loading={submitting}>
+                {submitting ? 'Salvando...' : editingTask ? 'Salvar Alterações' : 'Criar Tarefa'}
+              </Button>
+            </>
+          }
+        >
+          <form id="sector-task-form" onSubmit={handleSaveTask} className="space-y-3.5 text-xs">
+            <Field label="Título da tarefa" required>
+              <Input
+                type="text"
+                value={formTitle}
+                onChange={(e) => setFormTitle(e.target.value)}
+                placeholder="Ex: Elaborar dinâmica de grupo para Trainees"
+                required
+              />
+            </Field>
+            <Field label="Descrição & detalhes">
+              <Textarea
+                value={formDescription}
+                onChange={(e) => setFormDescription(e.target.value)}
+                placeholder="Descreva o objetivo, critérios e instruções..."
+              />
+            </Field>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field label="Coluna / status">
+                <Select value={formStatus} onChange={(e) => setFormStatus(e.target.value as TaskStatus)}>
+                  <option value="TODO">A Fazer / Backlog</option>
+                  <option value="IN_PROGRESS">Em Andamento</option>
+                  <option value="DONE">Concluído</option>
+                </Select>
+              </Field>
+              <Field label="Prioridade">
+                <Select value={formPriority} onChange={(e) => setFormPriority(e.target.value as TaskPriority)}>
+                  <option value="LOW">Baixa</option>
+                  <option value="MEDIUM">Média</option>
+                  <option value="HIGH">Alta</option>
+                  <option value="URGENT">Urgente</option>
+                </Select>
+              </Field>
             </div>
-
-            <form onSubmit={handleSaveTask} className="space-y-3.5 text-xs">
-              <div>
-                <label htmlFor="sectortask-1" className="block text-slate-300 font-semibold mb-1">
-                  Título da Tarefa <span className="text-rose-400">*</span>
-                </label>
-                <input id="sectortask-1"
-                  type="text"
-                  value={formTitle}
-                  onChange={(e) => setFormTitle(e.target.value)}
-                  placeholder="Ex: Elaborar dinâmica de grupo para Trainees"
-                  className={`${CONTROL_CLASS} w-full`}
-                  required
-                />
-              </div>
-
-              <div>
-                <label htmlFor="sectortask-2" className="block text-slate-300 font-semibold mb-1">
-                  Descrição & Detalhes
-                </label>
-                <textarea id="sectortask-2"
-                  rows={3}
-                  value={formDescription}
-                  onChange={(e) => setFormDescription(e.target.value)}
-                  placeholder="Descreva o objetivo, critérios e instruções..."
-                  className={`${CONTROL_CLASS} w-full resize-none`}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor="sectortask-3" className="block text-slate-300 font-semibold mb-1">Coluna / Status</label>
-                  <select id="sectortask-3"
-                    value={formStatus}
-                    onChange={(e) => setFormStatus(e.target.value as TaskStatus)}
-                    className={`${CONTROL_CLASS} w-full`}
-                  >
-                    <option value="TODO">A Fazer / Backlog</option>
-                    <option value="IN_PROGRESS">Em Andamento</option>
-                    <option value="DONE">Concluído</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label htmlFor="sectortask-4" className="block text-slate-300 font-semibold mb-1">Prioridade</label>
-                  <select id="sectortask-4"
-                    value={formPriority}
-                    onChange={(e) => setFormPriority(e.target.value as TaskPriority)}
-                    className={`${CONTROL_CLASS} w-full`}
-                  >
-                    <option value="LOW">Baixa</option>
-                    <option value="MEDIUM">Média</option>
-                    <option value="HIGH">Alta</option>
-                    <option value="URGENT">Urgente</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label htmlFor="sectortask-5" className="block text-slate-300 font-semibold mb-1">Responsável</label>
-                  <select id="sectortask-5"
-                    value={formAssigneeId}
-                    onChange={(e) => setFormAssigneeId(e.target.value)}
-                    className={`${CONTROL_CLASS} w-full`}
-                  >
-                    <option value="">Sem responsável</option>
-                    {users.map((u) => (
-                      <option key={u.id} value={u.id}>
-                        {u.name} ({u.title})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-slate-300 font-semibold mb-1">Data Limite (Prazo)</label>
-                  <input
-                    type="date"
-                    value={formDueDate}
-                    onChange={(e) => setFormDueDate(e.target.value)}
-                    className={`${CONTROL_CLASS} w-full`}
-                  />
-                </div>
-              </div>
-
-              <div className="pt-3 border-t border-slate-800 flex items-center justify-end gap-2.5">
-                <button
-                  type="button"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  type="submit"
-                  disabled={submitting}
-                  className="px-5 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-purple-900/30 flex items-center gap-1.5 transition-all"
-                >
-                  {submitting ? 'Salvando...' : editingTask ? 'Salvar Alterações' : 'Criar Tarefa'}
-                </button>
-              </div>
-            </form>
-          </div>
-        </ModalFrame>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Field label="Responsável">
+                <Select value={formAssigneeId} onChange={(e) => setFormAssigneeId(e.target.value)}>
+                  <option value="">Sem responsável</option>
+                  {users.map((u) => (
+                    <option key={u.id} value={u.id}>
+                      {u.name} ({u.title})
+                    </option>
+                  ))}
+                </Select>
+              </Field>
+              <Field label="Data limite (prazo)">
+                <DateInput value={formDueDate} onChange={(e) => setFormDueDate(e.target.value)} />
+              </Field>
+            </div>
+          </form>
+        </Modal>
       )}
     </div>
   );
