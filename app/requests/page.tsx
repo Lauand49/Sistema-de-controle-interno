@@ -26,6 +26,8 @@ import {
   Layers,
 } from 'lucide-react';
 import { formatDueDate } from '@/lib/dashboards/format';
+import { PageHeader, StatCard, EmptyState } from '@/components/ui/Display';
+import { Button } from '@/components/ui/Button';
 import { CONTROL_CLASS } from '@/components/ui/Input';
 
 export default function CrossDeptRequestsPage() {
@@ -126,68 +128,23 @@ export default function CrossDeptRequestsPage() {
       <SciTecNavbar onRefresh={fetchRequests} loading={loading} />
 
       <main className="flex-1 min-w-0 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
-        {/* Banner Hero */}
-        <div className="relative rounded-3xl bg-gradient-to-r from-purple-950/80 via-slate-900 to-indigo-950/80 border border-purple-800/40 p-6 md:p-8 shadow-2xl overflow-hidden">
-          <div className="absolute top-0 right-0 transform translate-x-12 -translate-y-12 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-            <div className="space-y-2 max-w-2xl">
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-purple-950/80 text-purple-300 border border-purple-700/50">
-                <Send className="w-3.5 h-3.5 text-purple-400" /> Integração Intersetorial
-              </div>
-              <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">
-                Central de Solicitações da SciTec jr.
-              </h1>
-              <p className="text-xs md:text-sm text-purple-200/80 leading-relaxed">
-                Canal unificado de solicitações entre Negócios, AdmJurFin, Gente e Mídias.
-                Cada pedido gera automaticamente um card no Kanban do setor responsável com rastreamento de SLA.
-              </p>
-            </div>
-
-            <button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs shadow-lg shadow-purple-900/40 flex items-center justify-center gap-2 transition-all transform active:scale-95 shrink-0"
-            >
-              <Plus className="w-4 h-4" /> Nova Solicitação
-            </button>
-          </div>
-        </div>
-
+        <PageHeader
+          icon={Send}
+          title="Central de Solicitações"
+          subtitle="Canal unificado entre Negócios, AdmJurFin, Gente e Mídias. Cada solicitação gera um card no Kanban do setor responsável, com rastreamento de SLA."
+          actions={
+            <Button icon={Plus} onClick={() => setIsCreateModalOpen(true)}>
+              Nova Solicitação
+            </Button>
+          }
+        />
         {/* KPI Metrics Summary */}
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-          <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-              Total de Solicitações
-            </span>
-            <h3 className="text-2xl font-black text-white">{totalCount}</h3>
-            <span className="text-[11px] text-slate-400">Histórico geral da EJ</span>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-              Pendentes de Início
-            </span>
-            <h3 className="text-2xl font-black text-amber-400">{pendingCount}</h3>
-            <span className="text-[11px] text-slate-400">Aguardando atendimento do setor</span>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-              Em Execução
-            </span>
-            <h3 className="text-2xl font-black text-blue-400">{inProgressCount}</h3>
-            <span className="text-[11px] text-slate-400">Com responsável alocado</span>
-          </div>
-
-          <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-1">
-            <span className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block">
-              Concluídas
-            </span>
-            <h3 className="text-2xl font-black text-emerald-400">{completedCount}</h3>
-            <span className="text-[11px] text-slate-400">Entregues com sucesso</span>
-          </div>
+          <StatCard label="Total de solicitações" value={totalCount} hint="Histórico geral da EJ" />
+          <StatCard label="Pendentes de início" value={pendingCount} tone="warning" hint="Aguardando atendimento do setor" />
+          <StatCard label="Em execução" value={inProgressCount} tone="info" hint="Com responsável alocado" />
+          <StatCard label="Concluídas" value={completedCount} tone="success" hint="Entregues com sucesso" />
         </div>
-
         {/* Filter Controls Bar */}
         <div className="p-4 rounded-2xl bg-slate-900/80 border border-slate-800 space-y-3">
           <div className="flex items-center justify-between border-b border-slate-800/60 pb-2.5">
@@ -281,13 +238,11 @@ export default function CrossDeptRequestsPage() {
         {/* Requests List */}
         <div className="space-y-3">
           {filteredRequests.length === 0 ? (
-            <div className="p-12 rounded-2xl bg-slate-900/40 border border-dashed border-slate-800 text-center space-y-2">
-              <CheckCircle2 className="w-8 h-8 text-slate-600 mx-auto" />
-              <h4 className="text-sm font-bold text-white">Nenhuma solicitação encontrada</h4>
-              <p className="text-xs text-slate-400">
-                Ajuste os filtros acima ou crie uma nova solicitação.
-              </p>
-            </div>
+            <EmptyState
+              icon={CheckCircle2}
+              title="Nenhuma solicitação encontrada"
+              description="Ajuste os filtros acima ou crie uma nova solicitação."
+            />
           ) : (
             filteredRequests.map((req) => (
               <div

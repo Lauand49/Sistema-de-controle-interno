@@ -30,6 +30,8 @@ import { isDepartmentManager, isGlobal, isSectorManager } from '@/lib/permission
 import { formatDueDate } from '@/lib/dashboards/format';
 import { ModalFrame } from '@/components/ui/Modal';
 import { CONTROL_CLASS } from '@/components/ui/Input';
+import { LoadingState, EmptyState, PageHeader, StatCard } from '@/components/ui/Display';
+import { Button } from '@/components/ui/Button';
 
 type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE' | 'CANCELLED';
 type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
@@ -303,63 +305,25 @@ export default function MyTasksPage() {
       <SciTecNavbar />
 
       <main className="flex-1 min-w-0 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
-        {/* Header Banner */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 rounded-3xl bg-gradient-to-r from-purple-950/80 via-slate-900 to-indigo-950/80 border border-purple-800/40 shadow-2xl">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-purple-950/80 text-purple-300 border border-purple-700/50">
-              <Sparkles className="w-3.5 h-3.5 text-purple-400" /> Central de Atividades
-            </div>
-            <h2 className="text-2xl font-black text-white tracking-tight flex items-center gap-3">
-              Minhas Tarefas & Responsabilidades
-            </h2>
-            <p className="text-xs text-purple-200/80 max-w-xl">
-              Acompanhe as tarefas nominais atribuídas a{' '}
-              <span className="font-bold text-white underline decoration-purple-400">
-                {currentProfile?.name || 'você'}
-              </span>{' '}
-              ({currentProfile?.title || 'Membro'}), além dos projetos e cards sob sua responsabilidade nos fluxos operacionais.
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <button
-              onClick={() => handleOpenCreate('TODO')}
-              className="px-4 py-2.5 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-2xl shadow-lg shadow-purple-900/40 flex items-center gap-2 transition-all active:scale-95"
-            >
-              <Plus className="w-4 h-4" /> Nova Tarefa
-            </button>
-          </div>
-        </div>
-
+        <PageHeader
+          icon={CheckSquare}
+          title="Minhas Tarefas & Responsabilidades"
+          subtitle={`Tarefas atribuídas a ${currentProfile?.name || 'você'} (${currentProfile?.title || 'Membro'}), além dos projetos e cards sob sua responsabilidade.`}
+          actions={
+            <Button icon={Plus} onClick={() => handleOpenCreate('TODO')}>
+              Nova Tarefa
+            </Button>
+          }
+        />
         {/* Workload Summary Cards for Current Operator */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-          <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex flex-col gap-1">
-            <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-1.5">
-              <Clock className="w-3.5 h-3.5 text-purple-400" /> A Fazer
-            </span>
-            <span className="text-2xl font-black text-white">{todoTasks.length}</span>
-          </div>
+          <StatCard label="A Fazer" icon={Clock} tone="default" value={todoTasks.length} />
 
-          <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex flex-col gap-1">
-            <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-1.5">
-              <AlertCircle className="w-3.5 h-3.5 text-blue-400" /> Em Andamento
-            </span>
-            <span className="text-2xl font-black text-blue-400">{inProgressTasks.length}</span>
-          </div>
+          <StatCard label="Em Andamento" icon={AlertCircle} tone="info" value={inProgressTasks.length} />
 
-          <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex flex-col gap-1">
-            <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-1.5">
-              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" /> Concluídas
-            </span>
-            <span className="text-2xl font-black text-emerald-400">{doneTasks.length}</span>
-          </div>
+          <StatCard label="Concluídas" icon={CheckCircle2} tone="success" value={doneTasks.length} />
 
-          <div className="p-4 rounded-2xl bg-slate-900/60 border border-slate-800 flex flex-col gap-1">
-            <span className="text-[11px] font-semibold text-slate-400 flex items-center gap-1.5">
-              <Kanban className="w-3.5 h-3.5 text-purple-400" /> Cards no Funil
-            </span>
-            <span className="text-2xl font-black text-purple-300">{myCards.length}</span>
-          </div>
+          <StatCard label="Cards no Funil" icon={Kanban} tone="default" value={myCards.length} />
         </div>
 
         {/* Filter Controls Bar */}
@@ -462,11 +426,9 @@ export default function MyTasksPage() {
 
             <div className="space-y-3 overflow-y-auto max-h-[600px] pr-1">
               {loading ? (
-                <div className="p-8 text-center text-xs text-slate-400">Carregando...</div>
+                <LoadingState label="Carregando…" />
               ) : todoTasks.length === 0 ? (
-                <div className="p-8 text-center border border-dashed border-slate-800 rounded-2xl text-xs text-slate-400">
-                  Nenhuma tarefa pendente nesta coluna.
-                </div>
+                <EmptyState title="Nenhuma tarefa pendente nesta coluna." />
               ) : (
                 todoTasks.map((task) => (
                   <TaskCard
@@ -503,11 +465,9 @@ export default function MyTasksPage() {
 
             <div className="space-y-3 overflow-y-auto max-h-[600px] pr-1">
               {loading ? (
-                <div className="p-8 text-center text-xs text-slate-400">Carregando...</div>
+                <LoadingState label="Carregando…" />
               ) : inProgressTasks.length === 0 ? (
-                <div className="p-8 text-center border border-dashed border-slate-800 rounded-2xl text-xs text-slate-400">
-                  Nenhuma tarefa em andamento.
-                </div>
+                <EmptyState title="Nenhuma tarefa em andamento." />
               ) : (
                 inProgressTasks.map((task) => (
                   <TaskCard
@@ -537,11 +497,9 @@ export default function MyTasksPage() {
 
             <div className="space-y-3 overflow-y-auto max-h-[600px] pr-1">
               {loading ? (
-                <div className="p-8 text-center text-xs text-slate-400">Carregando...</div>
+                <LoadingState label="Carregando…" />
               ) : doneTasks.length === 0 ? (
-                <div className="p-8 text-center border border-dashed border-slate-800 rounded-2xl text-xs text-slate-400">
-                  Nenhuma tarefa concluída ainda.
-                </div>
+                <EmptyState title="Nenhuma tarefa concluída ainda." />
               ) : (
                 doneTasks.map((task) => (
                   <TaskCard

@@ -24,6 +24,7 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { Pipe, CrossDeptRequest } from '@/types';
+import { PageHeader, StatCard } from '@/components/ui/Display';
 
 export default function HomeDashboard() {
   const { currentProfile } = useProfile();
@@ -148,88 +149,19 @@ export default function HomeDashboard() {
       <SciTecNavbar />
 
       <main className="flex-1 min-w-0 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
-        {/* Welcome Banner */}
-        <div className="relative rounded-3xl bg-gradient-to-r from-purple-950/80 via-slate-900 to-indigo-950/80 border border-purple-800/40 px-6 py-4 md:px-8 md:py-5 shadow-2xl overflow-hidden flex items-center justify-between">
-          <div className="absolute top-0 right-0 transform translate-x-10 -translate-y-10 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="relative z-10">
-            <h2 className="text-2xl md:text-3xl font-black tracking-tight text-white">
-              ScitecJr
-            </h2>
-          </div>
-
-          <div className="relative z-10 shrink-0">
-            <img
-              src="/brand/mascote.png"
-              alt="Mascote SciTec jr."
-              className="h-16 sm:h-20 md:h-24 w-auto object-contain filter drop-shadow-lg"
-            />
-          </div>
-        </div>
-
+        <PageHeader
+          title="ScitecJr"
+          subtitle="Visão geral dos processos, leads e solicitações da empresa júnior."
+          actions={<img src="/brand/mascote.png" alt="Mascote SciTec jr." className="h-16 w-auto object-contain" />}
+        />
         {/* Global Metrics Grid */}
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
-          <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 sm:p-5 shadow-lg flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-slate-400">Cards Ativos</span>
-              <div className="p-1.5 rounded-xl bg-purple-950/40 text-purple-400">
-                <Kanban className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="text-2xl sm:text-3xl font-black text-white">
-              {loading ? <span className="text-slate-700 animate-pulse">--</span> : metrics.activeCards}
-            </div>
-          </div>
-
-          <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 sm:p-5 shadow-lg flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-slate-400">Propostas</span>
-              <div className="p-1.5 rounded-xl bg-amber-950/40 text-amber-400">
-                <TrendingUp className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="text-2xl sm:text-3xl font-black text-white">
-              {loading ? <span className="text-slate-700 animate-pulse">--</span> : metrics.proposals}
-            </div>
-          </div>
-
-          <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 sm:p-5 shadow-lg flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-slate-400">Fechado/Ganho</span>
-              <div className="p-1.5 rounded-xl bg-emerald-950/40 text-emerald-400">
-                <Building2 className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="text-2xl sm:text-3xl font-black text-white">
-              {loading ? <span className="text-slate-700 animate-pulse">--</span> : metrics.won}
-            </div>
-          </div>
-
-          <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 sm:p-5 shadow-lg flex flex-col gap-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-slate-400">Leads Triagem</span>
-              <div className="p-1.5 rounded-xl bg-indigo-950/40 text-indigo-400">
-                <Users className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="text-2xl sm:text-3xl font-black text-white">
-              {loading ? <span className="text-slate-700 animate-pulse">--</span> : metrics.pendingLeads}
-            </div>
-          </div>
-
-          <div className="bg-slate-900/60 border border-slate-800/80 rounded-2xl p-4 sm:p-5 shadow-lg flex flex-col gap-2 col-span-2 lg:col-span-1">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-slate-400">Solicitações entre setores</span>
-              <div className="p-1.5 rounded-xl bg-rose-950/40 text-rose-400">
-                <Send className="w-4 h-4" />
-              </div>
-            </div>
-            <div className="text-2xl sm:text-3xl font-black text-rose-400">
-              {loading ? <span className="text-slate-700 animate-pulse">--</span> : metrics.pendingRequests}
-            </div>
-          </div>
+          <StatCard label="Cards Ativos" icon={Kanban} tone="default" value={loading ? '--' : metrics.activeCards} />
+          <StatCard label="Propostas" icon={TrendingUp} tone="default" value={loading ? '--' : metrics.proposals} />
+          <StatCard label="Fechado/Ganho" icon={Building2} tone="success" value={loading ? '--' : metrics.won} />
+          <StatCard label="Leads Triagem" icon={Users} tone="default" value={loading ? '--' : metrics.pendingLeads} />
+          <StatCard label="Solicitações entre setores" icon={Send} tone="danger" value={loading ? '--' : metrics.pendingRequests} className="col-span-2 lg:col-span-1" />
         </div>
-
         {/* WORKSPACES POR DIRETORIA / SETOR */}
         <div className="space-y-4">
           <div className="flex items-center justify-between">

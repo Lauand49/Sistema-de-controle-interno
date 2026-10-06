@@ -31,6 +31,8 @@ import { useProfile } from '@/contexts/ProfileContext';
 import { canUseNegociosTools } from '@/lib/permissions';
 import { ModalFrame } from '@/components/ui/Modal';
 import { CONTROL_CLASS } from '@/components/ui/Input';
+import { LoadingState } from '@/components/ui/Display';
+import { PageHeader } from '@/components/ui/Display';
 
 interface HistoryItem {
   lead: TriageLead;
@@ -387,12 +389,7 @@ export default function LeadFilterPage() {
               <span className="text-slate-600">/</span>
               <span className="text-slate-300">Triagem Rápida de Leads</span>
             </div>
-            <h1 className="text-2xl font-black tracking-tight text-white flex items-center gap-2.5">
-              <Filter className="w-6 h-6 text-purple-400" /> Triagem Rápida de Leads
-            </h1>
-            <p className="text-xs text-slate-400">
-              Qualificação preliminar ágil: aprove leads com perfil comercial ou descarte-os com justificativa.
-            </p>
+            <PageHeader icon={Filter} title="Triagem Rápida de Leads" subtitle="Qualificação preliminar ágil: aprove leads com perfil comercial ou descarte-os com justificativa." />
           </div>
 
           {canManageLeads && (
@@ -512,10 +509,7 @@ export default function LeadFilterPage() {
         {/* Main Content Area */}
         <div className="flex-1 flex flex-col items-center justify-center py-4">
           {loading ? (
-            <div className="text-center py-16 space-y-3">
-              <div className="w-10 h-10 border-3 border-purple-500 border-t-transparent rounded-full animate-spin mx-auto" />
-              <p className="text-sm text-slate-400">Carregando leads para a triagem...</p>
-            </div>
+            <LoadingState label="Carregando leads para a triagem…" className="py-16" />
           ) : queueLeads.length === 0 ? (
             /* Empty Queue State */
             <div className="max-w-md w-full bg-slate-900/60 border border-slate-800 rounded-3xl p-8 text-center space-y-5">

@@ -25,6 +25,7 @@ import {
   Award,
   Pickaxe,
 } from 'lucide-react';
+import { PageHeader } from '@/components/ui/Display';
 
 export default function ToolsHubPage() {
   const { currentProfile } = useProfile();
@@ -126,23 +127,11 @@ export default function ToolsHubPage() {
       <SciTecNavbar />
 
       <main className="flex-1 min-w-0 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
-        {/* Banner Informativo */}
-        <div className="relative rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950/60 to-purple-950/70 border border-slate-800 p-8 shadow-2xl overflow-hidden">
-          <div className="absolute top-0 right-0 transform translate-x-10 -translate-y-10 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="relative z-10 max-w-3xl space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-slate-800 text-purple-300 border border-purple-700/40">
-              <Wrench className="w-3.5 h-3.5 text-purple-400" /> Ferramentas Especializadas por Setor
-            </div>
-            <h2 className="text-3xl font-black tracking-tight text-white">
-              Hub de Ferramentas SciTec jr.
-            </h2>
-            <p className="text-sm text-slate-300 leading-relaxed">
-              As ferramentas agora são integradas e exclusivas de cada diretoria. Cada setor possui utilitários operacionais customizados para seu fluxo de trabalho, acessíveis diretamente na aba <strong className="text-purple-300">Ferramentas</strong> de cada setor.
-            </p>
-          </div>
-        </div>
-
+        <PageHeader
+          icon={Wrench}
+          title="Hub de Ferramentas SciTec jr."
+          subtitle="As ferramentas são integradas e exclusivas de cada diretoria, acessíveis na aba Ferramentas de cada setor."
+        />
         {/* Card ativo: Minerador de Leads (Negócios) */}
         {showLeadMiner && (
           <Link

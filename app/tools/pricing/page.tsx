@@ -41,6 +41,7 @@ import {
   TrendingUp,
 } from 'lucide-react';
 import { CONTROL_CLASS } from '@/components/ui/Input';
+import { PageHeader, EmptyState } from '@/components/ui/Display';
 
 export default function ProjectPricingPage() {
   const { profiles, currentProfile } = useProfile();
@@ -366,23 +367,11 @@ SciTec jr. - Consultoria & Engenharia em Computação
           </div>
         </div>
 
-        {/* Hero Banner */}
-        <div className="relative rounded-3xl bg-gradient-to-r from-purple-950/80 via-slate-900 to-indigo-950/80 border border-purple-800/40 p-6 md:p-8 shadow-2xl overflow-hidden">
-          <div className="absolute top-0 right-0 transform translate-x-12 -translate-y-12 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="relative z-10 max-w-3xl space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-purple-950/90 text-purple-300 border border-purple-700/60">
-              <Calculator className="w-3.5 h-3.5 text-purple-400" /> Motor Científico de Precificação
-            </div>
-            <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">
-              Simulador de Preço & Escopo de Projetos
-            </h1>
-            <p className="text-xs md:text-sm text-purple-200/80 leading-relaxed">
-              Cálculo formal baseado em alocação de horas por especialidade técnica, custos extras e fatores modificadores de mercado (porte, urgência, complexidade, experiência da equipe e fidelidade).
-            </p>
-          </div>
-        </div>
-
+        <PageHeader
+          icon={Calculator}
+          title="Simulador de Preço & Escopo de Projetos"
+          subtitle="Cálculo baseado em alocação de horas por especialidade, custos extras e fatores de mercado (porte, urgência, complexidade, experiência e fidelidade)."
+        />
         {/* Main Content: Left Column Form, Right Column Realtime Results */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
           {/* LEFT COLUMN: Inputs & Parameters (7 Cols) */}
@@ -753,9 +742,7 @@ SciTec jr. - Consultoria & Engenharia em Computação
               </div>
 
               {custosExtras.length === 0 ? (
-                <div className="p-4 rounded-xl bg-slate-950/50 border border-dashed border-slate-800 text-center text-xs text-slate-400">
-                  Nenhuma despesa extra cadastrada neste projeto.
-                </div>
+                <EmptyState title="Nenhuma despesa extra cadastrada neste projeto." className="p-4" />
               ) : (
                 <div className="space-y-3">
                   {custosExtras.map((cost, idx) => (

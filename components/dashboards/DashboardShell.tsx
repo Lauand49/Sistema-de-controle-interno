@@ -4,6 +4,7 @@ import React from 'react';
 import { LayoutDashboard, type LucideIcon } from 'lucide-react';
 import { SciTecNavbar } from '@/components/navigation/SciTecNavbar';
 import { PeriodSelector } from './PeriodSelector';
+import { PageHeader } from '@/components/ui/Display';
 
 /**
  * Moldura das Telas_Paineis: navbar, `h1` do painel e, opcionalmente, o seletor de Periodo.
@@ -29,23 +30,19 @@ export function DashboardShell({
     <div className="flex min-h-screen flex-col bg-slate-950 text-slate-100 selection:bg-purple-500 selection:text-white">
       <SciTecNavbar />
       <main className="flex-1 min-w-0 max-w-7xl w-full mx-auto p-4 md:p-6 space-y-6">
-        <header className="flex flex-col gap-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-6 md:flex-row md:items-center md:justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-purple-600 to-indigo-600 shadow-lg shadow-purple-900/40">
-              <Icon className="h-6 w-6 text-white" aria-hidden="true" />
-            </div>
-            <div className="min-w-0">
-              <h1 className="truncate text-2xl font-bold text-white">{title}</h1>
-              {subtitle ? <p className="mt-0.5 text-sm text-slate-400">{subtitle}</p> : null}
-            </div>
-          </div>
-          {showPeriod || actions ? (
-            <div className="flex flex-wrap items-center gap-3">
-              {actions}
-              {showPeriod ? <PeriodSelector /> : null}
-            </div>
-          ) : null}
-        </header>
+        <PageHeader
+          icon={Icon}
+          title={title}
+          subtitle={subtitle}
+          actions={
+            showPeriod || actions ? (
+              <>
+                {actions}
+                {showPeriod ? <PeriodSelector /> : null}
+              </>
+            ) : undefined
+          }
+        />
         {children}
       </main>
     </div>

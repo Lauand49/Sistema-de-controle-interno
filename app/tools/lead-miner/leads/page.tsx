@@ -61,6 +61,7 @@ import {
   type RankingView,
 } from '@/components/lead-miner/ranking-helpers';
 import type { RankingUiState } from '@/lib/leads/filters';
+import { PageHeader } from '@/components/ui/Display';
 
 /** Mapa só no cliente: fora do HTML do servidor e sem tocar APIs de navegador no SSR (Req. 13.9). */
 const CompanyMap = dynamic(() => import('@/components/lead-miner/CompanyMap'), {
@@ -316,13 +317,7 @@ function RankingScreen() {
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
             Minerador de Leads
           </Link>
-          <h1 className="flex items-center gap-3 text-2xl font-extrabold text-white">
-            <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600">
-              <Trophy className="h-5 w-5 text-white" aria-hidden="true" />
-            </span>
-            Ranking de empresas
-          </h1>
-          <p className="text-sm text-slate-400">Toda a base minerada, ordenada por score.</p>
+          <PageHeader icon={Trophy} title="Ranking de empresas" subtitle="Toda a base minerada, ordenada por score." />
         </div>
         <div className="flex flex-wrap gap-2">
           <Link

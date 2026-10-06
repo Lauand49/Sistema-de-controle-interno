@@ -2,6 +2,7 @@
 
 import React, { useId } from 'react';
 import type { LucideIcon } from 'lucide-react';
+import { EmptyState } from '@/components/ui/Display';
 
 /** Classes compartilhadas pelas seções dos painéis. */
 export const SECTION_CARD = 'rounded-2xl border border-slate-800 bg-slate-900/60 p-6';
@@ -51,11 +52,7 @@ export function DashboardSection({
 
 /** Mensagem de estado vazio de uma seção (Req. 11.5). */
 export function SectionEmpty({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="rounded-xl border border-dashed border-slate-800 bg-slate-950/40 px-4 py-6 text-center text-sm text-slate-400">
-      {children}
-    </p>
-  );
+  return <EmptyState title={<span className="text-sm font-normal text-fg-muted">{children}</span>} className="p-6" />;
 }
 
 /** URL do avatar com o mesmo fallback (iniciais) usado no restante do sistema. */

@@ -59,6 +59,8 @@ import {
 import { dashboardPages } from '@/lib/dashboards/client-api';
 import { formatDueDate } from '@/lib/dashboards/format';
 import { ModalFrame } from '@/components/ui/Modal';
+import { PageHeader, StatCard, EmptyState, LoadingState } from '@/components/ui/Display';
+import { Button } from '@/components/ui/Button';
 import { Tabs, type TabItem } from '@/components/ui/Tabs';
 import { Select } from '@/components/ui/Input';
 import { pluralize } from '@/lib/ui/format';
@@ -398,49 +400,28 @@ export default function SectorWorkspacePage() {
           </div>
         </div>
 
-        {/* Sector Hero Banner */}
-        <div
-          className={`relative rounded-3xl bg-gradient-to-r ${currentSector.bannerGradient} border ${currentSector.accentBorder} p-6 md:p-8 shadow-2xl overflow-hidden`}
-        >
-          <div className="absolute top-0 right-0 transform translate-x-10 -translate-y-10 w-96 h-96 bg-purple-600/10 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
-            <div className="space-y-2 max-w-2xl">
-              <div
-                className={`inline-flex items-center gap-2 px-3 py-0.5 rounded-full text-xs font-bold border ${currentSector.badgeColor}`}
+        <PageHeader
+          icon={SectorIcon}
+          title={currentSector.title}
+          subtitle={currentSector.subtitle}
+          actions={
+            canViewUnitDashboard(currentProfile, currentSector.code) ? (
+              <Link
+                href={dashboardPages.unit(currentSector.code)}
+                className="inline-flex items-center justify-center gap-2 min-h-10 px-4 text-sm font-bold text-white rounded-control bg-gradient-to-r from-primary-from to-primary-to hover:brightness-110 shadow-glow focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2 focus-visible:ring-offset-surface"
               >
-                <SectorIcon className="w-3.5 h-3.5" aria-hidden="true" /> Workspace {unitName(currentSector.code)}
-              </div>
-              <h1 className="text-2xl md:text-3xl font-black tracking-tight text-white">
-                {currentSector.title}
-              </h1>
-              <p className="text-xs md:text-sm text-slate-300 leading-relaxed">
-                {currentSector.subtitle}
-              </p>
-              {canViewUnitDashboard(currentProfile, currentSector.code) && (
-                <Link
-                  href={dashboardPages.unit(currentSector.code)}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 mt-1 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-lg shadow-purple-900/40 transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-950"
-                >
-                  <LayoutDashboard className="w-3.5 h-3.5" aria-hidden="true" /> Ver painel
-                </Link>
-              )}
-            </div>
-
-            {/* Quick Stats Chips */}
-            <div className="flex sm:flex-col gap-3 shrink-0">
-              <div className="px-4 py-2 rounded-xl bg-slate-950/70 border border-slate-800 text-center sm:text-right">
-                <span className="text-[11px] text-slate-400 uppercase tracking-wider block">Funis</span>
-                <span className="text-base font-bold text-white">{pluralize(pipes.length, 'funil', 'funis')}</span>
-              </div>
-              <div className="px-4 py-2 rounded-xl bg-slate-950/70 border border-slate-800 text-center sm:text-right">
-                <span className="text-[11px] text-slate-400 uppercase tracking-wider block">Solicitações</span>
-                <span className="text-base font-bold text-amber-400">
-                  {pluralize(requests.filter((r) => r.status === 'PENDING').length, 'pendente', 'pendentes')}
-                </span>
-              </div>
-            </div>
-          </div>
+                <LayoutDashboard className="w-4 h-4" aria-hidden="true" /> Ver painel
+              </Link>
+            ) : undefined
+          }
+        />
+        <div className="grid grid-cols-2 gap-4 max-w-xl">
+          <StatCard label={`Workspace ${unitName(currentSector.code)}`} value={pluralize(pipes.length, 'funil', 'funis')} />
+          <StatCard
+            label="Solicitações"
+            tone="warning"
+            value={pluralize(requests.filter((r) => r.status === 'PENDING').length, 'pendente', 'pendentes')}
+          />
         </div>
 
         {/* Read-Only Mode Banner */}
@@ -572,21 +553,18 @@ export default function SectorWorkspacePage() {
                 />
               </div>
             ) : (
-              <div className="p-12 rounded-2xl bg-slate-900/40 border border-dashed border-slate-800 text-center space-y-3">
-                <SectorIcon className="w-10 h-10 text-slate-600 mx-auto" />
-                <h3 className="text-sm font-bold text-white">Nenhum funil configurado</h3>
-                <p className="text-xs text-slate-400">
-                  Os processos deste setor ainda não foram inicializados.
-                </p>
-                {canEditSector && currentSector.code === 'GENTE' && (
-                  <button
-                    onClick={() => setIsCreatePipeModalOpen(true)}
-                    className="mt-2 inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-amber-500 text-slate-950 font-bold text-xs hover:bg-amber-400 transition-all shadow-md shadow-amber-950/40"
-                  >
-                    <Plus className="w-4 h-4" /> Criar Primeiro Funil de Gente
-                  </button>
-                )}
-              </div>
+              <EmptyState
+                icon={SectorIcon}
+                title="Nenhum funil configurado"
+                description="Os processos deste setor ainda não foram inicializados."
+                action={
+                  canEditSector && currentSector.code === 'GENTE' ? (
+                    <Button icon={Plus} onClick={() => setIsCreatePipeModalOpen(true)}>
+                      Criar primeiro funil de Gente
+                    </Button>
+                  ) : undefined
+                }
+              />
             )}
           </div>
         )}
@@ -1637,13 +1615,11 @@ export default function SectorWorkspacePage() {
             </div>
 
             {requests.length === 0 ? (
-              <div className="p-12 rounded-2xl bg-slate-900/40 border border-dashed border-slate-800 text-center space-y-2">
-                <CheckCircle2 className="w-8 h-8 text-emerald-400 mx-auto" />
-                <h4 className="text-sm font-bold text-white">Nenhuma solicitação pendente</h4>
-                <p className="text-xs text-slate-400">
-                  Todas as solicitações deste setor foram atendidas ou arquivadas.
-                </p>
-              </div>
+              <EmptyState
+                icon={CheckCircle2}
+                title="Nenhuma solicitação pendente"
+                description="Todas as solicitações deste setor foram atendidas ou arquivadas."
+              />
             ) : (
               <div className="space-y-3">
                 {requests.map((req) => (

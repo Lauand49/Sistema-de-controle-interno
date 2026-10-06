@@ -42,6 +42,8 @@ import {
 import { toast } from 'sonner';
 import { canAssignLeads, canBeLeadAssignee, canUseNegociosTools } from '@/lib/permissions';
 import { CONTROL_CLASS } from '@/components/ui/Input';
+import { LoadingState } from '@/components/ui/Display';
+import { PageHeader } from '@/components/ui/Display';
 
 type TabType = 'TRIAGE' | 'MEETING';
 
@@ -413,15 +415,7 @@ export default function LeadSheetPage() {
               <span className="text-slate-600">/</span>
               <span className="text-slate-300">Planilha de Leads</span>
             </div>
-            <div className="flex items-center gap-2 text-xs font-bold text-purple-300">
-              <FileSpreadsheet className="w-4 h-4 text-purple-400" /> Ferramenta de Prospecção SciTec
-            </div>
-            <h2 className="text-2xl font-black text-white">
-              Anotação e Triagem de Leads via Planilha
-            </h2>
-            <p className="text-xs text-purple-200/70">
-              Importe listas de prospecção em Excel/CSV, anote o plano de ação de cada lead e converta direto para a fase "Reunião marcada" do Funil SciTec.
-            </p>
+            <PageHeader icon={FileSpreadsheet} title="Anotação e Triagem de Leads via Planilha" subtitle="Importe listas de prospecção em Excel/CSV, anote o plano de ação de cada lead e converta direto para a fase Reunião marcada do Funil SciTec." />
           </div>
 
           <div className="flex items-center gap-3 shrink-0 flex-wrap">
@@ -831,8 +825,7 @@ export default function LeadSheetPage() {
                     {loading ? (
                       <tr>
                         <td colSpan={8} className="text-center py-12 text-slate-400 font-medium">
-                          <RefreshCw className="w-6 h-6 animate-spin mx-auto text-purple-500 mb-2" />
-                          Carregando lista de leads...
+                          <LoadingState label="Carregando lista de leads…" />
                         </td>
                       </tr>
                     ) : triageLeads.length === 0 ? (

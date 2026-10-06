@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { canEditUnit, unitName } from '@/lib/permissions';
+import { LoadingState } from '@/components/ui/Display';
 
 function DashboardContent() {
   const searchParams = useSearchParams();
@@ -185,15 +186,7 @@ function DashboardContent() {
       {/* Main Kanban Board */}
       <main className="flex-1">
         {loading && !pipe ? (
-          <div className="flex flex-col items-center justify-center h-96 space-y-4">
-            <div className="relative">
-              <div className="w-12 h-12 rounded-full border-4 border-purple-500/20 border-t-purple-500 animate-spin" />
-              <Cpu className="w-5 h-5 text-purple-400 absolute left-3.5 top-3.5" />
-            </div>
-            <p className="text-sm font-semibold text-purple-300/80">
-              Carregando processos SciTec jr....
-            </p>
-          </div>
+          <LoadingState label="Carregando processos SciTec jr.…" className="h-96" />
         ) : filteredPipe ? (
           <KanbanBoard
             pipe={filteredPipe}
@@ -230,9 +223,8 @@ export default function DashboardPage() {
   return (
     <Suspense
       fallback={
-        <div className="min-h-screen bg-slate-950 flex items-center justify-center text-purple-300">
-          <div className="w-8 h-8 rounded-full border-4 border-purple-500/20 border-t-purple-500 animate-spin mr-3" />
-          <span>Carregando SciTec jr....</span>
+        <div className="min-h-screen bg-slate-950">
+          <LoadingState label="Carregando SciTec jr.…" className="min-h-screen" />
         </div>
       }
     >

@@ -33,6 +33,7 @@ import { leadMinerApi, type RunListItem, type RunsListResponse } from '@/lib/lea
 import { useActiveRuns } from '@/hooks/lead-miner/useActiveRuns';
 import { useRunDrivers } from '@/hooks/lead-miner/useRunDrivers';
 import { useProfile } from '@/contexts/ProfileContext';
+import { PageHeader } from '@/components/ui/Display';
 
 function RunsScreen() {
   const router = useRouter();
@@ -150,11 +151,7 @@ function RunsScreen() {
             <ArrowLeft className="h-3.5 w-3.5" aria-hidden="true" />
             Minerador de Leads
           </Link>
-          <h1 className="flex items-center gap-2 text-2xl font-bold text-white">
-            <History className="h-6 w-6 text-purple-400" aria-hidden="true" />
-            Minerações
-          </h1>
-          <p className="mt-1 text-sm text-slate-400">Histórico de minerações de todos os autores.</p>
+          <PageHeader icon={History} title="Minerações" subtitle="Histórico de minerações de todos os autores." />
         </div>
         <Link
           href="/tools/lead-miner"

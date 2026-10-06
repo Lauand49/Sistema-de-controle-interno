@@ -24,6 +24,7 @@ import {
 import { formatDueDate } from '@/lib/dashboards/format';
 import { ModalFrame } from '@/components/ui/Modal';
 import { CONTROL_CLASS } from '@/components/ui/Input';
+import { EmptyState } from '@/components/ui/Display';
 
 interface SectorTaskBoardProps {
   department: string;
@@ -325,9 +326,7 @@ export const SectorTaskBoard: React.FC<SectorTaskBoardProps> = ({
                 {/* Cards List in this column */}
                 <div className="space-y-3">
                   {colTasks.length === 0 ? (
-                    <div className="p-8 rounded-xl bg-slate-950/40 border border-dashed border-slate-800/80 text-center space-y-1 text-slate-400 text-xs">
-                      <span>Nenhuma tarefa aqui</span>
-                    </div>
+                    <EmptyState title="Nenhuma tarefa aqui" className="p-6" />
                   ) : (
                     colTasks.map((task) => (
                       <div
