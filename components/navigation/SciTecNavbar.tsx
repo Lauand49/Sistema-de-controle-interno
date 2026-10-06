@@ -22,6 +22,7 @@ import {
   X,
   Home,
   MoreHorizontal,
+  type LucideIcon,
 } from 'lucide-react';
 import { ProfileSwitcher } from './ProfileSwitcher';
 import { CreateRequestModal } from '../modals/CreateRequestModal';
@@ -36,6 +37,46 @@ interface SciTecNavbarProps {
   onNewCardClick?: () => void;
   pipeName?: string;
 }
+
+interface NavLinkProps {
+  href: string;
+  active: boolean;
+  label: string;
+  /** Rótulo curto exibido entre xl e 2xl (ex.: "Tarefas"). */
+  shortLabel?: string;
+  icon: LucideIcon;
+  badge?: number;
+  /** Visível inline só a partir de 2xl (abaixo disso fica no menu "Mais"). */
+  only2xl?: boolean;
+}
+
+/** Item da barra principal: rótulo visível a partir de xl, só ícone abaixo (aria-label e title sempre). */
+export const NavLink: React.FC<NavLinkProps> = ({ href, active, label, shortLabel, icon: Icon, badge, only2xl }) => (
+  <Link
+    href={href}
+    aria-label={label}
+    title={label}
+    aria-current={active ? 'page' : undefined}
+    className={`px-2 2xl:px-3 min-h-10 text-xs font-bold rounded-lg ${only2xl ? 'hidden 2xl:flex' : 'flex'} items-center gap-1.5 whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${
+      active
+        ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
+        : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
+    }`}
+  >
+    <Icon className="w-3.5 h-3.5" aria-hidden="true" />
+    {shortLabel ? (
+      <>
+        <span className="hidden xl:inline 2xl:hidden">{shortLabel}</span>
+        <span className="hidden 2xl:inline">{label}</span>
+      </>
+    ) : (
+      <span className="hidden xl:inline">{label}</span>
+    )}
+    {badge !== undefined && (
+      <span className="bg-amber-500/20 text-amber-300 text-[11px] px-1.5 rounded-full border border-amber-500/40">{badge}</span>
+    )}
+  </Link>
+);
 
 export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
   onRefresh,
@@ -154,18 +195,8 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
 
             {/* Navigation Tabs (Desktop xl+) */}
             <nav className="hidden xl:flex items-center gap-0.5 2xl:gap-1 bg-slate-900/80 p-1 rounded-xl border border-purple-900/40">
-              <Link
-                href="/"
-                aria-label="Início"
-                title="Início"
-                className={`px-2 2xl:px-3 min-h-10 text-xs font-bold rounded-lg flex items-center gap-1.5 whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${isHomeActive
-                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
-                  : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
-                  }`}
-              >
-                <Home className="w-3.5 h-3.5" aria-hidden="true" />
-                <span className="hidden xl:inline">Início</span>
-              </Link>
+              {/* Abas principais (xl+): rótulos a partir de xl; "Tarefas" curto entre 1280 e 1535px; Equipe e Painéis só inline a partir de 2xl */}
+              <NavLink href="/" active={isHomeActive} label="Início" icon={Home} />
 
               {/* Workspaces / Setores Dropdown */}
               <div className="relative">
@@ -231,59 +262,16 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
                 )}
               </div>
 
-              {/* Central de Solicitações */}
-              <Link
+              <NavLink
                 href="/requests"
-                aria-label="Solicitações"
-                title="Solicitações"
-                className={`px-2 2xl:px-3 min-h-10 text-xs font-bold rounded-lg flex items-center gap-1.5 whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${isRequestsActive
-                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
-                  : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
-                  }`}
-              >
-                <Send className="w-3.5 h-3.5" aria-hidden="true" /> <span className="hidden xl:inline">Solicitações</span>
-                {pendingRequestsCount > 0 && (
-                  <span className="bg-amber-500/20 text-amber-300 text-[11px] px-1.5 py-0.2 rounded-full border border-amber-500/40">
-                    {pendingRequestsCount}
-                  </span>
-                )}
-              </Link>
-
-              <Link
-                href="/tasks"
-                aria-label="Minhas Tarefas"
-                title="Minhas Tarefas"
-                className={`px-2 2xl:px-3 min-h-10 text-xs font-bold rounded-lg flex items-center gap-1.5 whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${isTasksActive
-                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
-                  : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
-                  }`}
-              >
-                <CheckSquare className="w-3.5 h-3.5" aria-hidden="true" /> <span className="hidden xl:inline 2xl:hidden">Tarefas</span><span className="hidden 2xl:inline">Minhas Tarefas</span>
-              </Link>
-
-              <Link
-                href="/team"
-                aria-label="Equipe"
-                title="Equipe"
-                className={`px-2 2xl:px-3 min-h-10 text-xs font-bold rounded-lg hidden 2xl:flex items-center gap-1.5 whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${isTeamActive
-                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
-                  : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
-                  }`}
-              >
-                <Users className="w-3.5 h-3.5" aria-hidden="true" /> <span className="hidden xl:inline">Equipe</span>
-              </Link>
-
-              <Link
-                href="/paineis"
-                aria-label="Painéis"
-                title="Painéis"
-                className={`px-2 2xl:px-3 min-h-10 text-xs font-bold rounded-lg hidden 2xl:flex items-center gap-1.5 whitespace-nowrap transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus ${isPaineisActive
-                  ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md shadow-purple-900/30'
-                  : 'text-purple-200/70 hover:text-white hover:bg-purple-950/40'
-                  }`}
-              >
-                <LayoutDashboard className="w-3.5 h-3.5" aria-hidden="true" /> <span className="hidden xl:inline">Painéis</span>
-              </Link>
+                active={isRequestsActive}
+                label="Solicitações"
+                icon={Send}
+                badge={pendingRequestsCount > 0 ? pendingRequestsCount : undefined}
+              />
+              <NavLink href="/tasks" active={isTasksActive} label="Minhas Tarefas" shortLabel="Tarefas" icon={CheckSquare} />
+              <NavLink href="/team" active={isTeamActive} label="Equipe" icon={Users} only2xl />
+              <NavLink href="/paineis" active={isPaineisActive} label="Painéis" icon={LayoutDashboard} only2xl />
 
               {/* Itens de menor uso: só abaixo de 2xl */}
               <div className="relative 2xl:hidden">
