@@ -34,7 +34,7 @@ import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
 import { Select } from '@/components/ui/Input';
 import { CONTROL_CLASS } from '@/components/ui/Input';
-import { LoadingState } from '@/components/ui/Display';
+import { LoadingState, ErrorState, EmptyState } from '@/components/ui/Display';
 import { PageHeader } from '@/components/ui/Display';
 
 interface HistoryItem {
@@ -448,36 +448,29 @@ export default function LeadFilterPage() {
 
         {/* Módulo Exclusivo: Bloqueio Total para Outros Setores */}
         {!canManageLeads ? (
-          <div className="py-20 flex flex-col items-center justify-center text-center space-y-6 max-w-lg mx-auto bg-slate-900/50 border border-slate-800 p-8 rounded-3xl shadow-2xl animate-in fade-in duration-200">
-            <div className="w-16 h-16 rounded-3xl bg-amber-950/70 border border-amber-700/60 text-amber-400 flex items-center justify-center shadow-xl shadow-amber-950/40">
-              <Lock className="w-8 h-8" />
-            </div>
-            <div className="space-y-2">
-              <span className="text-xs font-extrabold uppercase tracking-wider text-amber-400 bg-amber-950/80 px-3 py-1 rounded-full border border-amber-800/60">
-                Acesso Restrito
-              </span>
-              <h2 className="text-2xl font-black text-white">
-                Módulo Exclusivo e Interno de Negócios
-              </h2>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                A triagem rápida e a qualificação de leads são confidenciais e de uso estritamente interno da Diretoria de <strong>Negócios</strong>. Membros de outros setores (Mídias, Gente ou AdmJurFin) não possuem autorização para avaliar ou visualizar a base de leads da SciTec jr.
-              </p>
-            </div>
-            <div className="flex items-center gap-3 pt-2">
-              <Link
-                href="/setores/negocios"
-                className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-bold text-xs transition-colors shadow-lg shadow-purple-900/30"
-              >
-                Ir para o Setor de Negócios
-              </Link>
-              <Link
-                href="/"
-                className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-semibold text-xs transition-colors"
-              >
-                Voltar à Página Inicial
-              </Link>
-            </div>
-          </div>
+          <ErrorState
+            icon={Lock}
+            tone="warning"
+            title="Acesso restrito: módulo exclusivo de Negócios"
+            description="A triagem rápida e a qualificação de leads são confidenciais e de uso interno da Diretoria de Negócios. Membros de outros setores (Mídias, Gente ou AdmJurFin) não têm autorização para avaliar ou visualizar a base de leads da SciTec jr."
+            action={
+              <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                <Link
+                  href="/setores/negocios"
+                  className="inline-flex items-center min-h-10 px-5 rounded-control bg-primary hover:bg-primary-hover text-white font-bold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                >
+                  Ir para o Setor de Negócios
+                </Link>
+                <Link
+                  href="/"
+                  className="inline-flex items-center min-h-10 px-5 rounded-control bg-surface-overlay hover:bg-border-strong text-fg font-semibold text-sm transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus"
+                >
+                  Voltar à Página Inicial
+                </Link>
+              </div>
+            }
+            className="max-w-lg mx-auto"
+          />
         ) : (
           <>
 
@@ -520,18 +513,13 @@ export default function LeadFilterPage() {
             <LoadingState label="Carregando leads para a triagem…" className="py-16" />
           ) : queueLeads.length === 0 ? (
             /* Empty Queue State */
-            <div className="max-w-md w-full bg-slate-900/60 border border-slate-800 rounded-3xl p-8 text-center space-y-5">
-              <div className="w-16 h-16 rounded-2xl bg-purple-950/80 border border-purple-800/60 text-purple-300 flex items-center justify-center mx-auto">
-                <Layers className="w-8 h-8" />
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-xl font-bold text-white">Nenhum Lead Pendente de Triagem</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Importe uma planilha de prospecção (.xlsx ou .csv) para iniciar a qualificação individual de leads.
-                </p>
-              </div>
-
-              <div className="pt-2 flex flex-col gap-2.5">
+            <EmptyState
+              icon={Layers}
+              title="Nenhum lead pendente de triagem"
+              description="Importe uma planilha de prospecção (.xlsx ou .csv) para iniciar a qualificação individual de leads."
+              className="max-w-md w-full"
+              action={
+                <div className="pt-2 flex flex-col gap-2.5">
                 {canManageLeads ? (
                   <button
                     onClick={() => setIsUploadModalOpen(true)}
@@ -551,7 +539,8 @@ export default function LeadFilterPage() {
                   <FileSpreadsheet className="w-4 h-4 text-emerald-400" /> Acessar Planilha Existente
                 </Link>
               </div>
-            </div>
+              }
+            />
           ) : currentIndex >= queueLeads.length ? (
             /* Completed Queue State */
             <div className="max-w-lg w-full bg-slate-900/80 border border-slate-800 rounded-3xl p-8 text-center space-y-6 shadow-2xl">
