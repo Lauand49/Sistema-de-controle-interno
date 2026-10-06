@@ -2,7 +2,7 @@
 
 import React from 'react';
 import { X, RotateCcw, Trash2, Building2, User, Phone, Calendar, AlertCircle } from 'lucide-react';
-import { ModalFrame } from '@/components/ui/Modal';
+import { Drawer } from '@/components/ui/Drawer';
 
 interface DiscardedLead {
   id: string;
@@ -36,29 +36,16 @@ export const DiscardedLeadsDrawer: React.FC<DiscardedLeadsDrawerProps> = ({
   if (!isOpen) return null;
 
   return (
-    <ModalFrame onClose={onClose} label="Leads Descartados" className="fixed inset-0 z-50 flex justify-end bg-black/70 backdrop-blur-sm">
-      <div className="w-full max-w-xl bg-slate-900 border-l border-slate-800 h-full flex flex-col shadow-2xl">
-        {/* Header */}
-        <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-950/80">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-400 border border-rose-500/20">
-              <Trash2 className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="font-bold text-lg text-white">Leads Descartados</h3>
-              <p className="text-xs text-slate-400">
-                {discardedLeads.length} lead{discardedLeads.length === 1 ? '' : 's'} arquivado
-                {discardedLeads.length === 1 ? '' : 's'} da prospecção
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={onClose}
-            className="p-2 text-slate-400 hover:text-white rounded-xl hover:bg-slate-800 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+    <Drawer
+      onClose={onClose}
+      title="Leads Descartados"
+      icon={
+        <div className="p-2.5 rounded-xl bg-danger-subtle text-danger-soft border border-danger/20">
+          <Trash2 className="w-5 h-5" aria-hidden="true" />
         </div>
+      }
+      description={`${discardedLeads.length} lead${discardedLeads.length === 1 ? '' : 's'} arquivado${discardedLeads.length === 1 ? '' : 's'} da prospecção`}
+    >
 
         {/* Content List */}
         <div className="flex-1 overflow-y-auto p-6 space-y-4">
@@ -159,7 +146,7 @@ export const DiscardedLeadsDrawer: React.FC<DiscardedLeadsDrawerProps> = ({
             ))
           )}
         </div>
-      </div>
-    </ModalFrame>
+      
+    </Drawer>
   );
 };
