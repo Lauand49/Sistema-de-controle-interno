@@ -1,4 +1,5 @@
 'use client';
+import { Button } from '@/components/ui/Button';
 
 import React, { useEffect, useState } from 'react';
 import { History, Loader2, X } from 'lucide-react';
@@ -73,14 +74,10 @@ export const RunFilterBanner: React.FC<RunFilterBannerProps> = ({ runId, onClear
         {run && <FailedNichesNote nichosFalhos={run.nichosFalhos} />}
         {run && <NoAiNote iaDisabledReason={run.iaDisabledReason} />}
       </div>
-      <button
-        type="button"
-        onClick={onClear}
-        className="inline-flex items-center gap-1 self-start rounded-xl border border-slate-800 bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
-      >
+      <Button variant="secondary" size="sm" type="button" onClick={onClear} className="self-start">
         <X className="h-4 w-4" aria-hidden="true" />
         Remover filtro da mineração
-      </button>
+      </Button>
     </section>
   );
 };

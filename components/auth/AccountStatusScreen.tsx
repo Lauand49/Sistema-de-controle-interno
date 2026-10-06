@@ -49,13 +49,9 @@ export const AccountStatusScreen: React.FC<Props> = ({ user, onLogout, onRefresh
               <RefreshCw className="w-4 h-4" aria-hidden="true" /> Verificar novamente
             </Button>
           )}
-          <button
-            type="button"
-            onClick={onLogout}
-            className="min-h-10 px-4 py-2.5 text-xs font-bold rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 border border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 flex items-center justify-center gap-2"
-          >
+          <Button variant="secondary" size="sm" type="button" onClick={onLogout}>
             <LogOut className="w-4 h-4" aria-hidden="true" /> Sair
-          </button>
+          </Button>
         </div>
       </div>
     </main>

@@ -111,13 +111,9 @@ export const ApproachMessages: React.FC<ApproachMessagesProps> = ({ companyId, i
                     <span>· {formatDateTime(m.createdAt) ?? '—'}</span>
                   </span>
                   <span className="flex gap-2">
-                    <button
-                      type="button"
-                      onClick={() => void copy(m)}
-                      className="inline-flex items-center gap-1 rounded-lg border border-slate-700 bg-slate-900 px-2 py-1 font-semibold text-slate-200 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
-                    >
+                    <Button variant="secondary" size="sm" type="button" onClick={() => void copy(m)}>
                       <Copy className="h-3.5 w-3.5" aria-hidden="true" /> Copiar
-                    </button>
+                    </Button>
                     {m.canal === 'WHATSAPP' && m.whatsappLink && (
                       <a
                         href={m.whatsappLink}

@@ -1,4 +1,5 @@
 'use client';
+import { Button } from '@/components/ui/Button';
 import React, { useRef, useState } from 'react';
 import { toast } from 'sonner';
 import { Loader2, RefreshCw } from 'lucide-react';
@@ -52,20 +53,14 @@ export const ReanalyzeButton: React.FC<ReanalyzeButtonProps> = ({ companyId, onR
   };
 
   return (
-    <button
-      type="button"
-      onClick={() => void run()}
-      disabled={busy}
-      aria-busy={busy}
-      className="inline-flex items-center gap-2 rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:cursor-not-allowed disabled:opacity-60"
-    >
+    <Button variant="secondary" size="sm" type="button" onClick={() => void run()} disabled={busy} aria-busy={busy}>
       {busy ? (
         <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
       ) : (
         <RefreshCw className="h-4 w-4" aria-hidden="true" />
       )}
       {busy ? 'Reanalisando…' : 'Reanalisar'}
-    </button>
+    </Button>
   );
 };
 

@@ -1,4 +1,5 @@
 'use client';
+import { Button } from '@/components/ui/Button';
 
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { Search, RotateCcw, AlertCircle } from 'lucide-react';
@@ -142,14 +143,10 @@ export const RankingFilters: React.FC<RankingFiltersProps> = ({
             />
           </div>
         </div>
-        <button
-          type="button"
-          onClick={onClear}
-          className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-semibold text-slate-200 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
-        >
+        <Button variant="secondary" size="sm" type="button" onClick={onClear}>
           <RotateCcw className="h-4 w-4" aria-hidden="true" />
           Limpar filtros
-        </button>
+        </Button>
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">

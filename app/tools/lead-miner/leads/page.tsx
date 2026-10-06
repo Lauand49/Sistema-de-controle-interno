@@ -1,4 +1,5 @@
 'use client';
+import { Button } from '@/components/ui/Button';
 
 /**
  * Tela_Ranking — `/tools/lead-miner/leads` (Req. 12, 13.9, 15.5, 15.7, 15.10, 16.6, 16.8, 16.9,
@@ -372,12 +373,7 @@ function RankingScreen() {
           )}
         </p>
         {tab === 'sem' && (
-          <button
-            type="button"
-            onClick={onEvaluate}
-            disabled={evaluating || list.loading || evalIds.length === 0}
-            className="inline-flex items-center justify-center gap-2 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-bold text-slate-200 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
-          >
+          <Button variant="secondary" size="sm" type="button" onClick={onEvaluate} disabled={evaluating || list.loading || evalIds.length === 0}>
             {evaluating ? (
               <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
             ) : (
@@ -388,7 +384,7 @@ function RankingScreen() {
               : evalIds.length > 0
                 ? `Avaliar (${evalIds.length})`
                 : 'Avaliar (nada pendente)'}
-          </button>
+          </Button>
         )}
         <div role="group" aria-label="Modo de visualização" className="inline-flex gap-1 rounded-xl border border-slate-800 bg-slate-900 p-1">
           <button type="button" aria-pressed={view === 'lista'} onClick={() => setView('lista')} className={tabClass(view === 'lista')}>
@@ -434,13 +430,9 @@ function RankingScreen() {
         {list.error ? (
           <div role="alert" className="rounded-2xl border border-red-900/60 bg-red-950/40 p-6 text-sm text-red-300">
             <p>{list.error}</p>
-            <button
-              type="button"
-              onClick={() => setReloadToken((n) => n + 1)}
-              className="mt-3 rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-bold text-slate-200 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
-            >
+            <Button variant="secondary" size="sm" type="button" onClick={() => setReloadToken((n) => n + 1)} className="mt-3">
               Tentar novamente
-            </button>
+            </Button>
           </div>
         ) : list.loading && list.rows.length === 0 ? (
           <div role="status" className="flex items-center justify-center gap-2 rounded-2xl border border-slate-800 bg-slate-900/60 p-10 text-sm text-slate-400">

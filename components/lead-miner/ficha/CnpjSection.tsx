@@ -95,13 +95,9 @@ export const CnpjSection: React.FC<CnpjSectionProps> = ({ company, onUpdated }) 
       icon={<FileText className="h-5 w-5 text-purple-400" aria-hidden="true" />}
       actions={
         <div className="flex gap-2">
-          <button
-            type="button"
-            onClick={openDialog}
-            className="rounded-xl border border-slate-700 bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-200 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
-          >
+          <Button variant="secondary" size="sm" type="button" onClick={openDialog}>
             {cnpj ? 'Alterar' : 'Informar CNPJ'}
-          </button>
+          </Button>
           {cnpj && (
             <button
               type="button"
@@ -167,13 +163,9 @@ export const CnpjSection: React.FC<CnpjSectionProps> = ({ company, onUpdated }) 
                   )}
                 </span>
                 {!c.conflito && (
-                  <button
-                    type="button"
-                    onClick={() => void useCandidate(c.formatado)}
-                    className="rounded-lg border border-slate-700 bg-slate-900 px-2.5 py-1 text-xs font-semibold text-slate-200 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
-                  >
+                  <Button variant="secondary" size="sm" type="button" onClick={() => void useCandidate(c.formatado)}>
                     Usar este CNPJ
-                  </button>
+                  </Button>
                 )}
               </li>
             ))}

@@ -1,4 +1,5 @@
 'use client';
+import { Button } from '@/components/ui/Button';
 
 import React, { useState, useMemo } from 'react';
 import Link from 'next/link';
@@ -733,12 +734,9 @@ SciTec jr. - Consultoria & Engenharia em Computação
                   </p>
                 </div>
 
-                <button
-                  onClick={addExtraCostRow}
-                  className="px-3 py-1.5 text-xs font-bold rounded-xl bg-slate-800 hover:bg-slate-700 text-purple-300 border border-purple-700/40 transition-all flex items-center gap-1.5"
-                >
+                <Button variant="secondary" size="sm" onClick={addExtraCostRow}>
                   <Plus className="w-3.5 h-3.5" /> Adicionar Despesa
-                </button>
+                </Button>
               </div>
 
               {custosExtras.length === 0 ? (
