@@ -2,9 +2,10 @@
 
 import React, { useEffect, useId, useRef, useState } from 'react';
 import { toast } from 'sonner';
-import { Loader2, OctagonX } from 'lucide-react';
+import { OctagonX } from 'lucide-react';
 import { isLeadMinerApiError, leadMinerApi, type RunProgress } from '@/lib/leads/client-api';
 import { MSG_CANCEL, cancelledLabel } from '@/lib/leads/run-cancel';
+import { Button } from '@/components/ui/Button';
 
 const FOCUSABLE = 'button:not([disabled]), [href], input:not([disabled]), [tabindex]:not([tabindex="-1"])';
 
@@ -89,21 +90,20 @@ export const StopRunButton: React.FC<StopRunButtonProps> = ({ runId, title, onSt
 
   return (
     <>
-      <button
+      <Button
         ref={openerRef}
-        type="button"
+        variant="danger"
+        size="sm"
+        icon={OctagonX}
         onClick={() => setOpen(true)}
         aria-label={title ? `Parar mineração ${title}` : 'Parar mineração'}
-        className={`inline-flex items-center gap-1.5 rounded-xl border border-rose-800/60 bg-rose-950/40 font-semibold text-rose-300 hover:bg-rose-900/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-500 ${
-          compact ? 'px-2.5 py-1 text-xs' : 'px-3 py-1.5 text-xs'
-        } ${className}`}
+        className={className}
       >
-        <OctagonX className="h-3.5 w-3.5" aria-hidden="true" />
         Parar
-      </button>
+      </Button>
 
       {open && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
           <div
             ref={dialogRef}
             role="alertdialog"
@@ -111,39 +111,22 @@ export const StopRunButton: React.FC<StopRunButtonProps> = ({ runId, title, onSt
             aria-labelledby={titleId}
             aria-describedby={descId}
             onKeyDown={onKeyDown}
-            className="w-full max-w-md space-y-4 rounded-2xl border border-slate-800 bg-slate-900 p-6 shadow-2xl"
+            className="w-full max-w-md space-y-4 rounded-card border border-border bg-surface-raised p-6 shadow-overlay"
           >
-            <h2 id={titleId} className="text-lg font-bold text-white">
+            <h2 id={titleId} className="text-lg font-bold text-fg">
               {MSG_CANCEL.confirmarTitulo}
             </h2>
-            {title && <p className="text-sm font-semibold text-slate-200">{title}</p>}
-            <p id={descId} className="text-sm text-slate-400">
+            {title && <p className="text-sm font-semibold text-fg">{title}</p>}
+            <p id={descId} className="text-sm text-fg-muted">
               {MSG_CANCEL.confirmarTexto}
             </p>
             <div className="flex justify-end gap-2">
-              <button
-                ref={keepRef}
-                type="button"
-                onClick={() => setOpen(false)}
-                disabled={busy}
-                className="rounded-xl border border-slate-800 bg-slate-900 px-4 py-2 text-xs font-bold text-slate-200 hover:bg-slate-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:opacity-40"
-              >
+              <Button ref={keepRef} variant="secondary" size="sm" onClick={() => setOpen(false)} disabled={busy}>
                 Continuar minerando
-              </button>
-              <button
-                type="button"
-                onClick={() => void confirm()}
-                disabled={busy}
-                aria-busy={busy}
-                className="inline-flex items-center gap-2 rounded-xl bg-rose-600 px-4 py-2 text-xs font-bold text-white hover:bg-rose-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-rose-400 disabled:cursor-not-allowed disabled:opacity-60"
-              >
-                {busy ? (
-                  <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
-                ) : (
-                  <OctagonX className="h-4 w-4" aria-hidden="true" />
-                )}
+              </Button>
+              <Button variant="danger" size="sm" icon={OctagonX} onClick={() => void confirm()} loading={busy}>
                 Parar mineração
-              </button>
+              </Button>
             </div>
           </div>
         </div>
