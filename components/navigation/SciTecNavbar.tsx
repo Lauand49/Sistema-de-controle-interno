@@ -26,6 +26,7 @@ import {
 import { ProfileSwitcher } from './ProfileSwitcher';
 import { CreateRequestModal } from '../modals/CreateRequestModal';
 import { Input } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
 
 interface SciTecNavbarProps {
   onRefresh?: () => void;
@@ -352,15 +353,10 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
 
             {/* Optional New Card Button */}
             {onNewCardClick && (
-              <button
-                onClick={onNewCardClick}
-                aria-label="Novo card"
-                title="Novo card"
-                className="min-h-10 px-3 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-lg shadow-purple-900/40 flex items-center gap-1.5 transition-all"
-              >
+              <Button size="sm" onClick={onNewCardClick} aria-label="Novo card" title="Novo card">
                 <Plus className="w-3.5 h-3.5" />
                 <span className="hidden lg:inline">Novo Card</span>
-              </button>
+              </Button>
             )}
 
             {/* Profile Switcher */}

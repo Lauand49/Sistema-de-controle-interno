@@ -292,12 +292,9 @@ export const SectorTaskBoard: React.FC<SectorTaskBoardProps> = ({
               <Lock className="w-3.5 h-3.5 inline mr-1 -mt-0.5" aria-hidden="true" />Somente Leitura
             </span>
           ) : (
-            <button
-              onClick={() => openNewTaskModal('TODO')}
-              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs shadow-md shadow-purple-900/30 flex items-center gap-1.5 transition-all"
-            >
+            <Button size="sm" onClick={() => openNewTaskModal('TODO')}>
               <Plus className="w-3.5 h-3.5" /> Nova Tarefa
-            </button>
+            </Button>
           )}
         </div>
       </div>

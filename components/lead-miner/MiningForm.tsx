@@ -50,6 +50,7 @@ import {
   type MiningFormValues,
 } from './mining-form-helpers';
 import { Select } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
 
 type IaState = 'loading' | 'available' | 'unavailable' | 'error';
 
@@ -435,19 +436,14 @@ export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
               ? `Preencha ${pendingCount === 1 ? 'o campo pendente' : `os ${pendingCount} campos pendentes`} para iniciar.`
               : 'Tudo pronto para minerar.'}
         </p>
-        <button
-          type="submit"
-          disabled={!enabled}
-          aria-describedby="mining-submit-hint"
-          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-5 py-2.5 text-sm font-bold text-white shadow-md hover:from-purple-500 hover:to-indigo-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:cursor-not-allowed disabled:opacity-50"
-        >
+        <Button size="md" type="submit" disabled={!enabled} aria-describedby="mining-submit-hint">
           {submitting ? (
             <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
           ) : (
             <Pickaxe className="h-4 w-4" aria-hidden="true" />
           )}
           {submitting ? 'Iniciando…' : 'Iniciar mineração'}
-        </button>
+        </Button>
       </div>
     </form>
   );

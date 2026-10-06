@@ -922,12 +922,9 @@ export default function SectorWorkspacePage() {
                       </p>
                     </div>
                     {canEditSector ? (
-                      <button
-                        onClick={() => setIsNewTransactionModalOpen(true)}
-                        className="mt-3 w-full py-2 px-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-all shadow-md shadow-purple-900/30"
-                      >
+                      <Button size="sm" onClick={() => setIsNewTransactionModalOpen(true)} className="mt-3 w-full">
                         <Plus className="w-3.5 h-3.5" /> Nova Movimentação
-                      </button>
+                      </Button>
                     ) : (
                       <div className="mt-3 py-2 px-3 rounded-xl bg-slate-950/80 border border-slate-800 text-center text-xs text-slate-400 font-medium">
                         <Lock className="w-3.5 h-3.5 inline mr-1 -mt-0.5" aria-hidden="true" />Registro restrito ao AdmJurFin
@@ -1606,12 +1603,9 @@ export default function SectorWorkspacePage() {
                 </p>
               </div>
 
-              <button
-                onClick={() => setIsCreateRequestModalOpen(true)}
-                className="px-3.5 py-1.5 text-xs font-bold rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white flex items-center gap-1.5 transition-all shadow-md"
-              >
+              <Button size="sm" onClick={() => setIsCreateRequestModalOpen(true)}>
                 <Plus className="w-3.5 h-3.5" /> Abrir Solicitação
-              </button>
+              </Button>
             </div>
 
             {requests.length === 0 ? (
@@ -1674,12 +1668,9 @@ export default function SectorWorkspacePage() {
 
                     <div className="flex items-center gap-2 shrink-0">
                       {req.status === 'PENDING' && (
-                        <button
-                          onClick={() => handleUpdateReqStatus(req.id, 'IN_PROGRESS')}
-                          className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs transition-colors"
-                        >
+                        <Button size="sm" onClick={() => handleUpdateReqStatus(req.id, 'IN_PROGRESS')}>
                           Iniciar Atendimento
-                        </button>
+                        </Button>
                       )}
 
                       {req.status === 'IN_PROGRESS' && (

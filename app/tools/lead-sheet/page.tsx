@@ -44,6 +44,7 @@ import { canAssignLeads, canBeLeadAssignee, canUseNegociosTools } from '@/lib/pe
 import { LoadingState } from '@/components/ui/Display';
 import { PageHeader } from '@/components/ui/Display';
 import { Input, Select, Textarea } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
 
 type TabType = 'TRIAGE' | 'MEETING';
 
@@ -962,13 +963,9 @@ export default function LeadSheetPage() {
                               </span>
                             ) : (
                               <div className="flex items-center justify-end gap-2">
-                                <button
-                                  onClick={() => setConvertingLead(lead)}
-                                  title="Agendar reunião e criar Card no Funil de Vendas"
-                                  className="px-3.5 py-1.5 text-xs font-bold text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 rounded-xl shadow-md flex items-center gap-1.5 transition-all transform hover:-translate-y-0.5"
-                                >
+                                <Button size="sm" onClick={() => setConvertingLead(lead)} title="Agendar reunião e criar Card no Funil de Vendas">
                                   <Zap className="w-3.5 h-3.5 text-yellow-300" /> Converter p/ Card
-                                </button>
+                                </Button>
 
                                 <button
                                   onClick={() => handleDiscardLead(lead.id)}

@@ -3,6 +3,7 @@
 import React from 'react';
 import { Clock, LogOut, RefreshCw, ShieldOff } from 'lucide-react';
 import type { User } from '@/types';
+import { Button } from '@/components/ui/Button';
 
 interface Props {
   user: User;
@@ -44,13 +45,9 @@ export const AccountStatusScreen: React.FC<Props> = ({ user, onLogout, onRefresh
 
         <div className="flex flex-col sm:flex-row gap-2 justify-center">
           {pending && (
-            <button
-              type="button"
-              onClick={onRefresh}
-              className="min-h-10 px-4 py-2.5 text-xs font-bold rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-400 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white flex items-center justify-center gap-2"
-            >
+            <Button size="sm" type="button" onClick={onRefresh}>
               <RefreshCw className="w-4 h-4" aria-hidden="true" /> Verificar novamente
-            </button>
+            </Button>
           )}
           <button
             type="button"

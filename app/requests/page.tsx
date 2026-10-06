@@ -321,12 +321,9 @@ export default function CrossDeptRequestsPage() {
                 {/* Right Actions */}
                 <div className="flex items-center gap-2 pt-2 md:pt-0 border-t md:border-t-0 border-slate-800 shrink-0">
                   {req.status === 'PENDING' && (
-                    <button
-                      onClick={() => handleUpdateStatus(req.id, 'IN_PROGRESS')}
-                      className="px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-bold text-xs transition-colors"
-                    >
+                    <Button size="sm" onClick={() => handleUpdateStatus(req.id, 'IN_PROGRESS')}>
                       Iniciar Atendimento
-                    </button>
+                    </Button>
                   )}
 
                   {req.status === 'IN_PROGRESS' && (

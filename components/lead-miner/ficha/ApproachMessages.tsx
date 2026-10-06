@@ -12,6 +12,7 @@ import { Muted, Section } from './Section';
 import { fallbackLabel } from '@/components/lead-miner/enrichment-helpers';
 import { formatDateTime } from './ficha-helpers';
 import { Select } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
 
 /**
  * Seção "Mensagens de abordagem" (Req. 15). Visível quando há Analise. Seletor de canal, botão
@@ -83,16 +84,10 @@ export const ApproachMessages: React.FC<ApproachMessagesProps> = ({ companyId, i
             <option value="WHATSAPP">WhatsApp</option>
             <option value="EMAIL">E-mail</option>
           </Select>
-          <button
-            type="button"
-            onClick={() => void generate()}
-            disabled={busy}
-            aria-busy={busy}
-            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-3 py-1.5 text-xs font-bold text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:cursor-not-allowed disabled:opacity-60"
-          >
+          <Button size="sm" type="button" onClick={() => void generate()} disabled={busy} aria-busy={busy}>
             {busy ? <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" /> : <MessageSquarePlus className="h-4 w-4" aria-hidden="true" />}
             {busy ? 'Gerando…' : 'Gerar mensagem de abordagem'}
-          </button>
+          </Button>
         </div>
       }
     >

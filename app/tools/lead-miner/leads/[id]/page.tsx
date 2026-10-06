@@ -22,6 +22,7 @@ import { ApproachMessages } from '@/components/lead-miner/ficha/ApproachMessages
 import { ReanalyzeButton } from '@/components/lead-miner/ficha/ReanalyzeButton';
 import { COMPANY_NOT_FOUND, NOT_ANALYZED, sortByDateDesc } from '@/components/lead-miner/ficha/ficha-helpers';
 import { isLeadMinerApiError, leadMinerApi, type CompanyDetail, type UserRef } from '@/lib/leads/client-api';
+import { Button } from '@/components/ui/Button';
 
 type LoadState =
   | { kind: 'loading' }
@@ -125,13 +126,9 @@ function FichaContent({ id }: { id: string }) {
       >
         <AlertTriangle className="h-8 w-8 text-red-400" aria-hidden="true" />
         <p className="text-sm text-red-200">{state.message}</p>
-        <button
-          type="button"
-          onClick={() => setReloadKey((k) => k + 1)}
-          className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-2 text-xs font-bold text-white hover:opacity-90 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500"
-        >
+        <Button size="sm" type="button" onClick={() => setReloadKey((k) => k + 1)}>
           <RefreshCw className="h-4 w-4" aria-hidden="true" /> Tentar novamente
-        </button>
+        </Button>
       </div>
     );
   }

@@ -5,6 +5,7 @@ import { Loader2, UserCheck } from 'lucide-react';
 import { toast } from 'sonner';
 import { leadMinerApi, type UserRef } from '@/lib/leads/client-api';
 import { CLAIM_INITIAL, CLAIM_SLOW_MS, CLAIM_SLOW_TEXT, claimReducer, classifyClaimError } from './ficha-helpers';
+import { Button } from '@/components/ui/Button';
 
 /**
  * "Assumir lead" (Req. 14.7, 14.9, 14.10, 14.12, 14.13, 16.3, 16.4).
@@ -66,20 +67,14 @@ export const ClaimLeadButton: React.FC<{
 
   return (
     <div className="flex flex-col items-end gap-1.5">
-      <button
-        type="button"
-        onClick={handleClick}
-        disabled={pending}
-        aria-busy={pending}
-        className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 px-4 py-2.5 text-sm font-bold text-white hover:from-purple-500 hover:to-indigo-500 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:cursor-not-allowed disabled:opacity-60"
-      >
+      <Button size="md" type="button" onClick={handleClick} disabled={pending} aria-busy={pending}>
         {pending ? (
           <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
         ) : (
           <UserCheck className="h-4 w-4" aria-hidden="true" />
         )}
         {pending ? 'Assumindo…' : 'Assumir lead'}
-      </button>
+      </Button>
       <div aria-live="polite" className="text-right text-xs">
         {state.phase === 'pending' && state.slow && <p className="text-amber-300">{CLAIM_SLOW_TEXT}</p>}
       </div>

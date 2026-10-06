@@ -42,6 +42,7 @@ import { teamApi } from '@/components/team/teamApi';
 import { PageHeader, EmptyState } from '@/components/ui/Display';
 import { Tabs } from '@/components/ui/Tabs';
 import { Input, Select } from '@/components/ui/Input';
+import { Button } from '@/components/ui/Button';
 
 type Tab = 'MEMBROS' | 'PENDENTES' | 'INATIVOS' | 'UNIDADES' | 'AUDITORIA';
 
@@ -409,14 +410,9 @@ export default function TeamPage() {
                         </option>
                       ))}
                     </Select>
-                    <button
-                      type="button"
-                      disabled={busyId === u.id || approvalDepartments.length === 0}
-                      onClick={() => handleApprove(u)}
-                      className="px-3 py-2 text-xs font-bold rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center gap-1.5 disabled:opacity-50"
-                    >
+                    <Button size="sm" type="button" disabled={busyId === u.id || approvalDepartments.length === 0} onClick={() => handleApprove(u)}>
                       <UserCheck className="w-4 h-4" aria-hidden="true" /> Aprovar
-                    </button>
+                    </Button>
                     {actor && canDeactivate(actor, u) && (
                       <button
                         type="button"
