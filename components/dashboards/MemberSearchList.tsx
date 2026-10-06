@@ -7,6 +7,7 @@ import { dashboardPages } from '@/lib/dashboards/client-api';
 import { matchesMemberSearch } from '@/lib/dashboards/format';
 import type { PersonBrief } from '@/lib/dashboards/types';
 import { FOCUS_RING, SectionEmpty, avatarUrl } from './DashboardSection';
+import { Input } from '@/components/ui/Input';
 
 /**
  * Lista de membros com busca por nome sem diferenciar caixa e acentos (Req. 9.3, 11.7).
@@ -30,7 +31,7 @@ export function MemberSearchList({ members }: { members: (PersonBrief & { title:
         </label>
         <div className="relative">
           <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-          <input
+          <Input
             id={inputId}
             type="search"
             value={query}

@@ -24,7 +24,7 @@ import {
 } from 'lucide-react';
 import { ProfileSwitcher } from './ProfileSwitcher';
 import { CreateRequestModal } from '../modals/CreateRequestModal';
-import { CONTROL_CLASS } from '@/components/ui/Input';
+import { Input } from '@/components/ui/Input';
 
 interface SciTecNavbarProps {
   onRefresh?: () => void;
@@ -288,12 +288,12 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
             {onSearchChange && (
               <div className="relative hidden md:block">
                 <Search className="w-3.5 h-3.5 text-purple-400 absolute left-3 top-3" aria-hidden="true" />
-                <input
+                <Input
                   type="text"
                   aria-label="Buscar no funil" placeholder="Buscar no funil..."
                   value={searchQuery}
                   onChange={(e) => onSearchChange(e.target.value)}
-                  className={`${CONTROL_CLASS} pl-8 pr-3 placeholder:text-purple-300/40 w-32 lg:w-44`}
+                  className="pl-8 pr-3 placeholder:text-purple-300/40 w-32 lg:w-44"
                 />
               </div>
             )}
@@ -364,12 +364,12 @@ export const SciTecNavbar: React.FC<SciTecNavbarProps> = ({
             {onSearchChange && (
               <div className="relative md:hidden pb-1">
                 <Search className="w-3.5 h-3.5 text-purple-400 absolute left-3 top-3" aria-hidden="true" />
-                <input
+                <Input
                   type="text"
                   aria-label="Buscar no funil" placeholder="Buscar no funil..."
                   value={searchQuery}
                   onChange={(e) => onSearchChange(e.target.value)}
-                  className={`${CONTROL_CLASS} w-full pl-8 pr-3 placeholder:text-purple-300/40`}
+                  className="w-full pl-8 pr-3 placeholder:text-purple-300/40"
                 />
               </div>
             )}

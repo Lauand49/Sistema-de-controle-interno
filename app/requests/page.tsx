@@ -28,7 +28,7 @@ import {
 import { formatDueDate } from '@/lib/dashboards/format';
 import { PageHeader, StatCard, EmptyState } from '@/components/ui/Display';
 import { Button } from '@/components/ui/Button';
-import { CONTROL_CLASS } from '@/components/ui/Input';
+import { Input, Select } from '@/components/ui/Input';
 
 export default function CrossDeptRequestsPage() {
   const { currentProfile } = useProfile();
@@ -154,12 +154,12 @@ export default function CrossDeptRequestsPage() {
 
             <div className="relative w-64">
               <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
-              <input
+              <Input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Buscar por título, escopo ou solicitante..."
-                className={`${CONTROL_CLASS} w-full pl-8 pr-3`}
+                className="w-full pl-8 pr-3"
               />
             </div>
           </div>
@@ -169,68 +169,68 @@ export default function CrossDeptRequestsPage() {
               <label htmlFor="page-1" className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
                 Setor de Destino
               </label>
-              <select id="page-1"
+              <Select id="page-1"
                 value={filterToDept}
                 onChange={(e) => setFilterToDept(e.target.value)}
-                className={`${CONTROL_CLASS} w-full`}
+                className="w-full"
               >
                 <option value="ALL">Todos os Destinos</option>
                 <option value="ADMJURFIN">AdmJurFin</option>
                 <option value="MIDIAS">Mídias</option>
                 <option value="GENTE">Gente</option>
                 <option value="NEGOCIOS">Negócios</option>
-              </select>
+              </Select>
             </div>
 
             <div>
               <label htmlFor="page-2" className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
                 Setor de Origem
               </label>
-              <select id="page-2"
+              <Select id="page-2"
                 value={filterFromDept}
                 onChange={(e) => setFilterFromDept(e.target.value)}
-                className={`${CONTROL_CLASS} w-full`}
+                className="w-full"
               >
                 <option value="ALL">Todas as Origens</option>
                 <option value="NEGOCIOS">Negócios</option>
                 <option value="ADMJURFIN">AdmJurFin</option>
                 <option value="GENTE">Gente</option>
                 <option value="MIDIAS">Mídias</option>
-              </select>
+              </Select>
             </div>
 
             <div>
               <label htmlFor="page-3" className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
                 Status
               </label>
-              <select id="page-3"
+              <Select id="page-3"
                 value={filterStatus}
                 onChange={(e) => setFilterStatus(e.target.value)}
-                className={`${CONTROL_CLASS} w-full`}
+                className="w-full"
               >
                 <option value="ALL">Todos os Status</option>
                 <option value="PENDING">Pendente</option>
                 <option value="IN_PROGRESS">Em Andamento</option>
                 <option value="COMPLETED">Concluída</option>
                 <option value="REJECTED">Rejeitada</option>
-              </select>
+              </Select>
             </div>
 
             <div>
               <label htmlFor="page-4" className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider mb-1">
                 Prioridade
               </label>
-              <select id="page-4"
+              <Select id="page-4"
                 value={filterPriority}
                 onChange={(e) => setFilterPriority(e.target.value)}
-                className={`${CONTROL_CLASS} w-full`}
+                className="w-full"
               >
                 <option value="ALL">Todas as Prioridades</option>
                 <option value="LOW">Baixa</option>
                 <option value="MEDIUM">Média</option>
                 <option value="HIGH">Alta</option>
                 <option value="URGENT">Urgente</option>
-              </select>
+              </Select>
             </div>
           </div>
         </div>

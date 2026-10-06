@@ -16,7 +16,7 @@ import {
   type DateRangeCheck,
   type RunsUiState,
 } from './runs-helpers';
-import { CONTROL_CLASS } from '@/components/ui/Input';
+import { Input, Select } from '@/components/ui/Input';
 
 export interface RunsFiltersProps {
   value: RunsUiState;
@@ -26,7 +26,7 @@ export interface RunsFiltersProps {
 }
 
 const LABEL = 'mb-1 block text-xs font-semibold text-slate-300';
-const FIELD = `${CONTROL_CLASS} aria-[invalid=true]:border-red-500`;
+const FIELD = 'aria-[invalid=true]:border-red-500';
 const FIELD_INVALID = 'border-red-600/70';
 
 export const RunsFilters: React.FC<RunsFiltersProps> = ({ value, dateCheck, onChange, onClear }) => {
@@ -67,7 +67,7 @@ export const RunsFilters: React.FC<RunsFiltersProps> = ({ value, dateCheck, onCh
           </label>
           <div className="relative">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" aria-hidden="true" />
-            <input
+            <Input
               id="runs-q"
               type="search"
               value={search}
@@ -83,49 +83,49 @@ export const RunsFilters: React.FC<RunsFiltersProps> = ({ value, dateCheck, onCh
           <label htmlFor="runs-uf" className={LABEL}>
             UF
           </label>
-          <select id="runs-uf" value={value.uf} onChange={(e) => onChange({ uf: e.target.value })} className={FIELD}>
+          <Select id="runs-uf" value={value.uf} onChange={(e) => onChange({ uf: e.target.value })} className={FIELD}>
             <option value="">Todas</option>
             {UFS.map((uf) => (
               <option key={uf} value={uf}>
                 {uf}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
 
         <div>
           <label htmlFor="runs-status" className={LABEL}>
             Status
           </label>
-          <select id="runs-status" value={value.status} onChange={(e) => onChange({ status: e.target.value })} className={FIELD}>
+          <Select id="runs-status" value={value.status} onChange={(e) => onChange({ status: e.target.value })} className={FIELD}>
             <option value="">Todos</option>
             {RUN_STATUS_OPTIONS.map((s) => (
               <option key={s} value={s}>
                 {RUN_STATUS_LABEL[s]}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
 
         <div className="lg:col-span-2">
           <label htmlFor="runs-fonte" className={LABEL}>
             Fonte
           </label>
-          <select id="runs-fonte" value={value.fonte} onChange={(e) => onChange({ fonte: e.target.value })} className={FIELD}>
+          <Select id="runs-fonte" value={value.fonte} onChange={(e) => onChange({ fonte: e.target.value })} className={FIELD}>
             <option value="">Todas</option>
             {RUN_SOURCE_OPTIONS.map((s) => (
               <option key={s} value={s}>
                 {RUN_SOURCE_LABEL[s]}
               </option>
             ))}
-          </select>
+          </Select>
         </div>
 
         <div>
           <label htmlFor="runs-from" className={LABEL}>
             Data inicial
           </label>
-          <input
+          <Input
             id="runs-from"
             type="date"
             value={value.from}
@@ -140,7 +140,7 @@ export const RunsFilters: React.FC<RunsFiltersProps> = ({ value, dateCheck, onCh
           <label htmlFor="runs-to" className={LABEL}>
             Data final
           </label>
-          <input
+          <Input
             id="runs-to"
             type="date"
             value={value.to}

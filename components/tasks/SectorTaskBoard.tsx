@@ -25,9 +25,9 @@ import { formatDueDate } from '@/lib/dashboards/format';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
-import { DateInput, Input, Select, Textarea } from '@/components/ui/Input';
 import { CONTROL_CLASS } from '@/components/ui/Input';
 import { EmptyState } from '@/components/ui/Display';
+import { DateInput, Input, Select, Textarea } from '@/components/ui/Input';
 
 interface SectorTaskBoardProps {
   department: string;
@@ -263,20 +263,20 @@ export const SectorTaskBoard: React.FC<SectorTaskBoardProps> = ({
           {/* Search */}
           <div className="relative">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
-            <input
+            <Input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Buscar tarefa..."
-              className={`${CONTROL_CLASS} pl-8 pr-3 w-44`}
+              className="pl-8 pr-3 w-44"
             />
           </div>
 
           {/* Member Filter */}
-          <select
+          <Select
             value={selectedAssignee}
             onChange={(e) => setSelectedAssignee(e.target.value)}
-            className={`${CONTROL_CLASS}`}
+            
           >
             <option value="ALL">Todos os Responsáveis</option>
             {users.map((u) => (
@@ -284,7 +284,7 @@ export const SectorTaskBoard: React.FC<SectorTaskBoardProps> = ({
                 {u.name}
               </option>
             ))}
-          </select>
+          </Select>
 
           {/* New Task Button */}
           {readOnly ? (

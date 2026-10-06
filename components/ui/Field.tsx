@@ -17,7 +17,7 @@ export const Field: React.FC<FieldProps> = ({ label, required, hint, error, clas
   const id = children.props.id ?? `f${uid.replace(/:/g, '')}`;
   const hintId = hint ? `${id}-hint` : undefined;
   const errId = error ? `${id}-err` : undefined;
-  const describedBy = [hintId, errId].filter(Boolean).join(' ') || undefined;
+  const describedBy = [children.props['aria-describedby'], hintId, errId].filter(Boolean).join(' ') || undefined;
   return (
     <div className={cn('space-y-1.5', className)}>
       <div className="flex items-center gap-2">

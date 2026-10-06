@@ -60,13 +60,11 @@ import { dashboardPages } from '@/lib/dashboards/client-api';
 import { formatDueDate } from '@/lib/dashboards/format';
 import { Modal } from '@/components/ui/Modal';
 import { Field } from '@/components/ui/Field';
-import { Input } from '@/components/ui/Input';
 import { PageHeader, StatCard, EmptyState, LoadingState } from '@/components/ui/Display';
 import { Button } from '@/components/ui/Button';
 import { Tabs, type TabItem } from '@/components/ui/Tabs';
-import { Select } from '@/components/ui/Input';
 import { pluralize } from '@/lib/ui/format';
-import { CONTROL_CLASS } from '@/components/ui/Input';
+import { Input, Select } from '@/components/ui/Input';
 
 export default function SectorWorkspacePage() {
   const params = useParams();
@@ -514,17 +512,17 @@ export default function SectorWorkspacePage() {
                   {genteViewMode === 'KANBAN' && pipes.length > 0 && (
                     <div className="flex items-center gap-1.5">
                       <span className="text-[11px] font-semibold text-slate-400 hidden sm:inline">Funil:</span>
-                      <select
+                      <Select
                         value={selectedPipeId}
                         onChange={(e) => setSelectedPipeId(e.target.value)}
-                        className={`${CONTROL_CLASS}`}
+                        
                       >
                         {pipes.map((p) => (
                           <option key={p.id} value={p.id}>
                             {p.name}
                           </option>
                         ))}
-                      </select>
+                      </Select>
                     </div>
                   )}
                   {canEditSector && (
@@ -759,12 +757,12 @@ export default function SectorWorkspacePage() {
 
                                   {/* Select de Consultor Designado */}
                                   <td className="p-3.5">
-                                    <select
+                                    <Select
                                       value={lead.assignedTo || ''}
                                       onChange={(e) => handleUpdateLeadAssignee(lead.id, e.target.value || null)}
                                       disabled={!canChangeAssignee(lead)}
                                       aria-label={`Consultor de ${lead.companyName}`}
-                                      className={`${CONTROL_CLASS} w-full disabled:opacity-50`}
+                                      className="w-full disabled:opacity-50"
                                     >
                                       <option value="">Aguardando Designação</option>
                                       <optgroup label="Equipe de Negócios">
@@ -783,7 +781,7 @@ export default function SectorWorkspacePage() {
                                           ))}
                                         </optgroup>
                                       )}
-                                    </select>
+                                    </Select>
                                   </td>
 
                                   <td className="p-3.5">

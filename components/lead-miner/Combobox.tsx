@@ -2,6 +2,7 @@
 
 import React, { useEffect, useId, useMemo, useRef, useState } from 'react';
 import { filterOptions, moveActive, suggestionsAnnouncement } from './combobox-helpers';
+import { Input } from '@/components/ui/Input';
 
 /**
  * Combobox editável com lista de sugestões (padrão ARIA "editable combobox with list
@@ -108,7 +109,7 @@ export const Combobox: React.FC<ComboboxProps> = ({
 
   return (
     <div className="relative">
-      <input
+      <Input
         id={id}
         type="text"
         role="combobox"

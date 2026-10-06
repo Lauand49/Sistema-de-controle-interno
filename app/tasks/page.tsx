@@ -30,10 +30,10 @@ import { isDepartmentManager, isGlobal, isSectorManager } from '@/lib/permission
 import { formatDueDate } from '@/lib/dashboards/format';
 import { Modal } from '@/components/ui/Modal';
 import { Field } from '@/components/ui/Field';
-import { DateInput, Input, Select, Textarea } from '@/components/ui/Input';
 import { CONTROL_CLASS } from '@/components/ui/Input';
 import { LoadingState, EmptyState, PageHeader, StatCard } from '@/components/ui/Display';
 import { Button } from '@/components/ui/Button';
+import { DateInput, Input, Select, Textarea } from '@/components/ui/Input';
 
 type TaskStatus = 'TODO' | 'IN_PROGRESS' | 'DONE' | 'CANCELLED';
 type TaskPriority = 'LOW' | 'MEDIUM' | 'HIGH' | 'URGENT';
@@ -364,10 +364,10 @@ export default function MyTasksPage() {
           <div className="flex items-center gap-3 flex-wrap">
             {/* Filter by Member when in ALL scope */}
             {viewScope === 'ALL' && (
-              <select
+              <Select
                 value={selectedMemberId}
                 onChange={(e) => setSelectedMemberId(e.target.value)}
-                className={`${CONTROL_CLASS}`}
+                
               >
                 <option value="ALL">Todos os Membros</option>
                 {profiles.map((p) => (
@@ -375,31 +375,31 @@ export default function MyTasksPage() {
                     {p.name} ({p.title})
                   </option>
                 ))}
-              </select>
+              </Select>
             )}
 
             {/* Filter Priority */}
-            <select
+            <Select
               value={priorityFilter}
               onChange={(e) => setPriorityFilter(e.target.value as any)}
-              className={`${CONTROL_CLASS}`}
+              
             >
               <option value="ALL">Todas Prioridades</option>
               <option value="URGENT">Urgente</option>
               <option value="HIGH">Alta</option>
               <option value="MEDIUM">Média</option>
               <option value="LOW">Baixa</option>
-            </select>
+            </Select>
 
             {/* Search Box */}
             <div className="relative min-w-[220px]">
               <Search className="w-4 h-4 text-purple-400 absolute left-3 top-2.5" />
-              <input
+              <Input
                 type="text"
                 placeholder="Buscar tarefa..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={`${CONTROL_CLASS} w-full pl-9 pr-4 placeholder:text-slate-400`}
+                className="w-full pl-9 pr-4 placeholder:text-slate-400"
               />
             </div>
           </div>

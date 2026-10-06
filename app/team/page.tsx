@@ -39,9 +39,9 @@ import {
 import { PersonTypeBadge } from '@/components/ui/PersonTypeBadge';
 import { ManageMemberModal } from '@/components/team/ManageMemberModal';
 import { teamApi } from '@/components/team/teamApi';
-import { CONTROL_CLASS } from '@/components/ui/Input';
 import { PageHeader, EmptyState } from '@/components/ui/Display';
 import { Tabs } from '@/components/ui/Tabs';
+import { Input, Select } from '@/components/ui/Input';
 
 type Tab = 'MEMBROS' | 'PENDENTES' | 'INATIVOS' | 'UNIDADES' | 'AUDITORIA';
 
@@ -247,23 +247,23 @@ export default function TeamPage() {
                 <label htmlFor="team-search" className="sr-only">
                   Buscar membros
                 </label>
-                <input
+                <Input
                   id="team-search"
                   type="search"
                   placeholder="Buscar por nome, e-mail, cargo ou setor..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
-                  className={`${CONTROL_CLASS} w-full pl-10 pr-4 placeholder:text-slate-400`}
+                  className="w-full pl-10 pr-4 placeholder:text-slate-400"
                 />
               </div>
               <label htmlFor="type-filter" className="sr-only">
                 Filtrar por tipo
               </label>
-              <select
+              <Select
                 id="type-filter"
                 value={typeFilter}
                 onChange={(e) => setTypeFilter(e.target.value as any)}
-                className={`${CONTROL_CLASS}`}
+                
               >
                 <option value="ALL">Todos os tipos</option>
                 {(Object.keys(PERSON_TYPE_LABEL) as PersonType[]).map((t) => (
@@ -271,15 +271,15 @@ export default function TeamPage() {
                     {PERSON_TYPE_LABEL[t]} ({typeCounts[t] || 0})
                   </option>
                 ))}
-              </select>
+              </Select>
               <label htmlFor="dept-filter" className="sr-only">
                 Filtrar por departamento
               </label>
-              <select
+              <Select
                 id="dept-filter"
                 value={deptFilter}
                 onChange={(e) => setDeptFilter(e.target.value)}
-                className={`${CONTROL_CLASS}`}
+                
               >
                 <option value="ALL">Todos os departamentos</option>
                 <option value="PRESIDENCIA">Presidência</option>
@@ -288,7 +288,7 @@ export default function TeamPage() {
                     {d.name}
                   </option>
                 ))}
-              </select>
+              </Select>
             </div>
 
             {loading ? (
@@ -397,18 +397,18 @@ export default function TeamPage() {
                     <label htmlFor={`approve-${u.id}`} className="sr-only">
                       Departamento de {u.name}
                     </label>
-                    <select
+                    <Select
                       id={`approve-${u.id}`}
                       value={approveDept[u.id] || approvalDepartments[0]?.code || ''}
                       onChange={(e) => setApproveDept((prev) => ({ ...prev, [u.id]: e.target.value }))}
-                      className={`${CONTROL_CLASS}`}
+                      
                     >
                       {approvalDepartments.map((d) => (
                         <option key={d.code} value={d.code}>
                           {d.name}
                         </option>
                       ))}
-                    </select>
+                    </Select>
                     <button
                       type="button"
                       disabled={busyId === u.id || approvalDepartments.length === 0}
@@ -452,18 +452,18 @@ export default function TeamPage() {
                   </div>
                   <div className="flex gap-2">
                     {!u.departmentCode && (
-                      <select
+                      <Select
                         aria-label={`Departamento para reativar ${u.name}`}
                         value={approveDept[u.id] || approvalDepartments[0]?.code || ''}
                         onChange={(e) => setApproveDept((prev) => ({ ...prev, [u.id]: e.target.value }))}
-                        className={`${CONTROL_CLASS}`}
+                        
                       >
                         {approvalDepartments.map((d) => (
                           <option key={d.code} value={d.code}>
                             {d.name}
                           </option>
                         ))}
-                      </select>
+                      </Select>
                     )}
                     <button
                       type="button"

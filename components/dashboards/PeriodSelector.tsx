@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { CalendarRange } from 'lucide-react';
 import { DEFAULT_PERIODO, PERIODS, parsePeriodo, type Periodo } from '@/lib/dashboards/period';
 import { PERIOD_LABEL } from '@/lib/dashboards/format';
-import { CONTROL_CLASS } from '@/components/ui/Input';
+import { Select } from '@/components/ui/Input';
 
 export interface UsePeriodoResult {
   /** Periodo efetivo (inválido na URL → '30d'). */
@@ -45,21 +45,21 @@ export function PeriodSelector() {
       <label htmlFor={id} className="text-sm font-medium text-slate-300">
         Período
       </label>
-      <select
+      <Select
         id={id}
         value={periodo}
         onChange={(e) => {
           const next = parsePeriodo(e.target.value);
           if (next) setPeriodo(next);
         }}
-        className={`${CONTROL_CLASS}`}
+        
       >
         {PERIODS.map((p) => (
           <option key={p} value={p}>
             {PERIOD_LABEL[p]}
           </option>
         ))}
-      </select>
+      </Select>
     </div>
   );
 }

@@ -40,8 +40,8 @@ import {
   ChevronRight,
   TrendingUp,
 } from 'lucide-react';
-import { CONTROL_CLASS } from '@/components/ui/Input';
 import { PageHeader, EmptyState } from '@/components/ui/Display';
+import { Input, Select } from '@/components/ui/Input';
 
 export default function ProjectPricingPage() {
   const { profiles, currentProfile } = useProfile();
@@ -390,12 +390,12 @@ SciTec jr. - Consultoria & Engenharia em Computação
                   <label htmlFor="page-1" className="block text-xs font-semibold text-slate-300 mb-1.5">
                     Nome da Empresa / Cliente
                   </label>
-                  <input id="page-1"
+                  <Input id="page-1"
                     type="text"
                     value={cliente}
                     onChange={(e) => setCliente(e.target.value)}
                     placeholder="Ex: Farmácia São Lucas ou BioTech"
-                    className={`${CONTROL_CLASS} w-full`}
+                    className="w-full"
                   />
                 </div>
 
@@ -403,12 +403,12 @@ SciTec jr. - Consultoria & Engenharia em Computação
                   <label htmlFor="page-2" className="block text-xs font-semibold text-slate-300 mb-1.5">
                     Nome do Projeto / Escopo
                   </label>
-                  <input id="page-2"
+                  <Input id="page-2"
                     type="text"
                     value={nomeProjeto}
                     onChange={(e) => setNomeProjeto(e.target.value)}
                     placeholder="Ex: Plataforma E-commerce Custom"
-                    className={`${CONTROL_CLASS} w-full`}
+                    className="w-full"
                   />
                 </div>
               </div>
@@ -423,17 +423,17 @@ SciTec jr. - Consultoria & Engenharia em Computação
                       +{(pricingResult.modificadores.porte * 100).toFixed(0)}%
                     </span>
                   </div>
-                  <select
+                  <Select
                     value={porteCliente}
                     onChange={(e) => setPorteCliente(e.target.value)}
-                    className={`${CONTROL_CLASS} w-full`}
+                    className="w-full"
                   >
                     {CLIENT_SIZE_MODIFIERS.map((p) => (
                       <option key={p.id} value={p.id}>
                         {p.label} (+{(p.modifier * 100).toFixed(0)}%)
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
 
                 {/* Urgência */}
@@ -446,17 +446,17 @@ SciTec jr. - Consultoria & Engenharia em Computação
                       +{(pricingResult.modificadores.urgencia * 100).toFixed(0)}%
                     </span>
                   </div>
-                  <select
+                  <Select
                     value={urgencia}
                     onChange={(e) => setUrgencia(e.target.value)}
-                    className={`${CONTROL_CLASS} w-full`}
+                    className="w-full"
                   >
                     {URGENCY_MODIFIERS.map((u) => (
                       <option key={u.id} value={u.id}>
                         {u.label} (+{(u.modifier * 100).toFixed(0)}%)
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
 
                 {/* Experiência da Equipe no Escopo */}
@@ -478,10 +478,10 @@ SciTec jr. - Consultoria & Engenharia em Computação
                       {(pricingResult.modificadores.experiencia * 100).toFixed(0)}%
                     </span>
                   </div>
-                  <select
+                  <Select
                     value={nivelExperiencia}
                     onChange={(e) => setNivelExperiencia(Number(e.target.value))}
-                    className={`${CONTROL_CLASS} w-full`}
+                    className="w-full"
                   >
                     {EXPERIENCE_MODIFIERS.map((e) => (
                       <option key={e.level} value={e.level}>
@@ -489,7 +489,7 @@ SciTec jr. - Consultoria & Engenharia em Computação
                         {(e.modifier * 100).toFixed(0)}%)
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
 
                 {/* Complexidade Técnica */}
@@ -511,10 +511,10 @@ SciTec jr. - Consultoria & Engenharia em Computação
                       {(pricingResult.modificadores.complexidade * 100).toFixed(0)}%
                     </span>
                   </div>
-                  <select
+                  <Select
                     value={nivelComplexidade}
                     onChange={(e) => setNivelComplexidade(Number(e.target.value))}
-                    className={`${CONTROL_CLASS} w-full`}
+                    className="w-full"
                   >
                     {COMPLEXITY_MODIFIERS.map((c) => (
                       <option key={c.level} value={c.level}>
@@ -522,7 +522,7 @@ SciTec jr. - Consultoria & Engenharia em Computação
                         {(c.modifier * 100).toFixed(0)}%)
                       </option>
                     ))}
-                  </select>
+                  </Select>
                 </div>
               </div>
 
@@ -539,13 +539,13 @@ SciTec jr. - Consultoria & Engenharia em Computação
                       {(pricingResult.modificadores.pessoas * 100).toFixed(0)}%
                     </span>
                   </div>
-                  <input
+                  <Input
                     type="number"
                     min={1}
                     max={20}
                     value={numPessoas}
                     onChange={(e) => setNumPessoas(Math.max(1, Number(e.target.value)))}
-                    className={`${CONTROL_CLASS} w-full`}
+                    className="w-full"
                   />
                   <span className="text-[11px] text-slate-400 block mt-1">
                     Base: 4 pessoas (±5% por pessoa)
@@ -583,7 +583,7 @@ SciTec jr. - Consultoria & Engenharia em Computação
                     </span>
                   </div>
                   <div className="relative">
-                    <input
+                    <Input
                       type="number"
                       min={0}
                       max={50}
@@ -592,7 +592,7 @@ SciTec jr. - Consultoria & Engenharia em Computação
                       onChange={(e) =>
                         setDescontoComercialPct(Math.min(50, Math.max(0, Number(e.target.value))))
                       }
-                      className={`${CONTROL_CLASS} w-full pl-3 pr-8`}
+                      className="w-full pl-3 pr-8"
                     />
                     <span className="absolute right-3 top-2.5 text-xs text-slate-400">%</span>
                   </div>
@@ -640,17 +640,17 @@ SciTec jr. - Consultoria & Engenharia em Computação
                         <label htmlFor="page-3" className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
                           Função Técnica
                         </label>
-                        <select id="page-3"
+                        <Select id="page-3"
                           value={serv.cargo}
                           onChange={(e) => updateServiceRow(index, 'cargo', e.target.value)}
-                          className={`${CONTROL_CLASS} w-full`}
+                          className="w-full"
                         >
                           {ROLES_RATES.map((role) => (
                             <option key={role.cargo} value={role.cargo}>
                               {role.cargo} — R$ {role.valorHora.toFixed(2)}/h
                             </option>
                           ))}
-                        </select>
+                        </Select>
                       </div>
 
                       {/* Horas Input */}
@@ -659,13 +659,13 @@ SciTec jr. - Consultoria & Engenharia em Computação
                           Horas
                         </label>
                         <div className="relative">
-                          <input
+                          <Input
                             type="number"
                             min={1}
                             max={1000}
                             value={serv.horas}
                             onChange={(e) => updateServiceRow(index, 'horas', e.target.value)}
-                            className={`${CONTROL_CLASS} w-full`}
+                            className="w-full"
                           />
                           <span className="absolute right-2.5 top-1.5 text-xs text-slate-400">h</span>
                         </div>
@@ -676,12 +676,12 @@ SciTec jr. - Consultoria & Engenharia em Computação
                         <label htmlFor="page-4" className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
                           Atividades / Escopo Detalhado
                         </label>
-                        <input id="page-4"
+                        <Input id="page-4"
                           type="text"
                           value={serv.descricao || ''}
                           onChange={(e) => updateServiceRow(index, 'descricao', e.target.value)}
                           placeholder="Ex: Telas, endpoints ou arquitetura..."
-                          className={`${CONTROL_CLASS} w-full`}
+                          className="w-full"
                         />
                       </div>
 
@@ -754,12 +754,12 @@ SciTec jr. - Consultoria & Engenharia em Computação
                         <label className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
                           Descrição da Despesa
                         </label>
-                        <input
+                        <Input
                           type="text"
                           value={cost.descricao}
                           onChange={(e) => updateExtraCostRow(idx, 'descricao', e.target.value)}
                           placeholder="Ex: Servidor AWS, Domínio, Licença de tema..."
-                          className={`${CONTROL_CLASS} w-full`}
+                          className="w-full"
                         />
                       </div>
 
@@ -767,13 +767,13 @@ SciTec jr. - Consultoria & Engenharia em Computação
                         <label htmlFor="page-5" className="text-[11px] font-semibold text-slate-400 uppercase tracking-wider block mb-1">
                           Valor (R$)
                         </label>
-                        <input id="page-5"
+                        <Input id="page-5"
                           type="number"
                           min={0}
                           step={10}
                           value={cost.valor_total}
                           onChange={(e) => updateExtraCostRow(idx, 'valor_total', e.target.value)}
-                          className={`${CONTROL_CLASS} w-full`}
+                          className="w-full"
                         />
                       </div>
 
@@ -977,10 +977,10 @@ SciTec jr. - Consultoria & Engenharia em Computação
                     </div>
 
                     <div className="flex items-center gap-2">
-                      <select
+                      <Select
                         value={selectedAssignee}
                         onChange={(e) => setSelectedAssignee(e.target.value)}
-                        className={`${CONTROL_CLASS} flex-1`}
+                        className="flex-1"
                       >
                         <option value="">Responsável Comercial (Opcional)</option>
                         {profiles.map((user) => (
@@ -988,7 +988,7 @@ SciTec jr. - Consultoria & Engenharia em Computação
                             {user.name} ({user.title})
                           </option>
                         ))}
-                      </select>
+                      </Select>
 
                       <button
                         onClick={handleSendToFunnel}

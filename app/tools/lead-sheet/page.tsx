@@ -41,9 +41,9 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { canAssignLeads, canBeLeadAssignee, canUseNegociosTools } from '@/lib/permissions';
-import { CONTROL_CLASS } from '@/components/ui/Input';
 import { LoadingState } from '@/components/ui/Display';
 import { PageHeader } from '@/components/ui/Display';
+import { Input, Select, Textarea } from '@/components/ui/Input';
 
 type TabType = 'TRIAGE' | 'MEETING';
 
@@ -559,27 +559,27 @@ export default function LeadSheetPage() {
                 <label htmlFor="page-1" className="block font-semibold text-purple-300 mb-1">
                   Nome da Empresa / Cliente <span className="text-red-400">*</span>
                 </label>
-                <select id="page-1"
+                <Select id="page-1"
                   value={mapping.companyName}
                   onChange={(e) => setMapping({ ...mapping, companyName: e.target.value })}
-                  className={`${CONTROL_CLASS} w-full`}
+                  className="w-full"
                 >
                   {columns.map((c) => (
                     <option key={c} value={c}>
                       {c}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
 
               <div>
                 <label className="block font-semibold text-slate-300 mb-1">
                   Contato Principal (Nome)
                 </label>
-                <select
+                <Select
                   value={mapping.contactName}
                   onChange={(e) => setMapping({ ...mapping, contactName: e.target.value })}
-                  className={`${CONTROL_CLASS} w-full`}
+                  className="w-full"
                 >
                   <option value="">-- Ignorar ou Nenhum --</option>
                   {columns.map((c) => (
@@ -587,17 +587,17 @@ export default function LeadSheetPage() {
                       {c}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
 
               <div>
                 <label className="block font-semibold text-slate-300 mb-1">
                   Telefone / E-mail / WhatsApp
                 </label>
-                <select
+                <Select
                   value={mapping.contactInfo}
                   onChange={(e) => setMapping({ ...mapping, contactInfo: e.target.value })}
-                  className={`${CONTROL_CLASS} w-full`}
+                  className="w-full"
                 >
                   <option value="">-- Ignorar ou Nenhum --</option>
                   {columns.map((c) => (
@@ -605,17 +605,17 @@ export default function LeadSheetPage() {
                       {c}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
 
               <div>
                 <label className="block font-semibold text-slate-300 mb-1">
                   Segmento / Nicho
                 </label>
-                <select
+                <Select
                   value={mapping.segment}
                   onChange={(e) => setMapping({ ...mapping, segment: e.target.value })}
-                  className={`${CONTROL_CLASS} w-full`}
+                  className="w-full"
                 >
                   <option value="">-- Ignorar ou Nenhum --</option>
                   {columns.map((c) => (
@@ -623,17 +623,17 @@ export default function LeadSheetPage() {
                       {c}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
 
               <div>
                 <label className="block font-semibold text-slate-300 mb-1">
                   Plano de Ação / Recomendação
                 </label>
-                <select
+                <Select
                   value={mapping.actionPlan}
                   onChange={(e) => setMapping({ ...mapping, actionPlan: e.target.value })}
-                  className={`${CONTROL_CLASS} w-full`}
+                  className="w-full"
                 >
                   <option value="">-- Ignorar ou Valor Padrão --</option>
                   {columns.map((c) => (
@@ -641,17 +641,17 @@ export default function LeadSheetPage() {
                       {c}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
 
               <div>
                 <label className="block font-semibold text-slate-300 mb-1">
                   Observações / Contexto
                 </label>
-                <select
+                <Select
                   value={mapping.notes}
                   onChange={(e) => setMapping({ ...mapping, notes: e.target.value })}
-                  className={`${CONTROL_CLASS} w-full`}
+                  className="w-full"
                 >
                   <option value="">-- Ignorar ou Nenhum --</option>
                   {columns.map((c) => (
@@ -659,7 +659,7 @@ export default function LeadSheetPage() {
                       {c}
                     </option>
                   ))}
-                </select>
+                </Select>
               </div>
             </div>
 
@@ -749,10 +749,10 @@ export default function LeadSheetPage() {
 
           <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end flex-wrap">
             {/* Filter by Member / Assignee */}
-            <select
+            <Select
               value={assigneeFilter}
               onChange={(e) => setAssigneeFilter(e.target.value)}
-              className={`${CONTROL_CLASS}`}
+              
             >
               <option value="ALL">Todos os Responsáveis</option>
               <option value="UNASSIGNED">Sem Responsável</option>
@@ -772,16 +772,16 @@ export default function LeadSheetPage() {
                   ))}
                 </optgroup>
               )}
-            </select>
+            </Select>
 
             <div className="relative w-full sm:w-64">
               <Search className="w-4 h-4 text-purple-400 absolute left-3 top-2.5" />
-              <input
+              <Input
                 type="text"
                 placeholder="Buscar por empresa, contato..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className={`${CONTROL_CLASS} w-full pl-9 pr-4 placeholder:text-slate-400`}
+                className="w-full pl-9 pr-4 placeholder:text-slate-400"
               />
             </div>
 
@@ -857,7 +857,7 @@ export default function LeadSheetPage() {
 
                           {/* Member Assignment (Responsável) - Restrito a Negócios & Presidência */}
                           <td className="p-3.5 min-w-[150px]">
-                            <select
+                            <Select
                               value={lead.assignedTo || ''}
                               onChange={(e) => {
                                 const val = e.target.value || null;
@@ -865,7 +865,7 @@ export default function LeadSheetPage() {
                               }}
                               disabled={!canChangeAssignee(lead)}
                               aria-label={`Responsável por ${lead.companyName}`}
-                              className={`${CONTROL_CLASS} w-full disabled:opacity-50 disabled:cursor-not-allowed`}
+                              className="w-full disabled:opacity-50 disabled:cursor-not-allowed"
                             >
                               <option value="">Não atribuído</option>
                               <optgroup label="Equipe de Negócios">
@@ -884,7 +884,7 @@ export default function LeadSheetPage() {
                                   ))}
                                 </optgroup>
                               )}
-                            </select>
+                            </Select>
                           </td>
 
                           <td className="p-3.5 text-slate-400 font-medium">
@@ -899,7 +899,7 @@ export default function LeadSheetPage() {
 
                           {/* Editable Action Plan */}
                           <td className="p-3.5 min-w-[220px]">
-                            <textarea
+                            <Textarea
                               rows={2}
                               defaultValue={lead.actionPlan}
                               disabled={!canManageLeads}
@@ -909,13 +909,13 @@ export default function LeadSheetPage() {
                                 }
                               }}
                               placeholder={canManageLeads ? "Digite o plano de abordagem..." : "Sem plano de abordagem definido"}
-                              className={`${CONTROL_CLASS} w-full disabled:opacity-60 disabled:cursor-not-allowed`}
+                              className="w-full disabled:opacity-60 disabled:cursor-not-allowed"
                             />
                           </td>
 
                           {/* Editable Notes */}
                           <td className="p-3.5 min-w-[180px]">
-                            <textarea
+                            <Textarea
                               rows={2}
                               defaultValue={lead.notes || ''}
                               disabled={!canManageLeads}
@@ -925,13 +925,13 @@ export default function LeadSheetPage() {
                                 }
                               }}
                               placeholder={canManageLeads ? "Anotações livres..." : "Nenhuma anotação"}
-                              className={`${CONTROL_CLASS} w-full disabled:opacity-60 disabled:cursor-not-allowed`}
+                              className="w-full disabled:opacity-60 disabled:cursor-not-allowed"
                             />
                           </td>
 
                           {/* Status Dropdown */}
                           <td className="p-3.5">
-                            <select
+                            <Select
                               value={lead.status}
                               disabled={!canManageLeads}
                               onChange={(e) => {
@@ -951,7 +951,7 @@ export default function LeadSheetPage() {
                               <option value="PENDING">Pendente</option>
                               <option value="IN_PROGRESS">Em Triagem</option>
                               <option value="DISCARDED">Descartado</option>
-                            </select>
+                            </Select>
                           </td>
 
                           {/* Action: Convert or Discard */}

@@ -49,6 +49,7 @@ import {
   type MiningFormField,
   type MiningFormValues,
 } from './mining-form-helpers';
+import { Select } from '@/components/ui/Input';
 
 type IaState = 'loading' | 'available' | 'unavailable' | 'error';
 
@@ -57,8 +58,7 @@ export interface MiningFormProps {
   onRunStarted: (run: RunProgress | string, title: string) => void;
 }
 
-const inputClass =
-  'w-full rounded-xl border bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-purple-500 disabled:opacity-60';
+const inputClass = 'w-full';
 
 export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
   const [values, setValues] = useState<MiningFormValues>(INITIAL_FORM_VALUES);
@@ -224,7 +224,7 @@ export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
   const joinIds = (...ids: Array<string | undefined>) => ids.filter(Boolean).join(' ') || undefined;
   const cidadeHintId = joinIds(describedBy('cidade'), cidadeNote ? 'mining-cidade-note' : undefined);
   const bairroHintId = joinIds(describedBy('bairro'), bairroNote ? 'mining-bairro-note' : undefined);
-  const border = (field: MiningFormField) => (serverErrors[field] ? 'border-red-500/70' : 'border-slate-700');
+  const border = (field: MiningFormField) => (serverErrors[field] ? '!border-danger' : '');
 
   const pendingCount = Object.keys(pending).length;
 
@@ -246,7 +246,7 @@ export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
           <label htmlFor="mining-uf" className="mb-1 block text-sm font-semibold text-slate-200">
             UF
           </label>
-          <select
+          <Select
             id="mining-uf"
             value={values.uf}
             onChange={(e) => changeUf(e.target.value)}
@@ -261,7 +261,7 @@ export const MiningForm: React.FC<MiningFormProps> = ({ onRunStarted }) => {
                 {uf}
               </option>
             ))}
-          </select>
+          </Select>
           {hint('uf')}
         </div>
         <div>

@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from 'react';
 import { signIn } from 'next-auth/react';
 import { AlertTriangle, ArrowRight, Code2, LogIn, ShieldCheck, Sparkles } from 'lucide-react';
-import { CONTROL_CLASS } from '@/components/ui/Input';
+import { Input } from '@/components/ui/Input';
 
 interface Props {
   callbackUrl: string;
@@ -130,14 +130,14 @@ export function LoginClient({ callbackUrl, error, domain, devLoginEnabled, googl
               <label htmlFor="dev-email" className="sr-only">
                 E-mail
               </label>
-              <input
+              <Input
                 id="dev-email"
                 type="email"
                 required
                 placeholder={`nome@${domain}`}
                 value={devEmail}
                 onChange={(e) => setDevEmail(e.target.value)}
-                className={`${CONTROL_CLASS} flex-1 placeholder:text-slate-400`}
+                className="flex-1 placeholder:text-slate-400"
               />
               <button
                 type="submit"

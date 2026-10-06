@@ -37,7 +37,48 @@ const code = (p: string) =>
     .split('\n')
     .filter((l) => !l.trim().startsWith('//') && !l.trim().startsWith('{/*') && !l.trim().startsWith('*'));
 
+/** Fim da tag JSX que começa em `i`, respeitando {...} e aspas. */
+function tagEnd(src: string, i: number): number {
+  let depth = 0;
+  let quote: string | null = null;
+  for (let j = i; j < src.length; j++) {
+    const c = src[j];
+    if (quote) {
+      if (c === quote) quote = null;
+    } else if (c === '"' || c === "'") quote = c;
+    else if (c === '{') depth++;
+    else if (c === '}') depth--;
+    else if (c === '>' && depth === 0) return j;
+  }
+  return src.length;
+}
+
+/**
+ * Controles crus permitidos: tipos que não têm componente em components/ui (caixa de seleção, opção, arquivo,
+ * faixa, cor, oculto). Textos, datas, números, <select> e <textarea> devem usar Input/Select/Textarea/DateInput.
+ */
+const RAW_INPUT_TYPES = ['checkbox', 'radio', 'file', 'range', 'color', 'hidden'];
+/** arquivo -> motivo, para controles crus de outros tipos. Vazio de propósito. */
+const RAW_CONTROL_EXCEPTIONS: Record<string, string> = {};
+
+function rawControls(p: string): string[] {
+  const src = readFileSync(p, 'utf8');
+  const found: string[] = [];
+  for (const m of src.matchAll(/<(input|select|textarea)\b/g)) {
+    const tag = src.slice(m.index!, tagEnd(src, m.index! + m[0].length) + 1);
+    const type = /type=["']([a-z-]+)["']/.exec(tag)?.[1];
+    if (m[1] === 'input' && type && RAW_INPUT_TYPES.includes(type)) continue;
+    found.push(`${p}: ${tag.replace(/\s+/g, ' ').slice(0, 70)}`);
+  }
+  return found;
+}
+
 describe('guarda de design', () => {
+  it('nenhum <input>/<select>/<textarea> cru fora de components/ui (use Input, Select, Textarea, DateInput)', () => {
+    const found = files.filter((p) => !p.startsWith('components/ui/') && !(p in RAW_CONTROL_EXCEPTIONS)).flatMap(rawControls);
+    expect(found).toEqual([]);
+  });
+
   it('nenhum emoji como ícone (exceções documentadas)', () => {
     const found = files
       .filter((p) => !(p in EMOJI_EXCEPTIONS))

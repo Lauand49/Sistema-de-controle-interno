@@ -12,7 +12,7 @@ import {
   AlertTriangle,
   ChevronDown,
   Sparkles, Lock } from 'lucide-react';
-import { CONTROL_CLASS } from '@/components/ui/Input';
+import { Input } from '@/components/ui/Input';
 
 export interface TriageLead {
   id: string;
@@ -177,12 +177,12 @@ export const LeadDecisionCard: React.FC<LeadDecisionCardProps> = ({
             </div>
 
             <div className="flex gap-2 pt-1">
-              <input
+              <Input
                 type="text"
                 value={discardReason}
                 onChange={(e) => setDiscardReason(e.target.value)}
                 placeholder="Ou digite uma justificativa personalizada..."
-                className={`${CONTROL_CLASS} flex-1`}
+                className="flex-1"
                 onKeyDown={(e) => {
                   if (e.key === 'Enter') {
                     e.preventDefault();

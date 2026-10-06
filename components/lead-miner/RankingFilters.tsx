@@ -13,11 +13,11 @@ import {
   type RankingInvalidField,
   type RankingUiKey,
 } from './ranking-helpers';
-import { CONTROL_CLASS } from '@/components/ui/Input';
+import { Input, Select } from '@/components/ui/Input';
 
 const TEXT_DEBOUNCE_MS = 400;
 
-const FIELD = `${CONTROL_CLASS} aria-[invalid=true]:border-red-500`;
+const FIELD = 'aria-[invalid=true]:border-red-500';
 const LABEL = 'mb-1 block text-xs font-semibold text-slate-400';
 
 interface RankingFiltersProps {
@@ -59,7 +59,7 @@ function DebouncedInput({
     return () => clearTimeout(t);
   }, [local, onCommit]);
 
-  return <input {...rest} value={local} onChange={(e) => setLocal(e.target.value)} />;
+  return <Input {...rest} value={local} onChange={(e) => setLocal(e.target.value)} />;
 }
 
 function SelectField({
@@ -80,9 +80,9 @@ function SelectField({
       <label htmlFor={id} className={LABEL}>
         {label}
       </label>
-      <select id={id} className={FIELD} value={value} onChange={(e) => onChange(e.target.value)}>
+      <Select id={id} className={FIELD} value={value} onChange={(e) => onChange(e.target.value)}>
         {children}
-      </select>
+      </Select>
     </div>
   );
 }
@@ -324,7 +324,7 @@ export const RankingFilters: React.FC<RankingFiltersProps> = ({
             <label htmlFor={id('analyzedFrom')} className="sr-only">
               Analisadas a partir de
             </label>
-            <input
+            <Input
               id={id('analyzedFrom')}
               type="date"
               className={FIELD}
@@ -337,7 +337,7 @@ export const RankingFilters: React.FC<RankingFiltersProps> = ({
             <label htmlFor={id('analyzedTo')} className="sr-only">
               Analisadas até
             </label>
-            <input
+            <Input
               id={id('analyzedTo')}
               type="date"
               className={FIELD}
