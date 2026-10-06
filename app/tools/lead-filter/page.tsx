@@ -30,7 +30,7 @@ import * as XLSX from 'xlsx';
 import { useProfile } from '@/contexts/ProfileContext';
 import { canUseNegociosTools } from '@/lib/permissions';
 import { Modal } from '@/components/ui/Modal';
-import { Button } from '@/components/ui/Button';
+import { Button, ButtonLink } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
 import { Select } from '@/components/ui/Input';
 import { CONTROL_CLASS } from '@/components/ui/Input';
@@ -538,19 +538,14 @@ export default function LeadFilterPage() {
             />
           ) : currentIndex >= queueLeads.length ? (
             /* Completed Queue State */
-            <div className="max-w-lg w-full bg-slate-900/80 border border-slate-800 rounded-3xl p-8 text-center space-y-6 shadow-2xl">
-              <div className="w-16 h-16 rounded-2xl bg-emerald-950/80 border border-emerald-700/60 text-emerald-400 flex items-center justify-center mx-auto shadow-inner">
-                <CheckCircle2 className="w-9 h-9" />
-              </div>
-
-              <div className="space-y-2">
-                <h3 className="text-2xl font-black text-white">Triagem Concluída!</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
-                  Todos os leads da fila foram avaliados. Os leads aprovados já estão disponíveis para a equipe comercial na planilha de trabalho.
-                </p>
-              </div>
-
-              {/* Session Summary Card */}
+            <EmptyState
+              icon={CheckCircle2}
+              title="Triagem Concluída!"
+              description="Todos os leads da fila foram avaliados. Os leads aprovados já estão disponíveis para a equipe comercial na planilha de trabalho."
+              className="max-w-lg w-full"
+              action={
+                <div className="w-full space-y-4 pt-2">
+                  {/* Session Summary Card */}
               <div className="grid grid-cols-2 gap-3 p-4 rounded-2xl bg-slate-950/70 border border-slate-800/80">
                 <div className="text-center p-3 rounded-xl bg-emerald-950/30 border border-emerald-800/30">
                   <span className="text-2xl font-black text-emerald-300">{sessionApproved}</span>
@@ -561,19 +556,17 @@ export default function LeadFilterPage() {
                   <p className="text-[11px] text-rose-400 font-semibold mt-0.5">Leads Descartados</p>
                 </div>
               </div>
-
-              <div className="flex flex-col sm:flex-row gap-3 pt-2">
-                <Link
-                  href="/tools/lead-sheet"
-                  className="flex-1 py-3 px-4 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-500 text-white flex items-center justify-center gap-2 transition-all shadow-lg shadow-emerald-950/30"
-                >
-                  <FileSpreadsheet className="w-4 h-4" /> Ver Planilha de Leads
-                </Link>
-                <Button variant="secondary" size="sm" onClick={() => setIsDrawerOpen(true)}>
-                  <Eye className="w-4 h-4 text-rose-400" /> Ver Descartados ({discardedLeads.length})
-                </Button>
-              </div>
-            </div>
+                  <div className="flex flex-col sm:flex-row gap-3 justify-center">
+                    <ButtonLink href="/tools/lead-sheet" icon={FileSpreadsheet}>
+                      Ver Planilha de Leads
+                    </ButtonLink>
+                    <Button variant="secondary" onClick={() => setIsDrawerOpen(true)}>
+                      <Eye className="w-4 h-4" aria-hidden="true" /> Ver Descartados ({discardedLeads.length})
+                    </Button>
+                  </div>
+                </div>
+              }
+            />
           ) : (
             /* Active Triage Decision Card */
             <div className="w-full flex flex-col items-center space-y-4">
