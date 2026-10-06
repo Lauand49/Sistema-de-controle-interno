@@ -60,7 +60,7 @@ import { dashboardPages } from '@/lib/dashboards/client-api';
 import { formatDueDate } from '@/lib/dashboards/format';
 import { Modal } from '@/components/ui/Modal';
 import { Field } from '@/components/ui/Field';
-import { PageHeader, StatCard, EmptyState, LoadingState } from '@/components/ui/Display';
+import { Badge, PageHeader, StatCard, EmptyState, LoadingState } from '@/components/ui/Display';
 import { Button, ButtonLink } from '@/components/ui/Button';
 import { Tabs, type TabItem } from '@/components/ui/Tabs';
 import { pluralize } from '@/lib/ui/format';
@@ -436,9 +436,9 @@ export default function SectorWorkspacePage() {
                   <h4 className="text-xs font-bold text-amber-300 uppercase tracking-wider">
                     Acesso restrito
                   </h4>
-                  <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 border border-amber-500/40 text-amber-300">
+                  <Badge tone="warning">
                     Sem permissão
-                  </span>
+                  </Badge>
                 </div>
                 <p className="text-xs text-amber-200/80">
                   Você não participa de <strong className="text-white">{unitName(currentSector.code)}</strong>. Funis, tarefas e
@@ -1009,9 +1009,9 @@ export default function SectorWorkspacePage() {
                       <div className="p-2.5 rounded-xl bg-blue-950/80 border border-blue-800/60 text-blue-400">
                         <FileText className="w-5 h-5" />
                       </div>
-                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/40">
+                      <Badge tone="info">
                         Minutas Ativas
-                      </span>
+                      </Badge>
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-white">Gerador de Minutas & Contratos</h4>
@@ -1026,9 +1026,9 @@ export default function SectorWorkspacePage() {
                       <div className="p-2.5 rounded-xl bg-blue-950/80 border border-blue-800/60 text-blue-400">
                         <Receipt className="w-5 h-5" />
                       </div>
-                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/40">
+                      <Badge tone="info">
                         Disponível
-                      </span>
+                      </Badge>
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-white">Emissor de Faturas & Recibos PJ</h4>
@@ -1043,9 +1043,9 @@ export default function SectorWorkspacePage() {
                       <div className="p-2.5 rounded-xl bg-blue-950/80 border border-blue-800/60 text-blue-400">
                         <Scale className="w-5 h-5" />
                       </div>
-                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/40">
+                      <Badge tone="info">
                         Disponível
-                      </span>
+                      </Badge>
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-white">Simulador Tributário & Fiscal</h4>
@@ -1158,9 +1158,9 @@ export default function SectorWorkspacePage() {
                       <div className="p-2.5 rounded-xl bg-pink-950/80 border border-pink-800/60 text-pink-400">
                         <Palette className="w-5 h-5" />
                       </div>
-                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/40">
+                      <Badge tone="primary">
                         Brand Kit
-                      </span>
+                      </Badge>
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-white">Identidade Visual & Ativos de Marca</h4>
@@ -1175,9 +1175,9 @@ export default function SectorWorkspacePage() {
                       <div className="p-2.5 rounded-xl bg-pink-950/80 border border-pink-800/60 text-pink-400">
                         <Sparkles className="w-5 h-5" />
                       </div>
-                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/40">
+                      <Badge tone="primary">
                         Copywriting
-                      </span>
+                      </Badge>
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-white">Gerador de Briefings de Conteúdo</h4>
@@ -1192,9 +1192,9 @@ export default function SectorWorkspacePage() {
                       <div className="p-2.5 rounded-xl bg-pink-950/80 border border-pink-800/60 text-pink-400">
                         <ExternalLink className="w-5 h-5" />
                       </div>
-                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/40">
+                      <Badge tone="primary">
                         Canais
-                      </span>
+                      </Badge>
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-white">Central de Links de Divulgação</h4>
@@ -1296,9 +1296,9 @@ export default function SectorWorkspacePage() {
                       <div className="p-2.5 rounded-xl bg-amber-950/80 border border-amber-800/60 text-amber-400">
                         <Clock className="w-5 h-5" />
                       </div>
-                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                      <Badge tone="warning">
                         Ativo
-                      </span>
+                      </Badge>
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-white">Banco de Horas & Dedicação Semanal</h4>
@@ -1313,9 +1313,9 @@ export default function SectorWorkspacePage() {
                       <div className="p-2.5 rounded-xl bg-amber-950/80 border border-amber-800/60 text-amber-400">
                         <Award className="w-5 h-5" />
                       </div>
-                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                      <Badge tone="warning">
                         Ciclo 2026.2
-                      </span>
+                      </Badge>
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-white">Matriz de Avaliação 360° & PDI</h4>
@@ -1330,9 +1330,9 @@ export default function SectorWorkspacePage() {
                       <div className="p-2.5 rounded-xl bg-amber-950/80 border border-amber-800/60 text-amber-400">
                         <UserCheck className="w-5 h-5" />
                       </div>
-                      <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/40">
+                      <Badge tone="warning">
                         Disponível
-                      </span>
+                      </Badge>
                     </div>
                     <div>
                       <h4 className="text-sm font-bold text-white">Emissor de Certificados de Membro</h4>
@@ -1377,9 +1377,9 @@ export default function SectorWorkspacePage() {
                         <div className="p-3 rounded-xl bg-purple-950/80 border border-purple-800/60 text-purple-300">
                           <Calculator className="w-6 h-6" />
                         </div>
-                        <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full border bg-emerald-500/20 text-emerald-300 border-emerald-500/40">
+                        <Badge tone="success">
                           ● Ativo
-                        </span>
+                        </Badge>
                       </div>
                       <div>
                         <span className="text-[11px] font-bold text-purple-400 uppercase tracking-wider">
@@ -1409,9 +1409,9 @@ export default function SectorWorkspacePage() {
                         <div className="p-3 rounded-xl bg-purple-950/80 border border-purple-800/60 text-purple-300">
                           <Filter className="w-6 h-6" />
                         </div>
-                        <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full border bg-purple-500/20 text-purple-300 border-purple-500/40">
+                        <Badge tone="primary">
                           ● Ativo
-                        </span>
+                        </Badge>
                       </div>
                       <div>
                         <span className="text-[11px] font-bold text-purple-400 uppercase tracking-wider">
@@ -1441,9 +1441,9 @@ export default function SectorWorkspacePage() {
                         <div className="p-3 rounded-xl bg-purple-950/80 border border-purple-800/60 text-purple-300">
                           <FileSpreadsheet className="w-6 h-6" />
                         </div>
-                        <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full border bg-emerald-500/20 text-emerald-300 border-emerald-500/40">
+                        <Badge tone="success">
                           ● Ativo
-                        </span>
+                        </Badge>
                       </div>
                       <div>
                         <span className="text-[11px] font-bold text-purple-400 uppercase tracking-wider">
@@ -1547,9 +1547,9 @@ export default function SectorWorkspacePage() {
                           <div className="p-3 rounded-xl bg-purple-950/80 border border-purple-800/60 text-purple-300">
                             <Pickaxe className="w-6 h-6" aria-hidden="true" />
                           </div>
-                          <span className="text-[11px] font-bold px-2.5 py-0.5 rounded-full border bg-emerald-500/20 text-emerald-300 border-emerald-500/40">
+                          <Badge tone="success">
                             ● Ativo
-                          </span>
+                          </Badge>
                         </div>
                         <div>
                           <span className="text-[11px] font-bold text-purple-400 uppercase tracking-wider">

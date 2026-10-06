@@ -26,7 +26,7 @@ import { Modal } from '@/components/ui/Modal';
 import { Button, IconButton } from '@/components/ui/Button';
 import { Field } from '@/components/ui/Field';
 import { CONTROL_CLASS } from '@/components/ui/Input';
-import { EmptyState } from '@/components/ui/Display';
+import { Badge, EmptyState, PRIORITY_TONE } from '@/components/ui/Display';
 import { DateInput, Input, Select, Textarea } from '@/components/ui/Input';
 
 interface SectorTaskBoardProps {
@@ -335,17 +335,9 @@ export const SectorTaskBoard: React.FC<SectorTaskBoardProps> = ({
                       >
                         {/* Priority & Actions Header */}
                         <div className="flex items-center justify-between">
-                          <span
-                            className={`text-[9px] font-bold px-2 py-0.5 rounded-full border ${
-                              task.priority === 'URGENT'
-                                ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
-                                : task.priority === 'HIGH'
-                                ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                                : 'bg-slate-800 text-slate-300 border-slate-700'
-                            }`}
-                          >
+                          <Badge tone={PRIORITY_TONE[task.priority] ?? 'neutral'}>
                             {task.priority === 'URGENT' ? 'URGENTE' : task.priority}
-                          </span>
+                          </Badge>
 
                           {!readOnly && (
                             <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">

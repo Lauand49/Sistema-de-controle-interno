@@ -26,7 +26,7 @@ import {
   Layers,
 } from 'lucide-react';
 import { formatDueDate } from '@/lib/dashboards/format';
-import { PageHeader, StatCard, EmptyState } from '@/components/ui/Display';
+import { Badge, EmptyState, PRIORITY_TONE, PageHeader, StatCard } from '@/components/ui/Display';
 import { Button } from '@/components/ui/Button';
 import { Input, Select } from '@/components/ui/Input';
 
@@ -252,17 +252,9 @@ export default function CrossDeptRequestsPage() {
                 <div className="space-y-2 flex-1">
                   <div className="flex flex-wrap items-center gap-2">
                     {/* Priority Badge */}
-                    <span
-                      className={`text-[11px] font-bold px-2.5 py-0.5 rounded-full border ${
-                        req.priority === 'URGENT'
-                          ? 'bg-rose-500/20 text-rose-300 border-rose-500/40'
-                          : req.priority === 'HIGH'
-                          ? 'bg-amber-500/20 text-amber-300 border-amber-500/40'
-                          : 'bg-slate-800 text-slate-300 border-slate-700'
-                      }`}
-                    >
+                    <Badge tone={PRIORITY_TONE[req.priority] ?? 'neutral'}>
                       {req.priority === 'URGENT' ? 'URGENTE' : req.priority}
-                    </span>
+                    </Badge>
 
                     {/* Department Flow Badge */}
                     <span

@@ -31,7 +31,7 @@ import { formatDueDate } from '@/lib/dashboards/format';
 import { Modal } from '@/components/ui/Modal';
 import { Field } from '@/components/ui/Field';
 import { CONTROL_CLASS } from '@/components/ui/Input';
-import { LoadingState, EmptyState, PageHeader, StatCard } from '@/components/ui/Display';
+import { Badge, EmptyState, LoadingState, PRIORITY_TONE, PageHeader, StatCard } from '@/components/ui/Display';
 import { Button, IconButton } from '@/components/ui/Button';
 import { DateInput, Input, Select, Textarea } from '@/components/ui/Input';
 
@@ -273,34 +273,14 @@ export default function MyTasksPage() {
   };
 
   const getPriorityBadge = (p: TaskPriority) => {
-    switch (p) {
-      case 'URGENT':
-        return (
-          <span className="px-2 py-0.5 rounded text-[11px] font-extrabold uppercase bg-rose-500/20 text-rose-300 border border-rose-500/40">
-            Urgente
-          </span>
-        );
-      case 'HIGH':
-        return (
-          <span className="px-2 py-0.5 rounded text-[11px] font-extrabold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/40">
-            Alta
-          </span>
-        );
-      case 'MEDIUM':
-        return (
-          <span className="px-2 py-0.5 rounded text-[11px] font-extrabold uppercase bg-blue-500/20 text-blue-300 border border-blue-500/40">
-            Média
-          </span>
-        );
-      case 'LOW':
-      default:
-        return (
-          <span className="px-2 py-0.5 rounded text-[11px] font-extrabold uppercase bg-slate-800 text-slate-400 border border-slate-700">
-            Baixa
-          </span>
-        );
-    }
+    const label = { URGENT: 'Urgente', HIGH: 'Alta', MEDIUM: 'Média', LOW: 'Baixa' }[p] ?? 'Baixa';
+    return (
+      <Badge tone={PRIORITY_TONE[p] ?? 'neutral'} className="uppercase">
+        {label}
+      </Badge>
+    );
   };
+
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100 selection:bg-purple-500 selection:text-white">

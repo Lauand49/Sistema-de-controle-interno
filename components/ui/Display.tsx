@@ -14,6 +14,9 @@ const TONES: Record<BadgeTone, string> = {
   info: 'bg-info-subtle text-info-soft border-info/40',
 };
 
+/** Prioridade de tarefa/solicitação → tom do Badge. */
+export const PRIORITY_TONE: Record<string, BadgeTone> = { URGENT: 'danger', HIGH: 'warning', MEDIUM: 'info', LOW: 'neutral' };
+
 export const Badge: React.FC<{ tone?: BadgeTone; icon?: Icon; className?: string; children: React.ReactNode }> = ({
   tone = 'neutral',
   icon: I,
