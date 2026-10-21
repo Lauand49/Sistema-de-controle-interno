@@ -1,4 +1,4 @@
-# 🚀 SciTec jr. - Sistema Operacional Integrado
+#  SciTec jr. - Sistema Operacional Integrado
 
 Sistema interno completo de gestão operacional, funis de processos (estilo Pipefy) e ferramentas setoriais integradas da **SciTec jr.**
 
