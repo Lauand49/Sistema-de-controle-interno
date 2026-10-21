@@ -1,7 +1,7 @@
 'use client';
 import { Button, IconButton } from '@/components/ui/Button';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { SciTecNavbar } from '@/components/navigation/SciTecNavbar';
 import { useProfile } from '@/contexts/ProfileContext';
@@ -44,6 +44,17 @@ import {
 import { PageHeader, EmptyState } from '@/components/ui/Display';
 import { Input, Select } from '@/components/ui/Input';
 
+interface SavedProposal {
+  id: string;
+  clientName: string;
+  projectName: string;
+  input: { projeto: ProjectHeader; servicos: ServiceAllocation[]; custos_extras: ExtraCost[] };
+  finalPrice: number;
+  cardId: string | null;
+  createdAt: string;
+  createdBy: { name: string };
+}
+
 export default function ProjectPricingPage() {
   const { profiles, currentProfile } = useProfile();
 
@@ -73,6 +84,25 @@ export default function ProjectPricingPage() {
   const [selectedAssignee, setSelectedAssignee] = useState<string>(currentProfile?.id || '');
   const [isSendingToPipe, setIsSendingToPipe] = useState(false);
   const [copiedProposal, setCopiedProposal] = useState(false);
+  const [savedProposals, setSavedProposals] = useState<SavedProposal[]>([]);
+  const [loadingSavedProposals, setLoadingSavedProposals] = useState(true);
+
+  const refreshSavedProposals = useCallback(async () => {
+    setLoadingSavedProposals(true);
+    try {
+      const response = await fetch('/api/tools/pricing/proposals', { cache: 'no-store' });
+      if (!response.ok) throw new Error('Falha ao carregar propostas salvas.');
+      setSavedProposals(await response.json());
+    } catch {
+      toast.error('Não foi possível carregar as propostas salvas.');
+    } finally {
+      setLoadingSavedProposals(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    void refreshSavedProposals();
+  }, [refreshSavedProposals]);
 
   // Real-time calculation using pure function
   const pricingResult = useMemo(() => {
@@ -309,17 +339,14 @@ SciTec jr. - Consultoria & Engenharia em Computação
       }
 
       const data = await res.json();
-      toast.success(
-        `Card criado com sucesso no Funil de Vendas na fase "${data.card?.phase?.name || 'Proposta'}"!`,
-        {
-          action: {
-            label: 'Ver Funil',
-            onClick: () => {
-              window.location.href = `/?openCard=${data.card?.id || ''}`;
-            },
-          },
-        }
-      );
+      await refreshSavedProposals();
+      if (data.card?.id) {
+        toast.success(`Proposta salva e card criado na fase "${data.card.phase?.name || 'Proposta'}"!`, {
+          action: { label: 'Ver Funil', onClick: () => { window.location.href = `/?openCard=${data.card.id}`; } },
+        });
+      } else {
+        toast.success('Proposta salva. Configure um funil de vendas para também criar o card.');
+      }
     } catch (err: any) {
       toast.error(err.message || 'Erro ao salvar no funil de vendas.');
     } finally {
@@ -329,6 +356,23 @@ SciTec jr. - Consultoria & Engenharia em Computação
 
   const formatCurrency = (v: number) =>
     v.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+
+  const loadSavedProposal = (proposal: SavedProposal) => {
+    const { projeto, servicos: savedServices, custos_extras: savedCosts } = proposal.input;
+    setCliente(projeto.cliente);
+    setNomeProjeto(projeto.nome_projeto);
+    setPorteCliente(projeto.porte_cliente);
+    setUrgencia(projeto.urgencia);
+    setNivelExperiencia(Number(projeto.nivel_experiencia) || 3);
+    setNivelComplexidade(projeto.nivel_complexidade);
+    setNumPessoas(projeto.num_pessoas);
+    setDescontoFidelidade(projeto.desconto_fidelidade);
+    setDescontoComercialPct(projeto.desconto_comercial * 100);
+    setServicos(savedServices);
+    setCustosExtras(savedCosts);
+    toast.info('Proposta carregada no simulador. Ao salvar novamente, será criada uma nova versão.');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-950 text-slate-100">
@@ -990,6 +1034,48 @@ SciTec jr. - Consultoria & Engenharia em Computação
             </div>
           </div>
         </div>
+
+        <section className="rounded-card border border-border bg-surface-raised p-5 space-y-4" aria-labelledby="saved-proposals-title">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 id="saved-proposals-title" className="text-base font-bold text-fg flex items-center gap-2">
+                <FileSpreadsheet className="w-4 h-4 text-primary-soft" aria-hidden="true" /> Propostas salvas
+              </h2>
+              <p className="mt-1 text-xs text-fg-muted">As 30 propostas mais recentes. Carregue uma para revisar os parâmetros e salvar uma nova versão.</p>
+            </div>
+            <Button variant="secondary" size="sm" icon={TrendingUp} onClick={() => void refreshSavedProposals()} loading={loadingSavedProposals}>
+              Atualizar
+            </Button>
+          </div>
+
+          {loadingSavedProposals ? (
+            <p className="py-4 text-sm text-fg-muted" role="status">Carregando propostas…</p>
+          ) : savedProposals.length === 0 ? (
+            <EmptyState title="Nenhuma proposta salva ainda" description="Use “Criar Card” para salvar uma proposta e seus parâmetros no banco." />
+          ) : (
+            <div className="divide-y divide-border">
+              {savedProposals.map((proposal) => (
+                <div key={proposal.id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 py-3 first:pt-0 last:pb-0">
+                  <div className="min-w-0">
+                    <p className="font-semibold text-sm text-fg truncate">{proposal.projectName}</p>
+                    <p className="text-xs text-fg-muted truncate">{proposal.clientName} · {proposal.createdBy.name} · {new Date(proposal.createdAt).toLocaleString('pt-BR')}</p>
+                    <p className="mt-1 text-sm font-bold text-success-soft">{formatCurrency(proposal.finalPrice)}</p>
+                  </div>
+                  <div className="flex items-center gap-2 shrink-0">
+                    {proposal.cardId && (
+                      <Link href={`/?openCard=${proposal.cardId}`} className="text-xs font-semibold text-primary-soft hover:underline">
+                        Abrir card
+                      </Link>
+                    )}
+                    <Button variant="secondary" size="sm" icon={Calculator} onClick={() => loadSavedProposal(proposal)}>
+                      Carregar para edição
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </section>
       </main>
     </div>
   );
