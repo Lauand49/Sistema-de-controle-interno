@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { Prisma } from '@prisma/client';
 import { prisma } from '@/lib/prisma';
 import { withAuth, ApiError, assert } from '@/lib/api';
 import { canUseNegociosTools } from '@/lib/permissions';
@@ -75,6 +76,7 @@ export const POST = withAuth(async (request, { actor }) => {
     const result = calculateProjectPricing(input);
 
     let createdCard = null;
+    let savedProposal = null;
 
     if (createCard) {
       // Find pipe and either "Proposta" phase or first phase
@@ -115,32 +117,70 @@ export const POST = withAuth(async (request, { actor }) => {
           `💰 Preço Final Sugerido: R$ ${result.preco_final.toLocaleString('pt-BR', { minimumFractionDigits: 2 })}`,
         ];
 
-        createdCard = await prisma.card.create({
-          data: {
-            title: `[Proposta] ${input.projeto.nome_projeto} - ${input.projeto.cliente}`,
-            description: breakdownLines.join('\n'),
-            phaseId: targetPhase.id,
-            assigneeId: assigneeId || null,
-            order: newOrder,
-            values: {
-              create: valueCreates,
-            },
-            activities: {
-              create: {
-                type: 'CARD_CREATED',
-                description: `Card gerado automaticamente pelo Motor de Precificação SciTec jr. (Valor: R$ ${result.preco_final.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})`,
-                userId: actor.id,
-                metadata: JSON.stringify({
-                  source: 'PRICING_ENGINE',
-                  preco_final: result.preco_final,
-                  horas_totais: result.horas_totais,
-                }),
+        const inputSnapshot = JSON.parse(JSON.stringify({
+          projeto: input.projeto,
+          servicos: input.servicos,
+          custos_extras: input.custos_extras,
+        })) as Prisma.InputJsonValue;
+        const resultSnapshot = JSON.parse(JSON.stringify(result)) as Prisma.InputJsonValue;
+
+        const saved = await prisma.$transaction(async (tx) => {
+          const card = await tx.card.create({
+            data: {
+              title: `[Proposta] ${input.projeto.nome_projeto} - ${input.projeto.cliente}`,
+              description: breakdownLines.join('\n'),
+              phaseId: targetPhase.id,
+              assigneeId: assigneeId || null,
+              order: newOrder,
+              values: { create: valueCreates },
+              activities: {
+                create: {
+                  type: 'CARD_CREATED',
+                  description: `Card gerado automaticamente pelo Motor de Precificação SciTec jr. (Valor: R$ ${result.preco_final.toLocaleString('pt-BR', { minimumFractionDigits: 2 })})`,
+                  userId: actor.id,
+                  metadata: JSON.stringify({
+                    source: 'PRICING_ENGINE',
+                    preco_final: result.preco_final,
+                    horas_totais: result.horas_totais,
+                  }),
+                },
               },
             },
-          },
-          include: {
-            phase: true,
-            assignee: true,
+            include: { phase: true, assignee: true },
+          });
+          const proposal = await tx.pricingProposal.create({
+            data: {
+              clientName: input.projeto.cliente,
+              projectName: input.projeto.nome_projeto,
+              input: inputSnapshot,
+              result: resultSnapshot,
+              finalPrice: result.preco_final,
+              createdById: actor.id,
+              cardId: card.id,
+            },
+          });
+          return { card, proposal };
+        });
+        createdCard = saved.card;
+        savedProposal = saved.proposal;
+      }
+
+      // Mesmo sem funil configurado, não descarta uma proposta que o usuário pediu para salvar.
+      if (!savedProposal) {
+        const inputSnapshot = JSON.parse(JSON.stringify({
+          projeto: input.projeto,
+          servicos: input.servicos,
+          custos_extras: input.custos_extras,
+        })) as Prisma.InputJsonValue;
+        const resultSnapshot = JSON.parse(JSON.stringify(result)) as Prisma.InputJsonValue;
+        savedProposal = await prisma.pricingProposal.create({
+          data: {
+            clientName: input.projeto.cliente,
+            projectName: input.projeto.nome_projeto,
+            input: inputSnapshot,
+            result: resultSnapshot,
+            finalPrice: result.preco_final,
+            createdById: actor.id,
           },
         });
       }
@@ -150,6 +190,7 @@ export const POST = withAuth(async (request, { actor }) => {
       success: true,
       result,
       card: createdCard,
+      proposal: savedProposal,
     });
   } catch (error: any) {
     if (error instanceof ApiError) throw error;

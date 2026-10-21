@@ -77,6 +77,7 @@ model User {
   miningRuns        MiningRun[]
   assignedCompanies Company[]
   approachMessages  ApproachMessage[]
+  pricingProposals  PricingProposal[]
 
   @@index([departmentId])
   @@index([status])
@@ -193,9 +194,27 @@ model Card {
 
   values     CardFieldValue[]
   activities CardActivity[]
+  pricingProposal PricingProposal?
 
   @@index([phaseId])
   @@index([assigneeId])
+}
+
+model PricingProposal {
+  id          String   @id @default(uuid())
+  clientName  String
+  projectName String
+  input       Json
+  result      Json
+  finalPrice  Decimal  @db.Decimal(12, 2)
+  createdById String
+  createdBy   User     @relation(fields: [createdById], references: [id], onDelete: Restrict)
+  cardId      String?  @unique
+  card        Card?    @relation(fields: [cardId], references: [id], onDelete: SetNull)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([createdById, createdAt(sort: Desc)])
 }
 
 model CardFieldValue {
